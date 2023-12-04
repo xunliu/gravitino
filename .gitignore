@@ -43,5 +43,12 @@ dev/docker/tools/docker-connector
 
 include web/.gitignore
 
+
 # node env
 .node
+
+# terraform
+dev/docker/cloud/**/.terraform**
+dev/docker/cloud/**/terraform.tfstate
+dev/docker/cloud/**/terraform.tfstate.backup
+dev/docker/cloud/**/tfplan

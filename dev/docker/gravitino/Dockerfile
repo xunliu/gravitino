@@ -9,6 +9,9 @@ WORKDIR /root/gravitino
 
 COPY packages/gravitino /root/gravitino
 
+# 设置环境变量
+ENV DOWNLOAD_JDBC_DRIVER="false"
+
 EXPOSE 8090
 
 ENTRYPOINT ["/bin/bash", "/root/gravitino/bin/gravitino.sh", "start"]

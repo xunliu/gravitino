@@ -20,6 +20,6 @@ cp -r "${gravitino_home}/distribution/package" "${gravitino_dir}/packages/gravit
 # Keeping the container running at all times
 cat <<EOF >> "${gravitino_dir}/packages/gravitino/bin/gravitino.sh"
 
-# Keeping a process running in the background
+# Keeping Gravitino server running in the background
 tail -f /dev/null
 EOF
