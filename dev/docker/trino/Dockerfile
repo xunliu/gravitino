@@ -2,8 +2,32 @@
 # Copyright 2023 Datastrato Pvt Ltd.
 # This software is licensed under the Apache License version 2.
 #
+FROM debian:buster as jdk11
+
+ARG RANGER_VERSION=2.4.0
+
+WORKDIR /root
+
+RUN apt-get -q update && \
+    apt-get install -y -q wget openjdk-11-jdk
+
+RUN wget https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.6.3/apache-maven-3.6.3-bin.tar.gz && \
+    tar zxvf apache-maven-3.6.3-bin.tar.gz && \
+    ln -s /root/apache-maven-3.6.3/bin/mvn /usr/local/bin/mvn
+
+RUN wget https://downloads.apache.org/ranger/${RANGER_VERSION}/apache-ranger-${RANGER_VERSION}.tar.gz && \
+    tar zxvf apache-ranger-${RANGER_VERSION}.tar.gz && \
+    ln -s apache-ranger-${RANGER_VERSION} apache-ranger && \
+    cd apache-ranger && \
+    mvn clean package -DskipTests -P ranger-trino-plugin,-linux -am -pl distro,plugin-trino,ranger-trino-plugin-shim,agents-installer,credentialbuilder
+
 FROM trinodb/trino:426
 LABEL maintainer="support@datastrato.com"
+
+ARG IMAGE_NAME
+ARG RANGER_VERSION=2.4.0
+ENV RANGER_REPOSITORY_NAME=""
+ENV RANGER_SERVER_URL=""
 
 USER root
 
@@ -52,7 +76,6 @@ COPY --chown=trino:trino packages/gravitino-trino-connector/postgresql-42.7.0.ja
 RUN mkdir /tmp/gravitino
 COPY --chown=trino:trino packages/gravitino-trino-connector /tmp/gravitino
 
-ARG IMAGE_NAME
 RUN if [ "$IMAGE_NAME" = "datastrato/trino" ] ; then \
     mv /tmp/gravitino /usr/lib/trino/plugin/; \
     else echo "Copying files for other images"; \
@@ -65,5 +88,8 @@ RUN if [ "$IMAGE_NAME" = "datastrato/trino" ] ; then \
 #ENV GRAVITINO_HOST_PORT
 #ENV GRAVITINO_METALAKE_NAME
 #ENV HADOOP_USER_NAME
+
+# Copy the Ranger plugin to the
+COPY --from=jdk11 /root/apache-ranger/target/ranger-${RANGER_VERSION}-trino-plugin.tar.gz /tmp
 
 ENTRYPOINT ["/bin/bash", "-c", "/etc/trino/update-trino-conf.sh && /usr/lib/trino/bin/run-trino"]
