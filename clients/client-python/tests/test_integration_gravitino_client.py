@@ -5,6 +5,8 @@ This software is licensed under the Apache License version 2.
 
 import os
 import unittest
+
+from gravitino import GravitinoClient
 from tests.integration_test_env import IntegrationTestEnv
 
 
@@ -21,3 +23,9 @@ class IntegrationTestGravitinoClient(IntegrationTestEnv):
 
         if projectVersion != '':
             assert versionDTO['version'] == projectVersion
+
+    def test1(self):
+        client = GravitinoClient("http://localhost:8090")
+        client.get_metalakes()
+        metalake_demo = client.get_metalakes()[1]
+        metalake_demo.catalog_hive.sales.customers.info()

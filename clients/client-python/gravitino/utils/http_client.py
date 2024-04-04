@@ -102,8 +102,12 @@ class HTTPClient:
 
         if headers:
             self._update_headers(headers)
+        else:
+            headers = {'Content-Type': 'application/json', 'Accept': 'application/vnd.gravitino.v1+json'}
+            self._update_headers(headers)
+
         if json:
-            request_data = _json.dumps(json).encode("utf-8")
+            request_data = json.to_json().encode("utf-8") #_json.dumps(json.__dict__).encode("utf-8")
 
         opener = build_opener()
         request = Request(self._build_url(endpoint, params), data=request_data)
@@ -127,6 +131,9 @@ class HTTPClient:
 
     def put(self, endpoint, json=None, **kwargs):
         return self._request("put", endpoint, json=json, **kwargs)
+
+    def close(self):
+        self._request("close")
 
 
 def unpack(path: str):
