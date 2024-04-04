@@ -128,6 +128,9 @@ class HTTPClient:
     def put(self, endpoint, json=None, **kwargs):
         return self._request("put", endpoint, json=json, **kwargs)
 
+    def close(self):
+        self._request("close")
+
 
 def unpack(path: str):
     def decorator(func):
