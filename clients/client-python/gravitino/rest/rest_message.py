@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
+from dataclasses_json import DataClassJsonMixin
 
 
-class RESTMessage(ABC):
+class RESTMessage(DataClassJsonMixin, ABC):
 
     @abstractmethod
     def validate(self):

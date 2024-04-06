@@ -11,6 +11,7 @@ An auditable entity is an entity that has audit information associated with it. 
 information is used to track changes to the entity.
 """
 
+
 class Auditable(ABC):
 
     @abstractmethod

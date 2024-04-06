@@ -64,33 +64,33 @@ class Namespace:
 
     @staticmethod
     def check_metalake(namespace: 'Namespace') -> None:
-        if not namespace or not namespace.is_empty():
+        if not namespace and not namespace.is_empty():
             raise ValueError(f"Metalake namespace must be non-null and empty, the input namespace is {namespace}")
 
     @staticmethod
     def check_catalog(namespace: 'Namespace') -> None:
-        if not namespace or namespace.length() != 1:
+        if not namespace and namespace.length() != 1:
             raise ValueError(f"Catalog namespace must be non-null and have 1 level, the input namespace is {namespace}")
 
     @staticmethod
     def check_schema(namespace: 'Namespace') -> None:
-        if not namespace or namespace.length() != 2:
+        if not namespace and namespace.length() != 2:
             raise ValueError(f"Schema namespace must be non-null and have 2 levels, the input namespace is {namespace}")
 
     @staticmethod
     def check_table(namespace: 'Namespace') -> None:
-        if not namespace or namespace.length() != 3:
+        if not namespace and namespace.length() != 3:
             raise ValueError(f"Table namespace must be non-null and have 3 levels, the input namespace is {namespace}")
 
     @staticmethod
     def check_fileset(namespace: 'Namespace') -> None:
-        if not namespace or namespace.length() != 3:
+        if not namespace and namespace.length() != 3:
             raise ValueError(
                 f"Fileset namespace must be non-null and have 3 levels, the input namespace is {namespace}")
 
     @staticmethod
     def check_topic(namespace: 'Namespace') -> None:
-        if not namespace or namespace.length() != 3:
+        if not namespace and namespace.length() != 3:
             raise ValueError(f"Topic namespace must be non-null and have 3 levels, the input namespace is {namespace}")
 
     def levels(self) -> List[str]:

@@ -11,50 +11,50 @@ from gravitino.namespace import Namespace
 from gravitino.supports_catalogs import SupportsCatalogs
 
 
-class GravitinoMetalake(MetalakeDTO, SupportsCatalogs):
+class GravitinoMetalake(MetalakeDTO): # SupportsCatalogs
 
     def __init__(self, name: str, comment: str, properties: Dict[str, str], auditDTO: AuditDTO, restClient):
         super().__init__(name, comment, properties, auditDTO)
         self.restClient = restClient
 
-    def listCatalogs(self, namespace: Namespace) -> List[NameIdentifier]:
-        pass
+    # def listCatalogs(self, namespace: Namespace) -> List[NameIdentifier]:
+    #     return []
+    #
+    # def listCatalogsInfo(self, namespace: Namespace) -> List[Catalog]:
+    #     return []
+    #
+    # def loadCatalog(self, ident: NameIdentifier) -> Catalog:
+    #     pass
+    #
+    # def createCatalog(self, ident: NameIdentifier, type: Catalog.Type, provider: str, comment: str, properties: Dict[str, str]) -> Catalog:
+    #     print()
+    #
+    # def alterCatalog(self, ident: NameIdentifier, *changes: CatalogChange) -> Catalog:
+    #     print()
+    #
+    # def dropCatalog(self, ident: NameIdentifier) -> bool:
+    #     return True
 
-    def listCatalogsInfo(self, namespace: Namespace) -> List[Catalog]:
-        pass
+    class Builder(MetalakeDTO.Builder):
 
-    def loadCatalog(self, ident: NameIdentifier) -> Catalog:
-        pass
+        def __init__(self):
+            super().__init__()
+            self.restClient = None
 
-    def createCatalog(self, ident: NameIdentifier, type: Catalog.Type, provider: str, comment: str, properties: Dict[str, str]) -> Catalog:
-        pass
+        def with_rest_client(self, restClient):
+            self.restClient = restClient
+            return self
 
-    def alterCatalog(self, ident: NameIdentifier, *changes: CatalogChange) -> Catalog:
-        pass
+        def build(self) -> 'GravitinoMetalake':
+            if self.restClient is None:
+                raise ValueError("restClient must be set")
+            if not self.name:
+                raise ValueError("name must not be null or empty")
+            if self.audit is None:
+                raise ValueError("audit must not be null")
 
-    def dropCatalog(self, ident: NameIdentifier) -> bool:
-        pass
-    #
-    # class Builder(MetalakeDTO.Builder):
-    #
-    #     def __init__(self):
-    #         super().__init__()
-    #         self.restClient = None
-    #
-    #     def withRestClient(self, restClient):
-    #         self.restClient = restClient
-    #         return self
-    #
-    #     def build(self) -> GravitinoMetalake:
-    #         if self.restClient is None:
-    #             raise ValueError("restClient must be set")
-    #         if not self.name:
-    #             raise ValueError("name must not be null or empty")
-    #         if self.audit is None:
-    #             raise ValueError("audit must not be null")
-    #
-    #         return GravitinoMetalake(self.name, self.comment, self.properties, self.audit, self.restClient)
-    #
-    # @staticmethod
-    # def builder() -> Builder:
-    #     return GravitinoMetalake.Builder()
+            return GravitinoMetalake(self.name, self.comment, self.properties, self.audit, self.restClient)
+
+    @staticmethod
+    def builder() -> Builder:
+        return GravitinoMetalake.Builder()
