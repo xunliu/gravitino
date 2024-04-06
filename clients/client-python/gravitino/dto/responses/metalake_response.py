@@ -19,6 +19,6 @@ class MetalakeResponse(BaseResponse):
     def validate(self):
         super().validate()
 
-        # Preconditions.check_argument(self.metalake is not None, "metalake must not be null")
-        # Preconditions.check_argument(StringUtils.isNotBlank(self.metalake.name()), "metalake 'name' must not be null and empty")
-        # Preconditions.check_argument(self.metalake.auditInfo() is not None, "metalake 'audit' must not be null")
+        assert self.metalake is not None, "metalake must not be null"
+        assert self.metalake.name is not None, "metalake 'name' must not be null and empty"
+        assert self.metalake.audit is not None, "metalake 'audit' must not be null"

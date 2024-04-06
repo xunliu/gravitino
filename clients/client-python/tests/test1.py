@@ -16,6 +16,8 @@ from gravitino.exceptions import NoSuchMetalakeException
 from gravitino.meta_change import MetalakeChange
 from gravitino.name_identifier import NameIdentifier
 from gravitino.client.gravitino_metalake import GravitinoMetalake
+from gravitino.utils.exceptions import NotFoundError
+
 
 class TestGravitinoClient(unittest.TestCase):
     def setUp(self):
@@ -44,9 +46,9 @@ class TestGravitinoClient(unittest.TestCase):
 
     def test_alter_metalake(self):
         gravitino_admin_client = GravitinoAdminClient.Builder(uri="http://localhost:8090").build()
-        new_name = "example_name30_new" #RandomNameUtils.gen_random_name("newmetaname")
+        new_name = "example_name21_new" #RandomNameUtils.gen_random_name("newmetaname")
 
-        metalake_name_a = "example_name30"  # Assuming this is set or generated elsewhere in your test
+        metalake_name_a = "example_name21"  # Assuming this is set or generated elsewhere in your test
         # self.client.create_metalake(NameIdentifier.parse(metalake_name_a), "metalake A comment", {})
 
         changes = (
@@ -57,7 +59,7 @@ class TestGravitinoClient(unittest.TestCase):
         metalake = gravitino_admin_client.alter_metalake(NameIdentifier.of(metalake_name_a), *changes)
         self.assertEqual(new_name, metalake.name)
         self.assertEqual("new metalake comment", metalake.comment)
-        self.assertEqual("ANONYMOUS_USER", metalake.audit_info.creator)  # Assuming a constant or similar attribute
+        self.assertEqual("anonymous", metalake.audit.creator)  # Assuming a constant or similar attribute
 
         # Reload metadata via new name to check if the changes are applied
         new_metalake = gravitino_admin_client.load_metalake(NameIdentifier.of(new_name))
@@ -66,16 +68,8 @@ class TestGravitinoClient(unittest.TestCase):
 
         # Old name does not exist
         old = NameIdentifier.of(metalake_name_a)
-        with self.assertRaises(NoSuchMetalakeException):
+        with self.assertRaises(NotFoundError): #NoSuchMetalakeException):
             gravitino_admin_client.load_metalake(old)
-
-    def test_stream_proc(self):
-        def square(num):
-            return num ** 2
-
-        int_array = [1, 2, 3, 4, 5]
-        result_array = [square(num) for num in int_array]
-        print(result_array)
 
     def test_drop_metalake(self, *args):
         name = "example_name31"
@@ -84,18 +78,21 @@ class TestGravitinoClient(unittest.TestCase):
         gravitino_admin_client = GravitinoAdminClient.Builder(uri="http://localhost:8090").build()
         self.assertTrue(gravitino_admin_client.drop_metalake(ident))
 
-    def test_metalake_update_request_serialized(self):
+    def test_metalake_update_request_to_json(self):
         changes = (
             MetalakeChange.rename("my_metalake_new"),
             MetalakeChange.update_comment("new metalake comment"),
         )
         reqs = [DTOConverters.to_metalake_update_request(change) for change in changes]
         updates_request = MetalakeUpdatesRequest(reqs)
-        valid_json = f'{"updates": [{"@type": "rename", "newName": "my_metalake_new"}, {"@type": "updateComment", "newComment": "new metalake comment"}]}'
+        valid_json = (f'{{"updates": [{{"@type": "rename", "newName": "my_metalake_new"}}, {{"@type": "updateComment", '
+                      f'"newComment": "new metalake comment"}}]}}')
         self.assertEqual(updates_request.to_json(), valid_json)
 
     def test_from_json_metalake_response(self, *args):
-        str = b'{"code":0,"metalake":{"name":"example_name18","comment":"This is a sample comment","properties":{"key1":"value1","key2":"value2"},"audit":{"creator":"anonymous","createTime":"2024-04-05T10:10:35.218Z"}}}'
+        str = (b'{"code":0,"metalake":{"name":"example_name18","comment":"This is a sample comment","properties":{'
+               b'"key1":"value1","key2":"value2"},"audit":{"creator":"anonymous",'
+               b'"createTime":"2024-04-05T10:10:35.218Z"}}}')
         metalake_response = MetalakeResponse.from_json(str)
         self.assertEqual(metalake_response.code, 0)
         self.assertIsNotNone(metalake_response.metalake)

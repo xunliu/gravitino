@@ -20,6 +20,8 @@ import collections
 
 from gravitino.client.gravitino_metalake import GravitinoMetalake
 from gravitino.client.gravitino_version import GravitinoVersion
+from gravitino.dto.dto_converters import DTOConverters
+from gravitino.dto.responses.metalake_response import MetalakeResponse
 from gravitino.name_identifier import NameIdentifier
 from gravitino.utils import HTTPClient
 
@@ -34,13 +36,14 @@ class GravitinoClientBase:
         self.rest_client = HTTPClient(uri)
 
     def load_metalake(self, ident: NameIdentifier) -> GravitinoMetalake:
-        pass
-        # NameIdentifier.check_metalake(ident)
-        #
-        # resp = self.rest_client.get(GravitinoClientBase.API_METALAKES_IDENTIFIER_PATH + ident.name())
+        NameIdentifier.check_metalake(ident)
+
+        resp = self.rest_client.get(GravitinoClientBase.API_METALAKES_IDENTIFIER_PATH + ident.name)
         # resp.validate()
-        #
-        # return DTOConverters.to_meta_lake(resp.get_metalake(), self.rest_client)
+        metalake_response = MetalakeResponse.from_json(resp.body)
+        metalake_response.validate()
+
+        return DTOConverters.to_meta_lake(metalake_response.metalake, self.rest_client)
 
     def get_version(self) -> GravitinoVersion:
         resp = self.rest_client.get("api/version")
