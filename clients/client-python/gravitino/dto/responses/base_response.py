@@ -6,7 +6,7 @@ from gravitino.rest.rest_response import RESTResponse
 
 
 @dataclass
-class BaseResponse(RESTResponse, DataClassJsonMixin):
+class BaseResponse(RESTResponse):
     """
     Represents a base response for REST API calls.
     """

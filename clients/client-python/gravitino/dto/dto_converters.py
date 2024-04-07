@@ -1,3 +1,7 @@
+"""
+Copyright 2024 Datastrato Pvt Ltd.
+This software is licensed under the Apache License version 2.
+"""
 from gravitino.client.gravitino_metalake import GravitinoMetalake
 from gravitino.dto.metalake_dto import MetalakeDTO
 from gravitino.dto.requests.metalake_update_request import MetalakeUpdateRequest
@@ -5,9 +9,12 @@ from gravitino.meta_change import MetalakeChange
 
 
 class DTOConverters:
+    """
+    Utility class for converting between DTOs and domain objects.
+    """
 
     @staticmethod
-    def to_meta_lake(metalake: MetalakeDTO, client) -> GravitinoMetalake:
+    def to_metalake(metalake: MetalakeDTO, client) -> GravitinoMetalake:
         return GravitinoMetalake.builder() \
             .with_name(metalake.name) \
             .with_comment(metalake.comment) \

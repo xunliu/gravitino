@@ -1,14 +1,7 @@
 from typing import List, Dict
-from datetime import datetime
-from abc import ABC, abstractmethod
 
-from gravitino.catalog import Catalog
-from gravitino.catalog_change import CatalogChange
 from gravitino.dto.audit_dto import AuditDTO
 from gravitino.dto.metalake_dto import MetalakeDTO
-from gravitino.name_identifier import NameIdentifier
-from gravitino.namespace import Namespace
-from gravitino.supports_catalogs import SupportsCatalogs
 
 
 class GravitinoMetalake(MetalakeDTO): # SupportsCatalogs

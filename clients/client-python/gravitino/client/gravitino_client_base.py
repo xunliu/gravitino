@@ -43,7 +43,7 @@ class GravitinoClientBase:
         metalake_response = MetalakeResponse.from_json(resp.body)
         metalake_response.validate()
 
-        return DTOConverters.to_meta_lake(metalake_response.metalake, self.rest_client)
+        return DTOConverters.to_metalake(metalake_response.metalake, self.rest_client)
 
     def get_version(self) -> GravitinoVersion:
         resp = self.rest_client.get("api/version")

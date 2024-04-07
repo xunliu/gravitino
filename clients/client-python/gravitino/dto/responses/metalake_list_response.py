@@ -11,13 +11,13 @@ class MetalakeListResponse(BaseResponse):
     """
     metalakes: List[MetalakeDTO]
 
-    def __init__(self, metalakes: List[MetalakeDTO]):
-        super().__init__(code=0)
-        self.metalakes = metalakes
+    # def __init__(self, metalakes: List[MetalakeDTO]):
+    #     super().__init__(code=0)
+    #     self.metalakes = metalakes
 
-    @classmethod
-    def default(cls):
-        return cls(metalakes=[])
+    # @classmethod
+    # def default(cls):
+    #     return cls(metalakes=[])
 
     def validate(self):
         super().validate()
@@ -28,5 +28,5 @@ class MetalakeListResponse(BaseResponse):
         for metalake in self.metalakes:
             if not metalake.name:
                 raise ValueError("metalake 'name' must not be null and empty")
-            if not metalake.auditInfo:
+            if not metalake.audit_info:
                 raise ValueError("metalake 'audit' must not be null")

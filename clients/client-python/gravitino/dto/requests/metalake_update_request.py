@@ -1,3 +1,7 @@
+"""
+Copyright 2024 Datastrato Pvt Ltd.
+This software is licensed under the Apache License version 2.
+"""
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
 
@@ -16,6 +20,9 @@ class MetalakeUpdateRequestType(RESTRequest, ABC):
 
 
 class MetalakeUpdateRequest:
+    """
+    Represents an interface for Metalake update requests.
+    """
 
     @abstractmethod
     def validate(self):
@@ -27,13 +34,21 @@ class MetalakeUpdateRequest:
 
     @dataclass
     class RenameMetalakeRequest(MetalakeUpdateRequestType):
-        newName: str = None
+        """
+        Represents a request to rename a Metalake.
+        """
+        newName: str = None  # The new name for the Metalake.
 
         def __init__(self, newName: str):
             super().__init__("rename")
             self.newName = newName
 
         def validate(self):
+            """
+            Validates the fields of the request.
+            Raises:
+                IllegalArgumentException if the new name is not set.
+            """
             if not self.newName:
                 raise ValueError('"newName" field is required and cannot be empty')
 
@@ -42,13 +57,21 @@ class MetalakeUpdateRequest:
 
     @dataclass
     class UpdateMetalakeCommentRequest(MetalakeUpdateRequestType):
-        newComment: str = None
+        """
+        Represents a request to update the comment on a Metalake.
+        """
+        newComment: str = None  # The new comment for the Metalake.
 
         def __init__(self, newComment: str):
             super().__init__("updateComment")
             self.newComment = newComment
 
         def validate(self):
+            """
+            Validates the fields of the request.
+            Raises:
+                IllegalArgumentException if the new comment is not set.
+            """
             if not self.newComment:
                 raise ValueError('"newComment" field is required and cannot be empty')
 
@@ -57,8 +80,11 @@ class MetalakeUpdateRequest:
 
     @dataclass
     class SetMetalakePropertyRequest(MetalakeUpdateRequestType):
-        property: str = None
-        value: str = None
+        """
+        Represents a request to set a property on a Metalake.
+        """
+        property: str = None  # The property to set.
+        value: str = None  # The value of the property.
 
         def __init__(self, property: str, value: str):
             super().__init__("setProperty")
@@ -66,6 +92,11 @@ class MetalakeUpdateRequest:
             self.value = value
 
         def validate(self):
+            """
+            Validates the fields of the request.
+            Raises:
+                 IllegalArgumentException if property or value are not set.
+            """
             if not self.property:
                 raise ValueError('"property" field is required and cannot be empty')
             if not self.value:
@@ -76,13 +107,21 @@ class MetalakeUpdateRequest:
 
     @dataclass
     class RemoveMetalakePropertyRequest(MetalakeUpdateRequestType):
-        property: str = None
+        """
+        Represents a request to remove a property from a Metalake.
+        """
+        property: str = None  # The property to remove.
 
         def __init__(self, property: str):
             super().__init__("removeProperty")
             self.property = property
 
         def validate(self):
+            """
+            Validates the fields of the request.
+            Raises:
+                 IllegalArgumentException if property is not set.
+            """
             if not self.property:
                 raise ValueError('"property" field is required and cannot be empty')
 

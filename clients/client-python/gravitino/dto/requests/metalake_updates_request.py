@@ -1,3 +1,7 @@
+"""
+Copyright 2024 Datastrato Pvt Ltd.
+This software is licensed under the Apache License version 2.
+"""
 from dataclasses import dataclass
 from typing import List
 
@@ -15,14 +19,16 @@ class MetalakeUpdatesRequest(RESTRequest):
     def __init__(self, updates: List[MetalakeUpdateRequest]):
         """
         Constructor for MetalakeUpdatesRequest.
-        @param updates The list of Metalake update requests.
+        Args:
+            updates: The list of Metalake update requests.
         """
         self.updates = updates
 
     def validate(self):
         """
         Validates each request in the list.
-        @throws IllegalArgumentException if validation of any request fails.
+        Raises:
+            IllegalArgumentException if validation of any request fails.
         """
         for update in self.updates:
             update.validate()

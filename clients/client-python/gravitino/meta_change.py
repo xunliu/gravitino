@@ -1,3 +1,7 @@
+"""
+Copyright 2024 Datastrato Pvt Ltd.
+This software is licensed under the Apache License version 2.
+"""
 from dataclasses import dataclass
 
 
@@ -12,8 +16,10 @@ class MetalakeChange:
     def rename(new_name: str) -> 'MetalakeChange.RenameMetalake':
         """
         Creates a new metalake change to rename the metalake.
-        @param new_name The New name of the metalake.
-        @return The metalake change.
+        Args:
+            new_name: The New name of the metalake.
+        Returns:
+            The metalake change.
         """
         return MetalakeChange.RenameMetalake(new_name)
 
@@ -21,8 +27,10 @@ class MetalakeChange:
     def update_comment(new_comment: str) -> 'MetalakeChange.UpdateMetalakeComment':
         """
         Creates a new metalake change to update the metalake comment.
-        @param new_comment The new comment of the metalake.
-        @return The metalake change.
+        Args:
+            new_comment: The new comment of the metalake.
+        Return:
+            The metalake change.
         """
         return MetalakeChange.UpdateMetalakeComment(new_comment)
 
@@ -30,9 +38,12 @@ class MetalakeChange:
     def set_property(property: str, value: str) -> 'SetProperty':
         """
         Creates a new metalake change to set a property and value pair for the metalake.
-        @param property The property name to set.
-        @param value The value to set the property to.
-        @return The metalake change.
+
+        Args:
+            property: The property name to set.
+            value: The value to set the property to.
+        Return:
+             The metalake change.
         """
         return MetalakeChange.SetProperty(property, value)
 
@@ -40,8 +51,10 @@ class MetalakeChange:
     def remove_property(property: str) -> 'RemoveProperty':
         """
         Creates a new metalake change to remove a property from the metalake.
-        @param property The property name to remove.
-        @return The metalake change.
+        Args:
+            property: The property name to remove.
+        Return:
+            The metalake change.
         """
         return MetalakeChange.RemoveProperty(property)
 

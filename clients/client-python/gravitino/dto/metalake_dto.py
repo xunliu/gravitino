@@ -1,41 +1,39 @@
+"""
+Copyright 2024 Datastrato Pvt Ltd.
+This software is licensed under the Apache License version 2.
+"""
+from abc import ABC
 from dataclasses import dataclass
 from typing import Optional, Dict
-from abc import ABC, abstractmethod
-
-from dataclasses_json import DataClassJsonMixin
 
 from gravitino.dto.audit_dto import AuditDTO
+from gravitino.metalake import Metalake
 
-
-# from audit_dto import AuditDTO
-
-
-# from objects import Objects
-# from preconditions import Preconditions
 
 @dataclass
-class MetalakeDTO(DataClassJsonMixin):
-    name: str
-    comment: Optional[str]
-    properties: Optional[Dict[str, str]]
-    audit: AuditDTO = None
+class MetalakeDTO(Metalake):  # DataClassJsonMixin,
+    """
+    Represents a Metalake Data Transfer Object (DTO) that implements the Metalake interface.
+    """
+    name: str  # The name of the Metalake DTO.
+    comment: Optional[str]  # The comment of the Metalake DTO.
+    properties: Optional[Dict[str, str]]  # The properties of the Metalake DTO.
+    audit: AuditDTO = None  # The audit information of the Metalake DTO.
 
-    # def __init__(self, name: str, comment: str, properties: Dict[str, str], audit: AuditDTO = None):
-    #     self.name = name
-    #     self.comment = comment
-    #     self.properties = properties
-    #     self.audit = audit
-
+    # @property
     def name(self):
         return self.name
 
+    # @property
     def comment(self):
         return self.comment
 
+    # @property
     def properties(self):
         return self.properties
 
-    def auditInfo(self):
+    # @property
+    def audit_info(self):
         return self.audit
 
     @classmethod
@@ -59,10 +57,13 @@ class MetalakeDTO(DataClassJsonMixin):
             return True
         return p1 == p2
 
-    # def __hash__(self):
-    #     return Objects.hash(self.name, self.comment, self.audit)
-
     class Builder:
+        """
+        A builder class for constructing instances of MetalakeDTO.
+        Args:
+            The type of the builder subclass.
+        """
+
         def __init__(self):
             self.name = None
             self.comment = None
@@ -70,92 +71,37 @@ class MetalakeDTO(DataClassJsonMixin):
             self.audit = None
 
         def with_name(self, name):
+            """
+            Sets the name of the Metalake DTO.
+            """
             self.name = name
             return self
 
         def with_comment(self, comment):
+            """
+            Sets the comment of the Metalake DTO.
+            """
             self.comment = comment
             return self
 
         def with_properties(self, properties):
+            """
+            Sets the properties of the Metalake DTO.
+            """
             self.properties = properties
             return self
 
         def with_audit(self, audit):
+            """
+            Sets the audit information of the Metalake DTO.
+            """
             self.audit = audit
             return self
 
         def build(self):
-            # Preconditions.check_argument(self.name is not None and self.name.strip(), "name cannot be null or empty")
-            # Preconditions.check_argument(self.audit is not None, "audit cannot be null")
+            """
+            Builds an instance of MetalakeDTO using the builder's properties.
+            """
+            assert self.name is not None and self.name.strip(), "name cannot be null or empty"
+            assert self.audit is not None, "audit cannot be null"
             return MetalakeDTO(self.name, self.comment, self.properties, self.audit)
-
-# from dataclasses import dataclass
-# from typing import Optional, Dict
-#
-# from gravitino.dto.audit_dto import AuditDTO
-# from gravitino.metalake import Metalake
-#
-# from dataclasses import dataclass
-# from dataclasses_json import DataClassJsonMixin
-#
-# @dataclass
-# class MetalakeDTO(DataClassJsonMixin):
-#     name: str
-#     comment: Optional[str]
-#     properties: Optional[Dict[str, str]]
-#     audit: AuditDTO
-#
-#     def name(self):
-#         return self.name
-#
-#     def comment(self):
-#         return self.comment
-#
-#     def properties(self):
-#         return self.properties
-#
-#     def audit_info(self):
-#         return self.audit
-#
-#     @staticmethod
-#     def builder():
-#         return MetalakeDTOBuilder()
-#
-# class MetalakeDTOBuilder:
-#     def __init__(self):
-#         self.name = None
-#         self.comment = None
-#         self.properties = None
-#         self.audit = None
-#
-#     def with_name(self, name):
-#         self.name = name
-#         return self
-#
-#     def with_comment(self, comment):
-#         self.comment = comment
-#         return self
-#
-#     def with_properties(self, properties):
-#         self.properties = properties
-#         return self
-#
-#     def with_audit(self, audit):
-#         self.audit = audit
-#         return self
-#
-#     def build(self):
-#         if self.name is None or not self.name:
-#             raise ValueError("name cannot be null or empty")
-#         if self.audit is None:
-#             raise ValueError("audit cannot be null")
-#         return MetalakeDTO(self.name, self.comment, self.properties, self.audit)
-#
-#     def __eq__(self, other):
-#         if not isinstance(other, MetalakeDTOBuilder):
-#             return False
-#         return self.name == other.name and self.comment == other.comment and self.properties == other.properties and self.audit == other.audit
-#
-#     def __hash__(self):
-#         return hash((self.name, self.comment, self.audit))

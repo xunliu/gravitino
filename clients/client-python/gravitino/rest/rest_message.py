@@ -1,8 +1,17 @@
+"""
+Copyright 2024 Datastrato Pvt Ltd.
+This software is licensed under the Apache License version 2.
+"""
 from abc import ABC, abstractmethod
 from dataclasses_json import DataClassJsonMixin
 
 
 class RESTMessage(DataClassJsonMixin, ABC):
+    """
+    Interface for REST messages.
+    REST messages are objects that are sent to and received from REST endpoints. They are
+    typically used to represent the request and response bodies of REST API calls.
+    """
 
     @abstractmethod
     def validate(self):
