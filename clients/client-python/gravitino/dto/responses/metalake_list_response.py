@@ -1,18 +1,14 @@
-from abc import ABC
-from typing import List
 from dataclasses import dataclass
-from typing import Optional
-from abc import ABC, abstractmethod
-import logging
-from abc import ABC
+from typing import List
 
 from gravitino.dto.metalake_dto import MetalakeDTO
 from gravitino.dto.responses.base_response import BaseResponse
 
-logger = logging.getLogger(__name__)
-
-# @dataclass
+@dataclass
 class MetalakeListResponse(BaseResponse):
+    """
+    Represents a response containing a list of metalakes.
+    """
     metalakes: List[MetalakeDTO]
 
     def __init__(self, metalakes: List[MetalakeDTO]):
@@ -34,6 +30,3 @@ class MetalakeListResponse(BaseResponse):
                 raise ValueError("metalake 'name' must not be null and empty")
             if not metalake.auditInfo:
                 raise ValueError("metalake 'audit' must not be null")
-
-    def object_hook(d):
-        return MetalakeListResponse(d['metalakes'])

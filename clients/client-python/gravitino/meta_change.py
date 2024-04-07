@@ -1,187 +1,87 @@
 from dataclasses import dataclass
-from typing import Union
 
-# Base class for Metalake changes
-class MetalakeChange222:
-    # Factory methods for creating instances of different changes
-    @staticmethod
-    def rename(new_name: str) -> 'MetalakeChange.RenameMetalake':
-        return MetalakeChange.RenameMetalake(new_name)
 
-    @staticmethod
-    def update_comment(new_comment: str) -> 'MetalakeChange.UpdateMetalakeComment':
-        return MetalakeChange.UpdateMetalakeComment(new_comment)
-
-    @staticmethod
-    def setProperty(property: str, value: str) -> 'SetProperty':
-        return MetalakeChange.SetProperty(property, value)
-
-    @staticmethod
-    def removeProperty(property: str) -> 'RemoveProperty':
-        return MetalakeChange.RemoveProperty(property)
-
-# Base class for Metalake changes
 class MetalakeChange:
-    # Factory methods for creating instances of different changes
+    """
+    A metalake change is a change to a metalake. It can be used to rename a metalake, update the
+    comment of a metalake, set a property and value pair for a metalake, or remove a property from a
+    metalake.
+    """
+
     @staticmethod
     def rename(new_name: str) -> 'MetalakeChange.RenameMetalake':
+        """
+        Creates a new metalake change to rename the metalake.
+        @param new_name The New name of the metalake.
+        @return The metalake change.
+        """
         return MetalakeChange.RenameMetalake(new_name)
 
     @staticmethod
     def update_comment(new_comment: str) -> 'MetalakeChange.UpdateMetalakeComment':
+        """
+        Creates a new metalake change to update the metalake comment.
+        @param new_comment The new comment of the metalake.
+        @return The metalake change.
+        """
         return MetalakeChange.UpdateMetalakeComment(new_comment)
 
     @staticmethod
-    def setProperty(property: str, value: str) -> 'SetProperty':
+    def set_property(property: str, value: str) -> 'SetProperty':
+        """
+        Creates a new metalake change to set a property and value pair for the metalake.
+        @param property The property name to set.
+        @param value The value to set the property to.
+        @return The metalake change.
+        """
         return MetalakeChange.SetProperty(property, value)
 
     @staticmethod
-    def removeProperty(property: str) -> 'RemoveProperty':
+    def remove_property(property: str) -> 'RemoveProperty':
+        """
+        Creates a new metalake change to remove a property from the metalake.
+        @param property The property name to remove.
+        @return The metalake change.
+        """
         return MetalakeChange.RemoveProperty(property)
 
-    # A metalake change to rename the metalake
-    @dataclass() # frozen=True
-    class RenameMetalake(MetalakeChange222):
+    @dataclass(frozen=True)
+    class RenameMetalake:
+        """
+        A metalake change to rename the metalake.
+        """
         newName: str
-
-        def __init__(self, newName: str) -> None:
-            super().__init__()
-            self.newName = newName
-
-        # @staticmethod
-        # def create(new_name: str) -> 'MetalakeChange.RenameMetalake':
-        #     return MetalakeChange.RenameMetalake(newName=new_name)
 
         def __str__(self):
             return f"RENAMEMETALAKE {self.newName}"
 
-    # A metalake change to update the metalake comment
     @dataclass(frozen=True)
-    class UpdateMetalakeComment(MetalakeChange222):
+    class UpdateMetalakeComment:
+        """
+        A metalake change to update the metalake comment
+        """
         newComment: str
 
         def __str__(self):
             return f"UPDATEMETALAKECOMMENT {self.newComment}"
 
-    # A metalake change to set a property and value pair for the metalake
     @dataclass(frozen=True)
-    class SetProperty(MetalakeChange222):
+    class SetProperty:
+        """
+        A metalake change to set a property and value pair for the metalake
+        """
         property: str
         value: str
 
         def __str__(self):
             return f"SETPROPERTY {self.property} {self.value}"
 
-    # A metalake change to remove a property from the metalake
     @dataclass(frozen=True)
-    class RemoveProperty(MetalakeChange222):
+    class RemoveProperty:
+        """
+        A metalake change to remove a property from the metalake
+        """
         property: str
 
         def __str__(self):
             return f"REMOVEPROPERTY {self.property}"
-
-# from abc import ABC, abstractmethod
-# from typing import Union
-# import dataclasses
-#
-# class MetalakeChange:
-#
-#     @staticmethod
-#     def rename(new_name):
-#         return RenameMetalake(new_name)
-#
-#     @staticmethod
-#     def update_comment(new_comment):
-#         return UpdateMetalakeComment(new_comment)
-#
-#     @staticmethod
-#     def set_property(property, value):
-#         return SetProperty(property, value)
-#
-#     @staticmethod
-#     def remove_property(property):
-#         return RemoveProperty(property)
-#
-#
-#     class RenameMetalake(MetalakeChange):
-#         def __init__(self, new_name):
-#             self.new_name = new_name
-#
-#         def get_new_name(self):
-#             return self.new_name
-#
-#         def __eq__(self, other):
-#             if self is other:
-#                 return True
-#             if not isinstance(other, RenameMetalake):
-#                 return False
-#             return self.new_name == other.new_name
-#
-#         def __hash__(self):
-#             return hash(self.new_name)
-#
-#         def __str__(self):
-#             return f"RENAMEMETALAKE {self.new_name}"
-#
-#     class UpdateMetalakeComment(MetalakeChange):
-#         def __init__(self, new_comment):
-#             self.new_comment = new_comment
-#
-#         def get_new_comment(self):
-#             return self.new_comment
-#
-#         def __eq__(self, other):
-#             if self is other:
-#                 return True
-#             if not isinstance(other, UpdateMetalakeComment):
-#                 return False
-#             return self.new_comment == other.new_comment
-#
-#         def __hash__(self):
-#             return hash(self.new_comment)
-#
-#         def __str__(self):
-#             return f"UPDATEMETALAKECOMMENT {self.new_comment}"
-#
-#     class SetProperty(MetalakeChange):
-#         def __init__(self, property_name, value):
-#             self.property_name = property_name
-#             self.value = value
-#
-#         def get_property(self):
-#             return self.property_name
-#
-#         def get_value(self):
-#             return self.value
-#
-#         def __eq__(self, other):
-#             if self is other:
-#                 return True
-#             if not isinstance(other, SetProperty):
-#                 return False
-#             return self.property_name == other.property_name and self.value == other.value
-#
-#         def __hash__(self):
-#             return hash((self.property_name, self.value))
-#
-#         def __str__(self):
-#             return f"SETPROPERTY {self.property_name} {self.value}"
-#
-#
-#     class RemoveProperty(MetalakeChange):
-#         def __init__(self, property):
-#             self.property = property
-#
-#         def get_property(self):
-#             return self.property
-#
-#         def __eq__(self, other):
-#             if not isinstance(other, RemoveProperty):
-#                 return False
-#             return self.property == other.property
-#
-#         def __hash__(self):
-#             return hash(self.property)
-#
-#         def __str__(self):
-#             return f"REMOVEPROPERTY {self.property}"

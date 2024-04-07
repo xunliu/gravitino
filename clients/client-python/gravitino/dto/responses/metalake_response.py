@@ -10,13 +10,16 @@ from gravitino.dto.responses.base_response import BaseResponse
 
 @dataclass
 class MetalakeResponse(BaseResponse):
+    """
+    Represents a response containing metalake information.
+    """
     metalake: Optional[MetalakeDTO]
 
-    # def __init__(self, metalake: MetalakeDTO = None):
-    #     super().__init__(code=0)
-    #     self.metalake = metalake
-
     def validate(self):
+        """
+        Validates the response data.
+        TODO: @throws IllegalArgumentException if the metalake, name or audit information is not set.
+        """
         super().validate()
 
         assert self.metalake is not None, "metalake must not be null"

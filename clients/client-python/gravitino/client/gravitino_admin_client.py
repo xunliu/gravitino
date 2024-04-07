@@ -16,55 +16,87 @@ from gravitino.dto.dto_converters import DTOConverters
 
 logger = logging.getLogger(__name__)
 
-class GravitinoAdminClient(GravitinoClientBase, SupportsMetalakes):
 
-    def __init__(self, uri):
+class GravitinoAdminClient(GravitinoClientBase, SupportsMetalakes):
+    """
+    Gravitino Client for the administrator to interact with the Gravitino API, allowing the client to
+    list, load, create, and alter Metalakes.
+    <p>Normal users should use {@link GravitinoClient} to connect with the Gravitino server.
+    """
+
+    def __init__(self, uri): # TODO: AuthDataProvider authDataProvider
         super().__init__(uri)
 
     def list_metalakes(self) -> List[GravitinoMetalake]:
+        """
+        Retrieves a list of Metalakes from the Gravitino API.
+        @return An array of GravitinoMetalake objects representing the Metalakes.
+        """
         resp = self.rest_client.get(
             self.API_METALAKES_LIST_PATH)  # , MetalakeListResponse, {}, ErrorHandlers.metalake_error_handler())
-        # resp.validate()
 
-        object = json.loads(resp.body, object_hook=MetalakeListResponse.object_hook)
+        metalake_list_resp = MetalakeListResponse.from_json(resp.body)
+        metalake_list_resp.validate()
 
-        return object.metalakes  # [DTOConverters.to_meta_lake(o, rest_client) for o in resp.get_metalakes()]
+        return [DTOConverters.to_meta_lake(o, self.rest_client) for o in metalake_list_resp.metalakes]
 
     def create_metalake(self, ident: NameIdentifier, comment: str, properties: Dict[str, str]) -> GravitinoMetalake:
+        """
+        Creates a new Metalake using the Gravitino API.
+        @param ident The identifier of the new Metalake.
+        @param comment The comment for the new Metalake.
+        @param properties The properties of the new Metalake.
+        @return A GravitinoMetalake instance representing the newly created Metalake.
+        TODO: @throws MetalakeAlreadyExistsException If a Metalake with the specified identifier already exists.
+        """
         NameIdentifier.check_metalake(ident)
 
         req = MetalakeCreateRequest(ident.name, comment, properties)
         req.validate()
 
         # headers = {'Content-Type': 'application/json', 'Accept': 'application/vnd.gravitino.v1+json'}
-        resp = self.rest_client.post(self.API_METALAKES_LIST_PATH, req)#json.dumps(req, default=vars)) #req)
-        # resp.validate()
+        resp = self.rest_client.post(self.API_METALAKES_LIST_PATH, req)  # json.dumps(req, default=vars)) #req)
         # json2 = resp.json().from_json()#.json()
-        metalakeResponse = MetalakeResponse.from_json(resp.body)
+        metalake_response = MetalakeResponse.from_json(resp.body)
+        metalake_response.validate()
 
         # object = json.loads(resp.body, object_hook=MetalakeCreateRequest.from_json_string)
 
-        return DTOConverters.to_meta_lake(metalakeResponse.metalake, self.rest_client)
+        return DTOConverters.to_meta_lake(metalake_response.metalake, self.rest_client)
 
     def alter_metalake(self, ident: NameIdentifier, *changes: MetalakeChange) -> GravitinoMetalake:
+        """
+        Alters a specific Metalake using the Gravitino API.
+        @param ident The identifier of the Metalake to be altered.
+        @param changes The changes to be applied to the Metalake.
+        @return A GravitinoMetalake instance representing the updated Metalake.
+        TODO: @throws NoSuchMetalakeException If the specified Metalake does not exist.
+        TODO: @throws IllegalArgumentException If the provided changes are invalid or not applicable.
+        """
         NameIdentifier.check_metalake(ident)
 
         reqs = [DTOConverters.to_metalake_update_request(change) for change in changes]
         updates_request = MetalakeUpdatesRequest(reqs)
         updates_request.validate()
 
-        resp = self.rest_client.put(self.API_METALAKES_IDENTIFIER_PATH + ident.name, updates_request) #, MetalakeResponse, {}, ErrorHandlers.metalake_error_handler())
-        # resp.validate()
+        resp = self.rest_client.put(self.API_METALAKES_IDENTIFIER_PATH + ident.name,
+                                    updates_request)  # , MetalakeResponse, {}, ErrorHandlers.metalake_error_handler())
         metalake_response = MetalakeResponse.from_json(resp.body)
+        metalake_response.validate()
 
         return DTOConverters.to_meta_lake(metalake_response.metalake, self.rest_client)
 
     def drop_metalake(self, ident: NameIdentifier) -> bool:
+        """
+        Drops a specific Metalake using the Gravitino API.
+        @param ident The identifier of the Metalake to be dropped.
+        @return True if the Metalake was successfully dropped, false otherwise.
+        """
         NameIdentifier.check_metalake(ident)
 
         try:
             resp = self.rest_client.delete(
-                self.API_METALAKES_IDENTIFIER_PATH + ident.name)  # , DropResponse, {}, ErrorHandlers.metalake_error_handler())
+                self.API_METALAKES_IDENTIFIER_PATH + ident.name)
             dropResponse = DropResponse.from_json(resp.body)
 
             return dropResponse.dropped()
@@ -78,12 +110,21 @@ class GravitinoAdminClient(GravitinoClientBase, SupportsMetalakes):
         return GravitinoAdminClient.Builder(uri)
 
     class Builder(GravitinoClientBase.Builder):
-
+        """
+        Creates a new builder for constructing a GravitinoClient.
+        @param uri The base URI for the Gravitino API.
+        @return A new instance of the Builder class for constructing a GravitinoClient.
+        """
         def __init__(self, uri: str):
             super().__init__(uri)
 
         def build(self) -> 'GravitinoAdminClient':
+            """
+            Builds a new GravitinoClient instance.
+            @return A new instance of GravitinoClient with the specified base URI.
+            TODO: @throws IllegalArgumentException If the base URI is null or empty.
+            """
             if not self.uri or not self.uri.strip():
                 raise ValueError("The argument 'uri' must be a valid URI")
 
-            return GravitinoAdminClient(self.uri) #, self.auth_data_provider
+            return GravitinoAdminClient(self.uri)  # TODO: self.auth_data_provider

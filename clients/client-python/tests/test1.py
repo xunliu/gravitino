@@ -46,9 +46,9 @@ class TestGravitinoClient(unittest.TestCase):
 
     def test_alter_metalake(self):
         gravitino_admin_client = GravitinoAdminClient.Builder(uri="http://localhost:8090").build()
-        new_name = "example_name21_new" #RandomNameUtils.gen_random_name("newmetaname")
+        new_name = "example_name16_new" #RandomNameUtils.gen_random_name("newmetaname")
 
-        metalake_name_a = "example_name21"  # Assuming this is set or generated elsewhere in your test
+        metalake_name_a = "example_name16"  # Assuming this is set or generated elsewhere in your test
         # self.client.create_metalake(NameIdentifier.parse(metalake_name_a), "metalake A comment", {})
 
         changes = (

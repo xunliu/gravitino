@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
 
 from dataclasses_json import config
@@ -6,9 +6,13 @@ from dataclasses_json import config
 from gravitino.meta_change import MetalakeChange
 from gravitino.rest.rest_request import RESTRequest
 
+
 @dataclass
-class MetalakeUpdateRequest222(RESTRequest):
-    type : str = field(metadata=config(field_name='@type')) #config(field_name='@type')
+class MetalakeUpdateRequestType(RESTRequest, ABC):
+    type: str = field(metadata=config(field_name='@type'))
+
+    def __init__(self, type: str):
+        self.type = type
 
 
 class MetalakeUpdateRequest:
@@ -18,58 +22,48 @@ class MetalakeUpdateRequest:
         pass
 
     @abstractmethod
-    def metalakeChange(self):
+    def metalake_change(self):
         pass
 
     @dataclass
-    class RenameMetalakeRequest(MetalakeUpdateRequest222):
+    class RenameMetalakeRequest(MetalakeUpdateRequestType):
         newName: str = None
 
         def __init__(self, newName: str):
+            super().__init__("rename")
             self.newName = newName
-            self.type = "rename"
-
-        # def __post_init__(self):
-        #     self.type = "rename"
 
         def validate(self):
             if not self.newName:
                 raise ValueError('"newName" field is required and cannot be empty')
 
-        def metalakeChange(self):
+        def metalake_change(self):
             return MetalakeChange.rename(self.newName)
 
     @dataclass
-    class UpdateMetalakeCommentRequest(MetalakeUpdateRequest222):
+    class UpdateMetalakeCommentRequest(MetalakeUpdateRequestType):
         newComment: str = None
 
         def __init__(self, newComment: str):
+            super().__init__("updateComment")
             self.newComment = newComment
-            self.type = "updateComment"
-
-        # def __post_init__(self):
-        #     self.type = "updateComment"
 
         def validate(self):
             if not self.newComment:
                 raise ValueError('"newComment" field is required and cannot be empty')
 
-        def metalakeChange(self):
+        def metalake_change(self):
             return MetalakeChange.update_comment(self.newComment)
 
     @dataclass
-    class SetMetalakePropertyRequest(MetalakeUpdateRequest222):
+    class SetMetalakePropertyRequest(MetalakeUpdateRequestType):
         property: str = None
         value: str = None
 
         def __init__(self, property: str, value: str):
+            super().__init__("setProperty")
             self.property = property
             self.value = value
-            self.type = "setProperty"
-
-
-        # def __post_init__(self):
-        #     self.type = "setProperty"
 
         def validate(self):
             if not self.property:
@@ -77,23 +71,20 @@ class MetalakeUpdateRequest:
             if not self.value:
                 raise ValueError('"value" field is required and cannot be empty')
 
-        def metalakeChange(self):
-            return MetalakeChange.setProperty(self.property, self.value)
+        def metalake_change(self):
+            return MetalakeChange.set_property(self.property, self.value)
 
     @dataclass
-    class RemoveMetalakePropertyRequest(MetalakeUpdateRequest222):
+    class RemoveMetalakePropertyRequest(MetalakeUpdateRequestType):
         property: str = None
 
-        # def __post_init__(self):
-        #     self.type = "removeProperty"
-
         def __init__(self, property: str):
+            super().__init__("removeProperty")
             self.property = property
-            self.type = "removeProperty"
 
         def validate(self):
             if not self.property:
                 raise ValueError('"property" field is required and cannot be empty')
 
-        def metalakeChange(self):
-            return MetalakeChange.removeProperty(self.property)
+        def metalake_change(self):
+            return MetalakeChange.remove_property(self.property)
