@@ -7,10 +7,12 @@ import logging
 from gravitino.client.gravitino_metalake import GravitinoMetalake
 from gravitino.client.gravitino_version import GravitinoVersion
 from gravitino.dto.responses.metalake_response import MetalakeResponse
+from gravitino.exceptions.no_such_metalake_exception import NoSuchMetalakeException
 from gravitino.name_identifier import NameIdentifier
-from gravitino.utils import HTTPClient
+from gravitino.utils import HTTPClient, Response
 
 logger = logging.getLogger(__name__)
+
 
 class GravitinoClientBase:
     """
@@ -36,10 +38,17 @@ class GravitinoClientBase:
         Raises:
             NoSuchMetalakeException If the specified Metalake does not exist.
         """
+
         NameIdentifier.check_metalake(ident)
 
-        resp = self.rest_client.get(GravitinoClientBase.API_METALAKES_IDENTIFIER_PATH + ident.name)
-        metalake_response = MetalakeResponse.from_json(resp.body)
+        #response: Response = None
+        # try:
+        response = self.rest_client.get(GravitinoClientBase.API_METALAKES_IDENTIFIER_PATH + ident.name)
+        # except Exception as e:
+        #     logger.warning("Failed to close the HTTP REST client", e)
+        #     raise NoSuchMetalakeException("Failed to find metalake by name %s", ident.name)
+
+        metalake_response = MetalakeResponse.from_json(response.body, infer_missing=True)
         metalake_response.validate()
 
         return GravitinoMetalake.build(metalake_response.metalake, self.rest_client)

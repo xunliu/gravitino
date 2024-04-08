@@ -13,7 +13,7 @@ from gravitino.dto.requests.metalake_updates_request import MetalakeUpdatesReque
 from gravitino.dto.responses.drop_response import DropResponse
 from gravitino.dto.responses.metalake_list_response import MetalakeListResponse
 from gravitino.dto.responses.metalake_response import MetalakeResponse
-from gravitino.meta_change import MetalakeChange
+from gravitino.api.metalake_change import MetalakeChange
 from gravitino.name_identifier import NameIdentifier
 
 logger = logging.getLogger(__name__)
@@ -41,8 +41,7 @@ class GravitinoAdminClient(GravitinoClientBase):
         return [GravitinoMetalake.build(o, self.rest_client) for o in metalake_list_resp.metalakes]
 
     def create_metalake(self, ident: NameIdentifier, comment: str, properties: Dict[str, str]) -> GravitinoMetalake:
-        """
-        Creates a new Metalake using the Gravitino API.
+        """Creates a new Metalake using the Gravitino API.
         Args:
             ident: The identifier of the new Metalake.
             comment: The comment for the new Metalake.
@@ -63,8 +62,7 @@ class GravitinoAdminClient(GravitinoClientBase):
         return GravitinoMetalake.build(metalake_response.metalake, self.rest_client)
 
     def alter_metalake(self, ident: NameIdentifier, *changes: MetalakeChange) -> GravitinoMetalake:
-        """
-        Alters a specific Metalake using the Gravitino API.
+        """Alters a specific Metalake using the Gravitino API.
         Args:
             ident: The identifier of the Metalake to be altered.
             changes: The changes to be applied to the Metalake.
@@ -79,9 +77,8 @@ class GravitinoAdminClient(GravitinoClientBase):
         updates_request = MetalakeUpdatesRequest(reqs)
         updates_request.validate()
 
-        resp = self.rest_client.put(self.API_METALAKES_IDENTIFIER_PATH + ident.name,
-                                    updates_request)  # , MetalakeResponse, {}, ErrorHandlers.metalake_error_handler())
-        metalake_response = MetalakeResponse.from_json(resp.body)
+        resp = self.rest_client.put(self.API_METALAKES_IDENTIFIER_PATH + ident.name, updates_request)
+        metalake_response = MetalakeResponse.from_json(resp.body, infer_missing=True)
         metalake_response.validate()
 
         return GravitinoMetalake.build(metalake_response.metalake, self.rest_client)
@@ -98,10 +95,9 @@ class GravitinoAdminClient(GravitinoClientBase):
 
         try:
             resp = self.rest_client.delete(self.API_METALAKES_IDENTIFIER_PATH + ident.name)
-            dropResponse = DropResponse.from_json(resp.body)
+            dropResponse = DropResponse.from_json(resp.body, infer_missing=True)
 
-            return dropResponse.dropped()
-
+            return dropResponse.dropped
         except Exception as e:
-            logger.warning(f"Failed to drop metadata ", e)
+            logger.warning(f"Failed to drop metalake {ident.name}", e)
             return False

@@ -7,6 +7,8 @@ import os
 import unittest
 import subprocess
 import time
+from abc import abstractmethod
+
 import requests
 
 logger = logging.getLogger(__name__)
@@ -76,6 +78,8 @@ class IntegrationTestEnv(unittest.TestCase):
         if not check_gravitino_server_status():
             logger.error("ERROR: Can't start Gravitino server!")
             quit(0)
+
+        cls.clean_test_date()
 
     @classmethod
     def tearDownClass(cls):
