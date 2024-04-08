@@ -1,53 +1,28 @@
-from typing import List, Dict
+"""
+Copyright 2024 Datastrato Pvt Ltd.
+This software is licensed under the Apache License version 2.
+"""
+from typing import Dict
 
 from gravitino.dto.audit_dto import AuditDTO
 from gravitino.dto.metalake_dto import MetalakeDTO
+from gravitino.utils import HTTPClient
 
 
-class GravitinoMetalake(MetalakeDTO): # SupportsCatalogs
+class GravitinoMetalake(MetalakeDTO):
+    """
+    Gravitino Metalake is the top-level metadata repository for users. It contains a list of catalogs
+    as sub-level metadata collections. With {@link GravitinoMetalake}, users can list, create, load,
+    alter and drop a catalog with specified identifier.
+    """
+    restClient: HTTPClient
 
-    def __init__(self, name: str, comment: str, properties: Dict[str, str], auditDTO: AuditDTO, restClient):
-        super().__init__(name, comment, properties, auditDTO)
-        self.restClient = restClient
+    def __init__(self, name: str = None, comment: str = None, properties: Dict[str, str] = None, audit: AuditDTO = None,
+                 rest_client: HTTPClient = None):
+        super().__init__(name=name, comment=comment, properties=properties, audit=audit)
+        self.restClient = rest_client
 
-    # def listCatalogs(self, namespace: Namespace) -> List[NameIdentifier]:
-    #     return []
-    #
-    # def listCatalogsInfo(self, namespace: Namespace) -> List[Catalog]:
-    #     return []
-    #
-    # def loadCatalog(self, ident: NameIdentifier) -> Catalog:
-    #     pass
-    #
-    # def createCatalog(self, ident: NameIdentifier, type: Catalog.Type, provider: str, comment: str, properties: Dict[str, str]) -> Catalog:
-    #     print()
-    #
-    # def alterCatalog(self, ident: NameIdentifier, *changes: CatalogChange) -> Catalog:
-    #     print()
-    #
-    # def dropCatalog(self, ident: NameIdentifier) -> bool:
-    #     return True
-
-    class Builder(MetalakeDTO.Builder):
-
-        def __init__(self):
-            super().__init__()
-            self.restClient = None
-
-        def with_rest_client(self, restClient):
-            self.restClient = restClient
-            return self
-
-        def build(self) -> 'GravitinoMetalake':
-            if self.restClient is None:
-                raise ValueError("restClient must be set")
-            if not self.name:
-                raise ValueError("name must not be null or empty")
-            if self.audit is None:
-                raise ValueError("audit must not be null")
-
-            return GravitinoMetalake(self.name, self.comment, self.properties, self.audit, self.restClient)
-
-    @staticmethod
-    def builder() -> Builder:
-        return GravitinoMetalake.Builder()
+    @classmethod
+    def build(cls, metalake: MetalakeDTO = None, client: HTTPClient = None):
+        return cls(name=metalake.name, comment=metalake.comment, properties=metalake.properties,
+                   audit=metalake.audit, rest_client=client)

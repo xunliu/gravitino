@@ -1,3 +1,8 @@
+"""
+Copyright 2024 Datastrato Pvt Ltd.
+This software is licensed under the Apache License version 2.
+"""
+import logging
 from typing import List, Dict
 
 from gravitino.client.gravitino_client_base import GravitinoClientBase
@@ -11,6 +16,8 @@ from gravitino.meta_change import MetalakeChange
 from gravitino.name_identifier import NameIdentifier
 from gravitino.dto.dto_converters import DTOConverters
 
+logger = logging.getLogger(__name__)
+
 
 class GravitinoAdminClient(GravitinoClientBase):
     """
@@ -18,7 +25,7 @@ class GravitinoAdminClient(GravitinoClientBase):
     Normal users should use {@link GravitinoClient} to connect with the Gravitino server.
     """
 
-    def __init__(self, uri): # TODO: AuthDataProvider authDataProvider
+    def __init__(self, uri):  # TODO: AuthDataProvider authDataProvider
         super().__init__(uri)
 
     def list_metalakes(self) -> List[GravitinoMetalake]:
@@ -28,11 +35,10 @@ class GravitinoAdminClient(GravitinoClientBase):
             An array of GravitinoMetalake objects representing the Metalakes.
         """
         resp = self.rest_client.get(self.API_METALAKES_LIST_PATH)
-
-        metalake_list_resp = MetalakeListResponse.from_json(resp.body)
+        metalake_list_resp = MetalakeListResponse.from_json(resp.body, infer_missing=True)
         metalake_list_resp.validate()
 
-        return [DTOConverters.to_metalake(o, self.rest_client) for o in metalake_list_resp.metalakes]
+        return [GravitinoMetalake.build(o, self.rest_client) for o in metalake_list_resp.metalakes]
 
     def create_metalake(self, ident: NameIdentifier, comment: str, properties: Dict[str, str]) -> GravitinoMetalake:
         """
@@ -50,15 +56,11 @@ class GravitinoAdminClient(GravitinoClientBase):
         req = MetalakeCreateRequest(ident.name, comment, properties)
         req.validate()
 
-        # headers = {'Content-Type': 'application/json', 'Accept': 'application/vnd.gravitino.v1+json'}
-        resp = self.rest_client.post(self.API_METALAKES_LIST_PATH, req)  # json.dumps(req, default=vars)) #req)
-        # json2 = resp.json().from_json()#.json()
+        resp = self.rest_client.post(self.API_METALAKES_LIST_PATH, req)
         metalake_response = MetalakeResponse.from_json(resp.body, infer_missing=True)
         metalake_response.validate()
 
-        # object = json.loads(resp.body, object_hook=MetalakeCreateRequest.from_json_string)
-
-        return DTOConverters.to_metalake(metalake_response.metalake, self.rest_client)
+        return GravitinoMetalake.build(metalake_response.metalake, self.rest_client)
 
     def alter_metalake(self, ident: NameIdentifier, *changes: MetalakeChange) -> GravitinoMetalake:
         """
@@ -82,7 +84,7 @@ class GravitinoAdminClient(GravitinoClientBase):
         metalake_response = MetalakeResponse.from_json(resp.body)
         metalake_response.validate()
 
-        return DTOConverters.to_metalake(metalake_response.metalake, self.rest_client)
+        return GravitinoMetalake.build(metalake_response.metalake, self.rest_client)
 
     def drop_metalake(self, ident: NameIdentifier) -> bool:
         """
@@ -104,30 +106,3 @@ class GravitinoAdminClient(GravitinoClientBase):
         except Exception as e:
             logger.warning(f"Failed to drop metadata ", e)
             return False
-
-    @staticmethod
-    def builder(uri: str) -> 'Builder':
-        return GravitinoAdminClient.Builder(uri)
-
-    class Builder(GravitinoClientBase.Builder):
-        """
-        Creates a new builder for constructing a GravitinoClient.
-        Args:
-            uri The base URI for the Gravitino API.
-        Return:
-            A new instance of the Builder class for constructing a GravitinoClient.
-        """
-        def __init__(self, uri: str):
-            super().__init__(uri)
-
-        def build(self) -> 'GravitinoAdminClient':
-            """
-            Builds a new GravitinoClient instance.
-            Return:
-                A new instance of GravitinoClient with the specified base URI.
-            TODO: @throws IllegalArgumentException If the base URI is null or empty.
-            """
-            if not self.uri or not self.uri.strip():
-                raise ValueError("The argument 'uri' must be a valid URI")
-
-            return GravitinoAdminClient(self.uri)  # TODO: self.auth_data_provider

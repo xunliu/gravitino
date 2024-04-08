@@ -2,22 +2,15 @@
 Copyright 2024 Datastrato Pvt Ltd.
 This software is licensed under the Apache License version 2.
 """
-import http
-import json
 import unittest
-
-import requests
 
 import gravitino
 from gravitino.client.gravitino_admin_client import GravitinoAdminClient
-from gravitino.dto.audit_dto import AuditDTO
 from gravitino.dto.dto_converters import DTOConverters
 from gravitino.dto.requests.metalake_updates_request import MetalakeUpdatesRequest
 from gravitino.dto.responses.metalake_response import MetalakeResponse
-from gravitino.exceptions import NoSuchMetalakeException
 from gravitino.meta_change import MetalakeChange
 from gravitino.name_identifier import NameIdentifier
-from gravitino.client.gravitino_metalake import GravitinoMetalake
 from gravitino.utils.exceptions import NotFoundError
 
 

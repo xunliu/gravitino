@@ -1,8 +1,13 @@
+"""
+Copyright 2024 Datastrato Pvt Ltd.
+This software is licensed under the Apache License version 2.
+"""
 from dataclasses import dataclass
 from typing import List
 
 from gravitino.dto.metalake_dto import MetalakeDTO
 from gravitino.dto.responses.base_response import BaseResponse
+
 
 @dataclass
 class MetalakeListResponse(BaseResponse):
@@ -10,14 +15,6 @@ class MetalakeListResponse(BaseResponse):
     Represents a response containing a list of metalakes.
     """
     metalakes: List[MetalakeDTO]
-
-    # def __init__(self, metalakes: List[MetalakeDTO]):
-    #     super().__init__(code=0)
-    #     self.metalakes = metalakes
-
-    # @classmethod
-    # def default(cls):
-    #     return cls(metalakes=[])
 
     def validate(self):
         super().validate()
@@ -28,5 +25,5 @@ class MetalakeListResponse(BaseResponse):
         for metalake in self.metalakes:
             if not metalake.name:
                 raise ValueError("metalake 'name' must not be null and empty")
-            if not metalake.audit_info:
+            if not metalake.audit:
                 raise ValueError("metalake 'audit' must not be null")

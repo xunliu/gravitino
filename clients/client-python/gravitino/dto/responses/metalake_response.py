@@ -1,9 +1,10 @@
+"""
+Copyright 2024 Datastrato Pvt Ltd.
+This software is licensed under the Apache License version 2.
+"""
 from dataclasses import dataclass
 from typing import Optional
 
-from dataclasses_json import DataClassJsonMixin
-
-# from base_response import BaseResponse
 from gravitino.dto.metalake_dto import MetalakeDTO
 from gravitino.dto.responses.base_response import BaseResponse
 

@@ -1,26 +1,11 @@
-from abc import ABC, abstractmethod
+"""
+Copyright 2024 Datastrato Pvt Ltd.
+This software is licensed under the Apache License version 2.
+"""
 import logging
-from typing import Dict, Any
-
-# from gravitino.name_identifier import NameIdentifier
-# from gravitino.utils import HTTPClient
-# from gravitino_metalake import GravitinoMetalake
-# from gravitino_version import GravitinoVersion
-# from name_identifier import NameIdentifier
-# from auth_data_provider import AuthDataProvider
-# from http_client import HTTPClient
-# from simple_token_provider import SimpleTokenProvider
-# from oauth2_token_provider import OAuth2TokenProvider
-# from kerberos_token_provider import KerberosTokenProvider
-# from version_response import VersionResponse
-# from metalake_response import MetalakeResponse
-# from dto_converters import DTOConverters
-# from error_handlers import ErrorHandlers
-import collections
 
 from gravitino.client.gravitino_metalake import GravitinoMetalake
 from gravitino.client.gravitino_version import GravitinoVersion
-from gravitino.dto.dto_converters import DTOConverters
 from gravitino.dto.responses.metalake_response import MetalakeResponse
 from gravitino.name_identifier import NameIdentifier
 from gravitino.utils import HTTPClient
@@ -28,59 +13,52 @@ from gravitino.utils import HTTPClient
 logger = logging.getLogger(__name__)
 
 class GravitinoClientBase:
-
-    API_METALAKES_LIST_PATH = "api/metalakes"
-    API_METALAKES_IDENTIFIER_PATH = f"{API_METALAKES_LIST_PATH}/"
+    """
+    Base class for Gravitino Java client;
+    It uses an underlying {@link RESTClient} to send HTTP requests and receive responses from the API.
+    """
+    rest_client: HTTPClient  # The REST client to communicate with the REST server
+    API_METALAKES_LIST_PATH = "api/metalakes"  # The REST API path for listing metalakes
+    API_METALAKES_IDENTIFIER_PATH = f"{API_METALAKES_LIST_PATH}/"  # The REST API path prefix for load a specific metalake
 
     def __init__(self, uri: str):
         self.rest_client = HTTPClient(uri)
 
     def load_metalake(self, ident: NameIdentifier) -> GravitinoMetalake:
+        """
+        Loads a specific Metalake from the Gravitino API.
+        Args:
+            ident The identifier of the Metalake to be loaded.
+        Return:
+            A GravitinoMetalake instance representing the loaded Metalake.
+        Raises:
+            NoSuchMetalakeException If the specified Metalake does not exist.
+        """
         NameIdentifier.check_metalake(ident)
 
         resp = self.rest_client.get(GravitinoClientBase.API_METALAKES_IDENTIFIER_PATH + ident.name)
-        # resp.validate()
         metalake_response = MetalakeResponse.from_json(resp.body)
         metalake_response.validate()
 
-        return DTOConverters.to_metalake(metalake_response.metalake, self.rest_client)
+        return GravitinoMetalake.build(metalake_response.metalake, self.rest_client)
 
     def get_version(self) -> GravitinoVersion:
+        """
+        Retrieves the version of the Gravitino API.
+        Return:
+            A GravitinoVersion instance representing the version of the Gravitino API.
+        """
         resp = self.rest_client.get("api/version")
         resp.validate()
 
         return GravitinoVersion(resp.get_version())
 
     def close(self):
+        """
+        Closes the GravitinoClient and releases any underlying resources.
+        """
         if self.rest_client is not None:
             try:
                 self.rest_client.close()
             except Exception as e:
-                logger.warn("Failed to close the HTTP REST client", e)
-
-    class Builder(ABC):
-
-        def __init__(self, uri: str):
-            self.uri = uri
-            self.auth_data_provider = None
-
-        # def with_simple_auth(self) -> 'Builder':
-        #     self.auth_data_provider = SimpleTokenProvider()
-        #     return self
-        #
-        # def with_oauth(self, data_provider: OAuth2TokenProvider) -> 'Builder':
-        #     self.auth_data_provider = data_provider
-        #     return self
-        #
-        # def with_kerberos_auth(self, data_provider: KerberosTokenProvider) -> 'Builder':
-        #     try:
-        #         if self.uri is not None:
-        #             data_provider.set_host(URI(self.uri).get_host())
-        #     except URISyntaxException as ue:
-        #         raise ValueError("URI has the wrong format") from ue
-        #     self.auth_data_provider = data_provider
-        #     return self
-
-        @abstractmethod
-        def build(self):
-            pass
+                logger.warning("Failed to close the HTTP REST client", e)

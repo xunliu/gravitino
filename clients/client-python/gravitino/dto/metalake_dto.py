@@ -2,43 +2,30 @@
 Copyright 2024 Datastrato Pvt Ltd.
 This software is licensed under the Apache License version 2.
 """
-from abc import ABC
 from dataclasses import dataclass
 from typing import Optional, Dict
 
+from dataclasses_json import DataClassJsonMixin
+
 from gravitino.dto.audit_dto import AuditDTO
-from gravitino.metalake import Metalake
 
 
 @dataclass
-class MetalakeDTO(Metalake):  # DataClassJsonMixin,
+class MetalakeDTO(DataClassJsonMixin):
     """
     Represents a Metalake Data Transfer Object (DTO) that implements the Metalake interface.
     """
     name: str  # The name of the Metalake DTO.
-    comment: Optional[str]  # The comment of the Metalake DTO.
-    properties: Optional[Dict[str, str]]  # The properties of the Metalake DTO.
+    comment: str  # The comment of the Metalake DTO.
+    properties: Dict[str, str] = None  # The properties of the Metalake DTO.
     audit: AuditDTO = None  # The audit information of the Metalake DTO.
 
-    # @property
-    def name(self):
-        return self.name
-
-    # @property
-    def comment(self):
-        return self.comment
-
-    # @property
-    def properties(self):
-        return self.properties
-
-    # @property
-    def audit_info(self):
-        return self.audit
-
-    @classmethod
-    def builder(cls):
-        return cls.Builder()
+    def __init__(self, name: str = None, comment: str = None, properties: Dict[str, str] = None,
+                 audit: AuditDTO = None):
+        self.name = name
+        self.comment = comment
+        self.properties = properties
+        self.audit = audit
 
     def equals(self, other):
         if self == other:
@@ -56,52 +43,3 @@ class MetalakeDTO(Metalake):  # DataClassJsonMixin,
         if p2 is not None and not p2 and p1 is None:
             return True
         return p1 == p2
-
-    class Builder:
-        """
-        A builder class for constructing instances of MetalakeDTO.
-        Args:
-            The type of the builder subclass.
-        """
-
-        def __init__(self):
-            self.name = None
-            self.comment = None
-            self.properties = None
-            self.audit = None
-
-        def with_name(self, name):
-            """
-            Sets the name of the Metalake DTO.
-            """
-            self.name = name
-            return self
-
-        def with_comment(self, comment):
-            """
-            Sets the comment of the Metalake DTO.
-            """
-            self.comment = comment
-            return self
-
-        def with_properties(self, properties):
-            """
-            Sets the properties of the Metalake DTO.
-            """
-            self.properties = properties
-            return self
-
-        def with_audit(self, audit):
-            """
-            Sets the audit information of the Metalake DTO.
-            """
-            self.audit = audit
-            return self
-
-        def build(self):
-            """
-            Builds an instance of MetalakeDTO using the builder's properties.
-            """
-            assert self.name is not None and self.name.strip(), "name cannot be null or empty"
-            assert self.audit is not None, "audit cannot be null"
-            return MetalakeDTO(self.name, self.comment, self.properties, self.audit)
