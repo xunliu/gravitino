@@ -21,13 +21,36 @@ class CatalogAlreadyExistsException(Exception):
 
 
 class GravitinoClient(GravitinoClientBase):
+    """Gravitino Client for an user to interact with the Gravitino API, allowing the client to list,
+    load, create, and alter Catalog.
+
+    It uses an underlying {@link RESTClient} to send HTTP requests and receive responses from the API.
+    """
     metalake: GravitinoMetalake
 
     def __init__(self, uri: str, metalake_name: str):
+        """Constructs a new GravitinoClient with the given URI, authenticator and AuthDataProvider.
+
+        Args:
+            uri: The base URI for the Gravitino API.
+            metalake_name: The specified metalake name.
+            TODO: authDataProvider: The provider of the data which is used for authentication.
+
+        Raise:
+            NoSuchMetalakeException if the metalake with specified name does not exist.
+        """
         super().__init__(uri)
         self.metalake = super().load_metalake(NameIdentifier.of(metalake_name))
 
     def get_metalake(self) -> GravitinoMetalake:
+        """Get the current metalake object
+
+        Raise:
+            NoSuchMetalakeException if the metalake with specified name does not exist.
+
+        Returns:
+            the {@link GravitinoMetalake} object
+        """
         return self.metalake
 
     def list_catalogs(self, namespace: Namespace) -> List[NameIdentifier]:

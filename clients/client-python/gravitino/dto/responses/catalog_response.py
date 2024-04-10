@@ -6,13 +6,15 @@ from ..catalog_dto import CatalogDTO
 
 @dataclass
 class CatalogResponse(BaseResponse):
+    """Represents a response containing catalog information."""
     catalog: CatalogDTO = None
 
-    # def __init__(self, catalog: CatalogDTO):
-    #     super().__init__(0)
-    #     self.catalog = catalog
-
     def validate(self):
+        """Validates the response data.
+
+        Raise:
+            IllegalArgumentException if the catalog name, type or audit is not set.
+        """
         super().validate()
 
         assert self.catalog is not None, "catalog must not be null"

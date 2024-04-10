@@ -84,10 +84,11 @@ class GravitinoAdminClient(GravitinoClientBase):
         return GravitinoMetalake.build(metalake_response.metalake, self.rest_client)
 
     def drop_metalake(self, ident: NameIdentifier) -> bool:
-        """
-        Drops a specific Metalake using the Gravitino API.
+        """Drops a specific Metalake using the Gravitino API.
+
         Args:
             ident: The identifier of the Metalake to be dropped.
+
         Return:
             True if the Metalake was successfully dropped, false otherwise.
         """

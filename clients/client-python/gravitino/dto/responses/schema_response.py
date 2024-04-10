@@ -9,13 +9,16 @@ from gravitino.dto.schema_dto import SchemaDTO
 
 @dataclass
 class SchemaResponse(BaseResponse, DataClassJsonMixin):
+    """Represents a response for a schema."""
     schema: Optional[SchemaDTO]
 
-    # def __init__(self, schema: Optional[SchemaDTO]):
-    #     super().__init__(0)
-    #     self.schema = schema
 
     def validate(self):
+        """Validates the response data.
+
+        Raise:
+            IllegalArgumentException if catalog identifiers are not set.
+        """
         super().validate()
 
         assert self.schema is not None, "schema must be non-null"

@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import config, DataClassJsonMixin
 
 from gravitino.api.fileset_change import FilesetChange
+from gravitino.rest.rest_message import RESTRequest
 
 
 @dataclass
@@ -17,28 +18,27 @@ class FilesetUpdateRequestType(DataClassJsonMixin):
     def __init__(self, type: str):
         self.type = type
 
-
-class FilesetUpdateRequest:
-    """Represents an interface for Fileset update requests."""
-
     @abstractmethod
+    def fileset_change(self):
+        pass
+
+
+class FilesetUpdateRequest(RESTRequest):
+    """Request to update a fileset."""
+
     def validate(self):
         pass
 
-    # @abstractmethod
-    # def metalake_change(self):
-    #     pass
-
     @dataclass
     class RenameFilesetRequest(FilesetUpdateRequestType):
-        """Represents a request to rename a Fileset."""
+        """The fileset update request for renaming a fileset."""
 
-        newName: str = None
+        new_name: str = field(metadata=config(field_name='newName'))
         """The new name for the Fileset."""
 
-        def __init__(self, newName: str):
+        def __init__(self, new_name: str):
             super().__init__("rename")
-            self.newName = newName
+            self.new_name = new_name
 
         def validate(self):
             """Validates the fields of the request.
@@ -46,22 +46,27 @@ class FilesetUpdateRequest:
             Raises:
                 IllegalArgumentException if the new name is not set.
             """
-            if not self.newName:
-                raise ValueError('"newName" field is required and cannot be empty')
+            if not self.new_name:
+                raise ValueError('"new_name" field is required and cannot be empty')
 
         def fileset_change(self):
-            return FilesetChange.rename(self.newName)
+            """Returns the fileset change.
+
+            Returns:
+                the fileset change.
+            """
+            return FilesetChange.rename(self.new_name)
 
     @dataclass
     class UpdateFilesetCommentRequest(FilesetUpdateRequestType):
         """Represents a request to update the comment on a Fileset."""
 
-        newComment: str = None
+        new_comment: str = field(metadata=config(field_name='newComment'))
         """The new comment for the Fileset."""
 
-        def __init__(self, newComment: str):
+        def __init__(self, new_comment: str):
             super().__init__("updateComment")
-            self.newComment = newComment
+            self.new_comment = new_comment
 
         def validate(self):
             """Validates the fields of the request.
@@ -69,11 +74,12 @@ class FilesetUpdateRequest:
             Raises:
                 IllegalArgumentException if the new comment is not set.
             """
-            if not self.newComment:
-                raise ValueError('"newComment" field is required and cannot be empty')
+            if not self.new_comment:
+                raise ValueError('"new_comment" field is required and cannot be empty')
 
         def fileset_change(self):
-            return FilesetChange.update_comment(self.newComment)
+            """Returns the fileset change"""
+            return FilesetChange.update_comment(self.new_comment)
 
     @dataclass
     class SetFilesetPropertyRequest(FilesetUpdateRequestType):

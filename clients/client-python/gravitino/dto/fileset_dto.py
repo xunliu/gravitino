@@ -9,6 +9,8 @@ from gravitino.dto.audit_dto import AuditDTO
 
 @dataclass
 class FilesetDTO(Fileset, DataClassJsonMixin):
+    """Represents a Fileset DTO (Data Transfer Object)."""
+
     _name: str = field(metadata=config(field_name='name'))
     _comment: Optional[str] = field(metadata=config(field_name='comment'))
     _type: Fileset.Type = field(metadata=config(field_name='type'))

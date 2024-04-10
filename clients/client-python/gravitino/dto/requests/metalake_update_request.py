@@ -17,6 +17,10 @@ class MetalakeUpdateRequestType(DataClassJsonMixin):
     def __init__(self, type: str):
         self.type = type
 
+    @abstractmethod
+    def metalake_change(self):
+        pass
+
 
 class MetalakeUpdateRequest:
     """Represents an interface for Metalake update requests."""
@@ -25,20 +29,16 @@ class MetalakeUpdateRequest:
     def validate(self):
         pass
 
-    # @abstractmethod
-    # def metalake_change(self):
-    #     pass
-
     @dataclass
     class RenameMetalakeRequest(MetalakeUpdateRequestType):
         """Represents a request to rename a Metalake."""
 
-        newName: str = None
+        new_name: str = field(metadata=config(field_name='newName'))
         """The new name for the Metalake."""
 
-        def __init__(self, newName: str):
+        def __init__(self, new_name: str):
             super().__init__("rename")
-            self.newName = newName
+            self.new_name = new_name
 
         def validate(self):
             """Validates the fields of the request.
@@ -46,22 +46,22 @@ class MetalakeUpdateRequest:
             Raises:
                 IllegalArgumentException if the new name is not set.
             """
-            if not self.newName:
+            if not self.new_name:
                 raise ValueError('"newName" field is required and cannot be empty')
 
         def metalake_change(self):
-            return MetalakeChange.rename(self.newName)
+            return MetalakeChange.rename(self.new_name)
 
     @dataclass
     class UpdateMetalakeCommentRequest(MetalakeUpdateRequestType):
         """Represents a request to update the comment on a Metalake."""
 
-        newComment: str = None
+        new_comment: str = field(metadata=config(field_name='newComment'))
         """The new comment for the Metalake."""
 
-        def __init__(self, newComment: str):
+        def __init__(self, new_comment: str):
             super().__init__("updateComment")
-            self.newComment = newComment
+            self.new_comment = new_comment
 
         def validate(self):
             """Validates the fields of the request.
@@ -69,11 +69,11 @@ class MetalakeUpdateRequest:
             Raises:
                 IllegalArgumentException if the new comment is not set.
             """
-            if not self.newComment:
+            if not self.new_comment:
                 raise ValueError('"newComment" field is required and cannot be empty')
 
         def metalake_change(self):
-            return MetalakeChange.update_comment(self.newComment)
+            return MetalakeChange.update_comment(self.new_comment)
 
     @dataclass
     class SetMetalakePropertyRequest(MetalakeUpdateRequestType):

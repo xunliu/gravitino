@@ -41,7 +41,7 @@ class TestGravitinoAdminClient(IntegrationTestEnv):
         self.assertEqual(gravitinoMetalake.name, metalake_name)
         self.assertEqual(gravitinoMetalake.comment, comment)
         self.assertEqual(gravitinoMetalake.properties.get("key1"), "value1")
-        self.assertEqual(gravitinoMetalake.audit.creator, "anonymous")
+        self.assertEqual(gravitinoMetalake.audit._creator, "anonymous")
 
     def test_alter_metalake(self):
         metalake_name = "metalake02"
@@ -60,7 +60,7 @@ class TestGravitinoAdminClient(IntegrationTestEnv):
         metalake = self._gravitino_admin_client.alter_metalake(NameIdentifier.of(metalake_name), *changes)
         self.assertEqual(metalake_new_name, metalake.name)
         self.assertEqual("new metalake comment", metalake.comment)
-        self.assertEqual("anonymous", metalake.audit.creator)  # Assuming a constant or similar attribute
+        self.assertEqual("anonymous", metalake.audit._creator)  # Assuming a constant or similar attribute
 
         # Reload metadata via new name to check if the changes are applied
         new_metalake = self._gravitino_admin_client.load_metalake(NameIdentifier.of(metalake_new_name))
@@ -104,7 +104,7 @@ class TestGravitinoAdminClient(IntegrationTestEnv):
         self.assertEqual(metalake_response.code, 0)
         self.assertIsNotNone(metalake_response.metalake)
         self.assertEqual(metalake_response.metalake.name, "example_name18")
-        self.assertEqual(metalake_response.metalake.audit.creator, "anonymous")
+        self.assertEqual(metalake_response.metalake.audit._creator, "anonymous")
 
     def test_list_metalakes(self):
         metalake_name = "metalake05"

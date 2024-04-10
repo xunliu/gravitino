@@ -1,15 +1,11 @@
 import logging
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import Dict
 
 from gravitino.api.catalog import Catalog
 from gravitino.api.schema_change import SchemaChange
 from gravitino.api.supports_schemas import SupportsSchemas
-# from gravitino.catalog.fileset_catalog import FilesetCatalog
 from gravitino.dto.audit_dto import AuditDTO
 from gravitino.dto.catalog_dto import CatalogDTO
-# from gravitino.dto.dto_converters import DTOConverters
 from gravitino.dto.requests.schema_create_request import SchemaCreateRequest
 from gravitino.dto.requests.schema_update_request import SchemaUpdateRequest
 from gravitino.dto.requests.schema_updates_request import SchemaUpdatesRequest
@@ -23,8 +19,12 @@ from gravitino.utils import HTTPClient
 logger = logging.getLogger(__name__)
 
 
-# @dataclass
-class BaseSchemaCatalog(CatalogDTO, SupportsSchemas):  # SupportsSchemas
+class BaseSchemaCatalog(CatalogDTO, SupportsSchemas):
+    """
+    BaseSchemaCatalog is the base abstract class for all the catalog with schema. It provides the
+    common methods for managing schemas in a catalog. With BaseSchemaCatalog, users can list,
+    create, load, alter and drop a schema with specified identifier.
+    """
     name: str
     type: Catalog.Type
     provider: str
@@ -32,6 +32,7 @@ class BaseSchemaCatalog(CatalogDTO, SupportsSchemas):  # SupportsSchemas
     properties: Dict[str, str]
     audit: AuditDTO
     rest_client: HTTPClient
+    """The REST client to send the requests."""
 
     def __init__(self, name: str = None, type: Catalog.Type = Catalog.Type.UNSUPPORTED, provider: str = None,
                  comment: str = None, properties: Dict[str, str] = None, audit: AuditDTO = None,
@@ -43,6 +44,17 @@ class BaseSchemaCatalog(CatalogDTO, SupportsSchemas):  # SupportsSchemas
         return self
 
     def list_schemas(self, namespace: Namespace) -> [NameIdentifier]:
+        """List all the schemas under the given catalog namespace.
+
+        Args:
+             namespace: The namespace of the catalog.
+
+        Raise:
+            NoSuchCatalogException if the catalog with specified namespace does not exist.
+
+        Returns:
+             A list of {@link NameIdentifier} of the schemas under the given catalog namespace.
+        """
         Namespace.check_schema(namespace)
         resp = self.rest_client.get(BaseSchemaCatalog.format_schema_request_path(
             namespace))  # , EntityListResponse.class, Collections.emptyMap(), ErrorHandlers.schemaErrorHandler())
@@ -51,49 +63,92 @@ class BaseSchemaCatalog(CatalogDTO, SupportsSchemas):  # SupportsSchemas
         return entity_list_response.idents
 
     def create_schema(self, ident: NameIdentifier = None, comment: str = None, properties: Dict[str, str] = None):
+        """Create a new schema with specified identifier, comment and metadata.
+
+        Args:
+            ident: The name identifier of the schema.
+            comment: The comment of the schema.
+            properties: The properties of the schema.
+
+        Raise:
+            NoSuchCatalogException if the catalog with specified namespace does not exist.
+            SchemaAlreadyExistsException if the schema with specified identifier already exists.
+
+        Returns:
+             The created Schema.
+        """
         NameIdentifier.check_schema(ident)
         req = SchemaCreateRequest(ident.name, comment, properties)
         req.validate()
 
-        resp = self.rest_client.post(BaseSchemaCatalog.format_schema_request_path(
-            ident.namespace), json=req)  # , req, SchemaResponse.class, Collections.emptyMap(), ErrorHandlers.schemaErrorHandler())
+        resp = self.rest_client.post(BaseSchemaCatalog.format_schema_request_path(ident.namespace), json=req)
         schema_response = SchemaResponse.from_json(resp.body, infer_missing=True)
         schema_response.validate()
 
         return schema_response.schema
 
     def load_schema(self, ident):
+        """Load the schema with specified identifier.
+
+        Args:
+            ident: The name identifier of the schema.
+
+        Raise:
+            NoSuchSchemaException if the schema with specified identifier does not exist.
+
+        Returns:
+            The Schema with specified identifier.
+        """
         NameIdentifier.check_schema(ident)
-        resp = self.rest_client.get(BaseSchemaCatalog.format_schema_request_path(
-            ident.namespace) + "/" + ident.name)  # , SchemaResponse.class, Collections.emptyMap(), ErrorHandlers.schemaErrorHandler())
+        resp = self.rest_client.get(BaseSchemaCatalog.format_schema_request_path(ident.namespace) + "/" + ident.name)
         schema_response = SchemaResponse.from_json(resp.body, infer_missing=True)
         schema_response.validate()
 
         return schema_response.schema
 
     def alter_schema(self, ident, *changes):
+        """Alter the schema with specified identifier by applying the changes.
+
+        Args:
+             ident: The name identifier of the schema.
+            changes: The metadata changes to apply.
+
+        Raise:
+            NoSuchSchemaException if the schema with specified identifier does not exist.
+
+        Returns:
+            The altered Schema.
+        """
         NameIdentifier.check_schema(ident)
         reqs = [BaseSchemaCatalog.to_schema_update_request(change) for change in changes]
         updatesRequest = SchemaUpdatesRequest(reqs)
         updatesRequest.validate()
-        resp = self.rest_client.put(BaseSchemaCatalog.format_schema_request_path(
-            ident.namespace) + "/" + ident.name)  # , updatesRequest, SchemaResponse.class, Collections.emptyMap(), ErrorHandlers.schemaErrorHandler())
+        resp = self.rest_client.put(BaseSchemaCatalog.format_schema_request_path(ident.namespace) + "/" + ident.name)
         schema_response = SchemaResponse.from_json(resp.body, infer_missing=True)
         schema_response.validate()
         return schema_response.schema
 
     def drop_schema(self, ident, cascade: bool):
+        """Drop the schema with specified identifier.
+
+        Args:
+            ident: The name identifier of the schema.
+            cascade: Whether to drop all the tables under the schema.
+
+        Raise:
+            NonEmptySchemaException if the schema is not empty and cascade is false.
+
+        Returns:
+             true if the schema is dropped successfully, false otherwise.
+        """
         NameIdentifier.check_schema(ident)
         try:
             params = {"cascade": str(cascade)}
             resp = self.rest_client.delete(
-                BaseSchemaCatalog.format_schema_request_path(ident.namespace) + "/" + ident.name,
-                params=params)  # Collections.singletonMap("cascade", str(cascade)), DropResponse.class, Collections.emptyMap(), ErrorHandlers.schemaErrorHandler())
+                BaseSchemaCatalog.format_schema_request_path(ident.namespace) + "/" + ident.name, params=params)
             drop_resp = DropResponse.from_json(resp.body, infer_missing=True)
             drop_resp.validate()
             return drop_resp.dropped
-        # except NonEmptySchemaException as e:
-        #     raise e
         except Exception as e:
             logger.warning("Failed to drop schema {}", ident, e)
             return False

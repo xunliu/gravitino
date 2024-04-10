@@ -8,9 +8,15 @@ from gravitino.dto.requests.schema_update_request import SchemaUpdateRequest
 
 @dataclass
 class SchemaUpdatesRequest(DataClassJsonMixin):
+    """Represents a request to update a schema."""
     updates: Optional[List[SchemaUpdateRequest]] = field(default_factory=list)
 
     def validate(self):
+        """Validates the request.
+
+        Raise:
+            IllegalArgumentException If the request is invalid, this exception is thrown.
+        """
         if not self.updates:
             raise ValueError("Updates cannot be empty")
         for update_request in self.updates:

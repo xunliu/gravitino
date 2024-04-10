@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 
 from dataclasses_json import config, DataClassJsonMixin
 
-from gravitino.api.metalake_change import MetalakeChange
 from gravitino.api.schema_change import SchemaChange
 
 
@@ -18,22 +17,17 @@ class SchemaUpdateRequestType(DataClassJsonMixin):
     def __init__(self, type: str):
         self.type = type
 
+    @abstractmethod
+    def schema_change(self):
+        pass
 
 @dataclass
 class SchemaUpdateRequest:
-    """Represents an interface for Metalake update requests."""
-
-    # @abstractmethod
-    # def validate(self):
-    #     pass
-
-    # @abstractmethod
-    # def metalake_change(self):
-    #     pass
+    """Represents an interface for Schema update requests."""
 
     @dataclass
     class SetSchemaPropertyRequest(SchemaUpdateRequestType):
-        """Represents a request to set a property on a Metalake."""
+        """Represents a request to set a property on a Schema."""
 
         property: str = None
         """The property to set."""
@@ -57,12 +51,12 @@ class SchemaUpdateRequest:
             if not self.value:
                 raise ValueError('"value" field is required and cannot be empty')
 
-        # def schema_change(self):
-        #     return SchemaChange.set_property(self.property, self.value)
+        def schema_change(self):
+            return SchemaChange.set_property(self.property, self.value)
 
     @dataclass
     class RemoveSchemaPropertyRequest(SchemaUpdateRequestType):
-        """Represents a request to remove a property from a Metalake."""
+        """Represents a request to remove a property from a Schema."""
 
         property: str = None
         """The property to remove."""

@@ -7,6 +7,7 @@ from gravitino.rest.rest_message import RESTRequest
 
 @dataclass
 class FilesetUpdatesRequest(RESTRequest):
+    """Request to represent updates to a fileset."""
     updates: Optional[List[FilesetUpdateRequest]] = field(default_factory=list)
 
     def validate(self):
