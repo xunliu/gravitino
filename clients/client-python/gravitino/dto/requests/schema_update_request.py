@@ -22,6 +22,7 @@ class SchemaUpdateRequestBase(RESTRequest):
     def schema_change(self):
         pass
 
+
 @dataclass
 class SchemaUpdateRequest:
     """Represents an interface for Schema update requests."""

@@ -17,7 +17,7 @@ from tests.integration.integration_test_env import IntegrationTestEnv
 logger = logging.getLogger(__name__)
 
 
-class TestGravitinoAdminClient(IntegrationTestEnv):
+class TestMetalake(IntegrationTestEnv):
     def setUp(self):
         self._gravitino_admin_client = GravitinoAdminClient(uri="http://localhost:8090")
 
