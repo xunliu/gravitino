@@ -28,13 +28,6 @@ class SchemaDTO(Schema):
     _audit: AuditDTO = field(metadata=config(field_name='audit'))
     """The audit information of the Metalake DTO."""
 
-    # def __init__(self, name: str = None, comment: str = None, properties: Dict[str, str] = None,
-    #              audit: AuditDTO = None):
-    #     self.name = name
-    #     self.comment = comment
-    #     self.properties = properties
-    #     self.audit = audit
-
     def name(self) -> str:
         return self._name
 
