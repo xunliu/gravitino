@@ -27,7 +27,7 @@ class MetalakeListResponse(BaseResponse):
             raise ValueError("metalakes must be non-null")
 
         for metalake in self.metalakes:
-            if not metalake.name:
+            if not metalake.name():
                 raise ValueError("metalake 'name' must not be null and empty")
-            if not metalake.audit:
+            if not metalake.audit_info():
                 raise ValueError("metalake 'audit' must not be null")

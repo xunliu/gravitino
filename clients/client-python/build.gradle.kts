@@ -26,7 +26,7 @@ fun gravitinoServer(operation: String) {
     val exitCode = process.waitFor()
     if (exitCode == 0) {
       val currentContext = process.inputStream.bufferedReader().readText()
-      println("Current docker context is: $currentContext")
+      println("Gravitino server status: $currentContext")
     } else {
       println("checkOrbStackStatus Command execution failed with exit code $exitCode")
     }

@@ -50,13 +50,13 @@ class GravitinoMetalake(MetalakeDTO):
 
     def __init__(self, name: str = None, comment: str = None, properties: Dict[str, str] = None, audit: AuditDTO = None,
                  rest_client: HTTPClient = None):
-        super().__init__(name=name, comment=comment, properties=properties, audit=audit)
+        super().__init__(_name=name, _comment=comment, _properties=properties, _audit=audit)
         self.rest_client = rest_client
 
     @classmethod
     def build(cls, metalake: MetalakeDTO = None, client: HTTPClient = None):
-        return cls(name=metalake.name, comment=metalake.comment, properties=metalake.properties,
-                   audit=metalake.audit, rest_client=client)
+        return cls(name=metalake.name(), comment=metalake.comment(), properties=metalake.properties(),
+                   audit=metalake.audit_info(), rest_client=client)
 
     def list_catalogs(self, namespace: Namespace) -> List[NameIdentifier]:
         """List all the catalogs under this metalake with specified namespace.

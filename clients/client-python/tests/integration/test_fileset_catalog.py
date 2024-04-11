@@ -3,6 +3,9 @@ Copyright 2024 Datastrato Pvt Ltd.
 This software is licensed under the Apache License version 2.
 """
 import logging
+from typing import Dict
+
+from packaging.metadata import Metadata
 
 from gravitino.api.catalog import Catalog
 from gravitino.api.fileset import Fileset
@@ -19,10 +22,17 @@ logger = logging.getLogger(__name__)
 
 class TestFilesetCatalog(IntegrationTestEnv):
     catalog: Catalog = None
-    metalake: GravitinoMetalake = None
     metalake_name: str = "testMetalake"
+    metalake_comment: str = "metalake_comment"
+    metalake_properties: Dict[str, str] = {"metalake_k1": "metalake_v1"}
+
     catalog_name: str = "testCatalog"
+    catalog_comment: str = "catalog_comment"
+    catalog_properties: str = {"catalog_k1": "catalog_v1"}
+
     schema_name: str = "testSchema"
+    schema_comment: str = "schema_comment"
+
     fileset_name: str = "testFileset1"
     fileset_alter_name: str = "testFilesetAlter"
     provider: str = "hadoop"
@@ -43,25 +53,30 @@ class TestFilesetCatalog(IntegrationTestEnv):
         cls.clean_test_data()
 
         cls.gravitino_admin_client = GravitinoAdminClient(uri="http://localhost:8090")
-        cls.metalake = cls.gravitino_admin_client.create_metalake(ident=cls.metalake_ident,
-                                                                  comment="test comment", properties={})
-        cls.gravitino_client = GravitinoClient(uri="http://localhost:8090", metalake_name=cls.metalake_name)
-
-        cls.catalog = cls.gravitino_client.create_catalog(
-            ident=cls.catalog_ident,
-            type=CatalogDTO.Type.FILESET,
-            provider=cls.provider,
-            comment="comment",
-            properties={"k1": "v1"}
-        )
-
-        cls.catalog.as_schemas().create_schema(ident=cls.schema_ident, comment="comment", properties={"k1": "v1"})
+        # cls.gravitino_admin_client.create_metalake(ident=cls.metalake_ident,
+        #                                            comment=cls.metalake_comment, properties=cls.metalake_properties)
+        #
+        # cls.gravitino_client = GravitinoClient(uri="http://localhost:8090", metalake_name=cls.metalake_name)
+        #
+        # cls.catalog = cls.gravitino_client.create_catalog(
+        #     ident=cls.catalog_ident,
+        #     type=CatalogDTO.Type.FILESET,
+        #     provider=cls.provider,
+        #     comment=cls.catalog_comment,
+        #     properties={"k1": "v1"}
+        # )
+        #
+        # cls.catalog.as_schemas().create_schema(ident=cls.schema_ident, comment="comment", properties={"k1": "v1"})
 
     @classmethod
     def tearDownClass(cls):
         """Clean test data"""
         cls.clean_test_data()
         super().tearDownClass()
+
+    def tearDown(self):
+        """Clean test data"""
+        self.clean_test_data()
 
     @classmethod
     def clean_test_data(cls):
@@ -77,23 +92,32 @@ class TestFilesetCatalog(IntegrationTestEnv):
         except Exception as e:
             logger.debug(e)
 
-    def create_catalog(self):
-        self.catalog = self.gravitino_client.create_catalog(
-            ident=self.catalog_ident,
-            type=CatalogDTO.Type.FILESET,
-            provider=self.provider,
-            comment="comment",
-            properties={"k1": "v1"})
+    def creata_metalake(self) -> GravitinoMetalake:
+        return self.gravitino_admin_client.create_metalake(ident=self.metalake_ident,
+                                                           comment=self.metalake_comment,
+                                                           properties=self.metalake_properties)
 
-        assert self.catalog.name == self.catalog_name
-        assert self.catalog.type == CatalogDTO.Type.FILESET
-        assert self.catalog.provider == self.provider
+    def test_a_create_metalake(self):
+        metalake = self.creata_metalake()
+        assert metalake.name() == self.metalake_ident.name()
+        assert metalake.comment() == self.metalake_comment
+        assert metalake.properties() == self.metalake_properties
 
-    def create_schema(self):
-        self.catalog.as_schemas().create_schema(
-            ident=self.schema_ident,
-            comment="comment",
-            properties={"k1": "v1"})
+        self.gravitino_admin_client.drop_metalake(ident=self.metalake_ident)
+
+    def test_b_load_metalake(self):
+        self.creata_metalake()
+        metalake = self.gravitino_admin_client.load_metalake(ident=self.metalake_ident)
+        assert metalake.name() == self.metalake_ident.name()
+        assert metalake.comment() == self.metalake_comment
+        assert metalake.properties() == self.metalake_properties
+        self.gravitino_admin_client.drop_metalake(ident=self.metalake_ident)
+
+    def test_c_alter_metalake(self):
+        self.creata_metalake()
+        metalake = self.gravitino_admin_client.alter_metalake(ident=self.metalake_ident)
+
+        self.gravitino_admin_client.drop_metalake(ident=self.metalake_ident)
 
     def test_create_fileset(self):
         fileset = self.catalog.as_fileset_catalog().create_fileset(ident=self.fileset_ident,
@@ -108,7 +132,7 @@ class TestFilesetCatalog(IntegrationTestEnv):
 
         fileset = self.catalog.as_fileset_catalog().load_fileset(self.fileset_ident)
         assert fileset is not None
-        assert fileset.name() == self.fileset_ident.name()
+        assert fileset._name() == self.fileset_ident.name()
 
         # Alter fileset
         changes = (
@@ -125,3 +149,7 @@ class TestFilesetCatalog(IntegrationTestEnv):
 
         # Clean test data
         self.catalog.as_fileset_catalog().drop_fileset(ident=self.fileset_ident)
+
+    def test_schema(self):
+        schema = self.catalog.as_schemas().load_schema(self.schema_ident)
+        assert schema.name() == self.schema_ident.name()

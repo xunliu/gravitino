@@ -81,7 +81,7 @@ class FilesetCatalog(BaseSchemaCatalog):
         """
         NameIdentifier.check_fileset(ident)
 
-        resp = self.rest_client.get(f"{self.format_fileset_request_path(ident.namespace())}/{ident.name()}")
+        resp = self.rest_client.get(f"{self.format_fileset_request_path(ident.namespace())}/{ident._name()}")
         fileset_resp = FilesetResponse.from_json(resp.body, infer_missing=True)
         fileset_resp.validate()
 
@@ -141,7 +141,7 @@ class FilesetCatalog(BaseSchemaCatalog):
         req = FilesetUpdatesRequest(updates)
         req.validate()
 
-        resp = self.rest_client.put(f"{self.format_fileset_request_path(ident.namespace())}/{ident.name()}", req)
+        resp = self.rest_client.put(f"{self.format_fileset_request_path(ident.namespace())}/{ident._name()}", req)
         fileset_resp = FilesetResponse.from_json(resp.body, infer_missing=True)
         fileset_resp.validate()
 

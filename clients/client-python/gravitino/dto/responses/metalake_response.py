@@ -22,5 +22,5 @@ class MetalakeResponse(BaseResponse):
         super().validate()
 
         assert self.metalake is not None, "metalake must not be null"
-        assert self.metalake.name is not None, "metalake 'name' must not be null and empty"
-        assert self.metalake.audit is not None, "metalake 'audit' must not be null"
+        assert self.metalake.name() is not None, "metalake 'name' must not be null and empty"
+        assert self.metalake.audit_info() is not None, "metalake 'audit' must not be null"
