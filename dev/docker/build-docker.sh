@@ -73,7 +73,7 @@ fi
 
 if [[ "${component_type}" == "hive" ]]; then
   . ${script_dir}/hive/hive-dependency.sh
-  build_args="--build-arg HADOOP_PACKAGE_NAME=${HADOOP_PACKAGE_NAME} --build-arg HIVE_PACKAGE_NAME=${HIVE_PACKAGE_NAME} --build-arg JDBC_DIVER_PACKAGE_NAME=${JDBC_DIVER_PACKAGE_NAME} --build-arg HADOOP_VERSION=${HADOOP_VERSION} --build-arg HIVE_VERSION=${HIVE_VERSION} --build-arg MYSQL_JDBC_DRIVER_VERSION=${MYSQL_JDBC_DRIVER_VERSION}"
+  build_args="--build-arg HADOOP_VERSION=${HADOOP_VERSION} --build-arg HIVE_VERSION=${HIVE_VERSION} --build-arg MYSQL_JDBC_DRIVER_VERSION=${MYSQL_JDBC_DRIVER_VERSION} --build-arg ZOOKEEPER_VERSION=${ZOOKEEPER_VERSION} --build-arg RANGER_VERSION=${RANGER_VERSION}"
 elif [[ "${component_type}" == "kerberos-hive" ]]; then
   . ${script_dir}/kerberos-hive/hive-dependency.sh
   build_args="--build-arg HADOOP_PACKAGE_NAME=${HADOOP_PACKAGE_NAME} --build-arg HIVE_PACKAGE_NAME=${HIVE_PACKAGE_NAME} --build-arg JDBC_DIVER_PACKAGE_NAME=${JDBC_DIVER_PACKAGE_NAME}"
@@ -86,7 +86,7 @@ elif [ "${component_type}" == "doris" ]; then
   build_args="--build-arg DORIS_VERSION=${DORIS_VERSION}"
 elif [ "${component_type}" == "ranger" ]; then
   # Multiple plugins can be passed using commas, e.g. `plugin-trino,plugin-hive`
-  build_args="--build-arg RANGER_VERSION=2.4.0 --build-arg RANGER_PLUGINS=plugin-trino,plugin-hive"
+  build_args="--build-arg RANGER_VERSION=${RANGER_VERSION}"
 else
   echo "ERROR : ${component_type} is not a valid component type"
   usage
