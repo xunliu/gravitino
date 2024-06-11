@@ -32,6 +32,8 @@ import org.slf4j.LoggerFactory;
 public class AuthorizationManager implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(AuthorizationManager.class);
 
+  public static final String AUTHORIZATION_PROVIDER = "AUTHORIZATION_PROVIDER";
+
   private final Config config;
 
   public AuthorizationManager(Config config, EntityStore store, IdGenerator idGenerator) {
@@ -66,9 +68,13 @@ public class AuthorizationManager implements Closeable {
     }
   }
 
+  BaseAuthorization createAuthorization(CatalogEntity entity) {
+    return createAuthorizationWrapper(entity).authorization;
+  }
+
   private AuthorizationWrapper createAuthorizationWrapper(CatalogEntity entity) {
     Map<String, String> conf = entity.getProperties();
-    String provider = entity.getProvider();
+    String provider = conf.get("AUTHORIZATION_PROVIDER");
 
     IsolatedClassLoader classLoader = createClassLoader(provider, conf);
     BaseAuthorization<?> catalog = createBaseAuthorization(classLoader, entity);
@@ -97,7 +103,7 @@ public class AuthorizationManager implements Closeable {
   }
 
   private IsolatedClassLoader createClassLoader(String provider, Map<String, String> conf) {
-    if (config.get(Configs.CATALOG_LOAD_ISOLATED)) {
+    if (config.get(Configs.AUTHORIZATION_LOAD_ISOLATED)) {
       String pkgPath = buildPkgPath(conf, provider);
       String confPath = buildConfPath(conf, provider);
       return IsolatedClassLoader.buildClassLoader(Lists.newArrayList(pkgPath, confPath));
@@ -112,7 +118,7 @@ public class AuthorizationManager implements Closeable {
       IsolatedClassLoader classLoader, CatalogEntity entity) {
     // Load Catalog class instance
     BaseAuthorization<?> authorization =
-        createAuthorizationInstance(classLoader, entity.getProvider());
+        createAuthorizationInstance(classLoader, entity.getProperties().get(AUTHORIZATION_PROVIDER));
     authorization.withAuthorizationConf(entity.getProperties()); // .withCatalogEntity(entity);
     return authorization;
   }
