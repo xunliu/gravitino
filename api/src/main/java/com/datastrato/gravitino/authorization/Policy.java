@@ -4,12 +4,10 @@
  */
 package com.datastrato.gravitino.authorization;
 
-import com.datastrato.gravitino.Auditable;
 import com.datastrato.gravitino.MetadataObject;
 import com.datastrato.gravitino.annotation.Evolving;
 
 import java.util.List;
-import java.util.Map;
 
 @Evolving
 public interface Policy extends MetadataObject {

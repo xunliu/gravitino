@@ -9,6 +9,7 @@ import com.datastrato.gravitino.Entity;
 import com.datastrato.gravitino.Field;
 import com.datastrato.gravitino.HasIdentifier;
 import com.datastrato.gravitino.Namespace;
+import com.datastrato.gravitino.authorization.Policy;
 import com.datastrato.gravitino.authorization.Role;
 import com.datastrato.gravitino.authorization.SecurableObject;
 import com.google.common.collect.ImmutableList;
@@ -35,12 +36,16 @@ public class RoleEntity implements Role, Entity, Auditable, HasIdentifier {
   public static final Field SECURABLE_OBJECT =
       Field.required("securable_objects", List.class, "The securable objects of the role entity.");
 
+  public static final Field POLICIES =
+          Field.required("policies", List.class, "The policies of the role entity.");
+
   private Long id;
   private String name;
   private Map<String, String> properties;
   private AuditInfo auditInfo;
   private Namespace namespace;
   private List<SecurableObject> securableObjects;
+  private List<Policy> policies;
 
   /**
    * The name of the role.
@@ -89,6 +94,11 @@ public class RoleEntity implements Role, Entity, Auditable, HasIdentifier {
     return securableObjects;
   }
 
+  @Override
+  public List<Policy> policies() {
+    return policies;
+  }
+
   /**
    * Retrieves the fields and their associated values of the entity.
    *
@@ -102,6 +112,7 @@ public class RoleEntity implements Role, Entity, Auditable, HasIdentifier {
     fields.put(AUDIT_INFO, auditInfo);
     fields.put(PROPERTIES, properties);
     fields.put(SECURABLE_OBJECT, securableObjects);
+    fields.put(POLICIES, policies);
 
     return Collections.unmodifiableMap(fields);
   }
@@ -137,12 +148,13 @@ public class RoleEntity implements Role, Entity, Auditable, HasIdentifier {
         && Objects.equals(namespace, that.namespace)
         && Objects.equals(auditInfo, that.auditInfo)
         && Objects.equals(properties, that.properties)
-        && Objects.equals(securableObjects, that.securableObjects);
+        && Objects.equals(securableObjects, that.securableObjects)
+        && Objects.equals(policies, that.policies);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, properties, auditInfo, securableObjects);
+    return Objects.hash(id, name, properties, auditInfo, securableObjects, policies, namespace);
   }
 
   /**
@@ -229,6 +241,11 @@ public class RoleEntity implements Role, Entity, Auditable, HasIdentifier {
      */
     public Builder withNamespace(Namespace namespace) {
       roleEntity.namespace = namespace;
+      return this;
+    }
+
+    public Builder withPolicies(List<Policy> policies) {
+      roleEntity.policies = ImmutableList.copyOf(policies);
       return this;
     }
 

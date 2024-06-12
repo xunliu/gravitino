@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @Evolving
-public interface Function extends Auditable {
+public interface Function {
   static public class Parameter {
     String name;
     Type type;
@@ -31,5 +31,5 @@ public interface Function extends Auditable {
 
   String expression();
 
-  Type returns();
+//  Type returns();
 }
