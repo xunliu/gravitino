@@ -4,6 +4,7 @@
  */
 package com.datastrato.gravitino.authorization.ranger;
 
+import com.datastrato.gravitino.authorization.Authorization;
 import com.datastrato.gravitino.authorization.AuthorizationOperations;
 import com.datastrato.gravitino.authorization.AuthorizationProvider;
 import com.datastrato.gravitino.authorization.BaseAuthorization;
@@ -21,14 +22,4 @@ public class RangerAuthorization extends BaseAuthorization<RangerAuthorization> 
   protected AuthorizationOperations newOps(Map<String, String> config) {
     return new RangerAuthorizationOperations();
   }
-
-//    @Override
-//    public RangerAuthorization clone() {
-//        RangerAuthorization rangerAuthorization = (RangerAuthorization) super.clone();
-////        try {
-////            return (RangerAuthorization) super.clone();
-////        } catch (CloneNotSupportedException e) {
-////            throw new AssertionError();
-////        }
-//    }
 }

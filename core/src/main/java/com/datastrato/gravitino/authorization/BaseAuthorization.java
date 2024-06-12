@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class BaseAuthorization<T extends BaseAuthorization>
-        implements AuthorizationProvider, Closeable {
+        implements Authorization, AuthorizationProvider, Closeable {
 
   private static final Logger LOG = LoggerFactory.getLogger(BaseAuthorization.class);
 
