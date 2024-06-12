@@ -100,7 +100,7 @@ public interface RoleChange {
       this.securableObject = securableObject;
     }
 
-    private SecurableObject getSecurableObject() {
+    public SecurableObject getSecurableObject() {
       return this.securableObject;
     }
 

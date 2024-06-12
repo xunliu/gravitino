@@ -37,8 +37,8 @@ dependencies {
   testImplementation(libs.junit.jupiter.params)
   testImplementation(libs.testcontainers)
   testImplementation(libs.ranger.intg) {
-    exclude("org.apache.hadoop", "hadoop-common")
-    exclude("org.apache.hive", "hive-storage-api")
+//    exclude("org.apache.hadoop", "hadoop-common")
+//    exclude("org.apache.hive", "hive-storage-api")
     exclude("org.apache.lucene")
     exclude("org.apache.solr")
     exclude("org.apache.kafka")
