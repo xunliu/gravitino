@@ -92,6 +92,10 @@ public interface RoleChange {
     }
   }
 
+  static RoleChange addSecurableObject(SecurableObject securableObject) {
+    return new AddSecurableObject(securableObject);
+  }
+
   /** A RoleChange to update a table's comment. */
   final class AddSecurableObject implements RoleChange {
     private final SecurableObject securableObject;

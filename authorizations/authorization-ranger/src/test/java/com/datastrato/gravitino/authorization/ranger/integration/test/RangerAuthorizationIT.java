@@ -4,10 +4,19 @@
  */
 package com.datastrato.gravitino.authorization.ranger.integration.test;
 
+import com.datastrato.gravitino.MetadataObject;
+import com.datastrato.gravitino.Namespace;
+import com.datastrato.gravitino.authorization.Privilege;
+import com.datastrato.gravitino.authorization.Privileges;
+import com.datastrato.gravitino.authorization.RoleChange;
+import com.datastrato.gravitino.authorization.SecurableObject;
+import com.datastrato.gravitino.authorization.SecurableObjects;
 import com.datastrato.gravitino.authorization.ranger.RangerAuthorizationOperations;
 import com.datastrato.gravitino.integration.test.container.ContainerSuite;
 import com.datastrato.gravitino.integration.test.util.AbstractIT;
+import com.datastrato.gravitino.integration.test.util.GravitinoITUtils;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import org.apache.ranger.RangerClient;
 import org.apache.ranger.RangerServiceException;
 import org.apache.ranger.plugin.model.RangerService;
@@ -21,6 +30,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -39,19 +49,26 @@ public class RangerAuthorizationIT {// extends AbstractIT {
 
 //  private static final ContainerSuite containerSuite = ContainerSuite.getInstance();
 
+  private static String roleName = GravitinoITUtils.genRandomName("testRole");
+
+  static RangerAuthorizationOperations rangerAuthorizationOperations;
+
   @BeforeAll
   public static void setup() throws RangerServiceException {
 //    containerSuite.startRangerContainer();
-
 //    rangerClient = containerSuite.getRangerContainer().rangerClient;
+
+    rangerAuthorizationOperations = new RangerAuthorizationOperations();
+    rangerAuthorizationOperations.initialize(ImmutableMap.of("provider", "ranger"));
+
     initRangerClient();
   }
 
   @AfterAll
   public static void cleanup() throws RangerServiceException {
-    if (rangerClient != null) {
-      rangerClient.deleteService(serviceName);
-    }
+//    if (rangerClient != null) {
+//      rangerClient.deleteService(serviceName);
+//    }
   }
 
   private static void initRangerClient() throws RangerServiceException {
@@ -68,17 +85,38 @@ public class RangerAuthorizationIT {// extends AbstractIT {
 
     LOG.info("");
 
-//    createHiveService();
+    createHiveService();
   }
 
   @Test
   public void createRole() {
-    RangerAuthorizationOperations rangerAuthorizationOperations = new RangerAuthorizationOperations();
-    rangerAuthorizationOperations.initialize(ImmutableMap.of("provider", "ranger"));
-    rangerAuthorizationOperations.createRole("testRole");
+    rangerAuthorizationOperations.createRole(roleName);
+  }
+
+  /**
+   * Access Control Syntax: GRANT <privilege_type> ON <securable_object> TO <principal>
+   * Access Control Sample: GRANT SELECT ON TABLE <schema-name>.<table-name> TO users
+   * */
+  @Test
+  public void grantPrivilegeToObjectToRole() {
+    SecurableObject securableObjectTable = SecurableObjects.ofNamespace(
+            SecurableObject.Type.TABLE,
+            Namespace.of("default", "db1", "tab1"),
+            Lists.newArrayList(Privileges.TabularSelect.allow()));
+    rangerAuthorizationOperations.updateRole(roleName,
+            RoleChange.addSecurableObject(securableObjectTable));
+
   }
 
   public static void createHiveService() throws RangerServiceException {
+    try {
+        if(null != rangerClient.getService(serviceName)) {
+          return;
+        }
+    } catch (RangerServiceException e) {
+        LOG.error("Error while fetching service: {}", e.getMessage());
+    }
+
     String usernameKey = "username";
     String usernameVal = "admin";
     String passwordKey = "password";

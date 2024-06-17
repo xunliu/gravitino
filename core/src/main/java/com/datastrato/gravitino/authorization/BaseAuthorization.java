@@ -20,6 +20,13 @@ public abstract class BaseAuthorization<T extends BaseAuthorization>
 
   private Map<String, String> conf;
 
+  /** Mapping Gravitino privilege name to the underlying authorization system. */
+  protected Map<Privilege.Name, String> mapPrivileges;
+
+  public String underlayPrivilege(Privilege.Name name) {
+    return mapPrivileges.get(name);
+  }
+
   public T withAuthorizationConf(Map<String, String> conf) {
     this.conf = conf;
     return (T) this;

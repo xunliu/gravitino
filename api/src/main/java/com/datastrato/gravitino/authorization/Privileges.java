@@ -32,6 +32,7 @@ import static com.datastrato.gravitino.authorization.Privilege.Name.READ_TOPIC;
 import static com.datastrato.gravitino.authorization.Privilege.Name.REMOVE_GROUP;
 import static com.datastrato.gravitino.authorization.Privilege.Name.REMOVE_USER;
 import static com.datastrato.gravitino.authorization.Privilege.Name.REVOKE_ROLE;
+import static com.datastrato.gravitino.authorization.Privilege.Name.TABULAR_SELECT;
 import static com.datastrato.gravitino.authorization.Privilege.Name.USE_CATALOG;
 import static com.datastrato.gravitino.authorization.Privilege.Name.USE_METALAKE;
 import static com.datastrato.gravitino.authorization.Privilege.Name.USE_SCHEMA;
@@ -1724,6 +1725,50 @@ public class Privileges {
     @Override
     public String simpleString() {
       return condition().name() + " revoke role";
+    }
+  }
+
+  /** The privilege to select in the tabular. */
+  public abstract static class TabularSelect implements Privilege {
+
+    private static final TabularSelect ALLOW_INSTANCE =
+            new TabularSelect() {
+              @Override
+              public Condition condition() {
+                return Condition.ALLOW;
+              }
+            };
+
+    private static final TabularSelect DENY_INSTANCE =
+            new TabularSelect() {
+              @Override
+              public Condition condition() {
+                return Condition.DENY;
+              }
+            };
+
+    private TabularSelect() {}
+
+    /** @return The instance with allow condition of the privilege. */
+    public static TabularSelect allow() {
+      return ALLOW_INSTANCE;
+    }
+
+    /** @return The instance with deny condition of the privilege. */
+    public static TabularSelect deny() {
+      return DENY_INSTANCE;
+    }
+
+    /** @return The generic name of the privilege. */
+    @Override
+    public Name name() {
+      return TABULAR_SELECT;
+    }
+
+    /** @return A readable string representation for the privilege. */
+    @Override
+    public String simpleString() {
+      return condition().name() + " get role";
     }
   }
 }
