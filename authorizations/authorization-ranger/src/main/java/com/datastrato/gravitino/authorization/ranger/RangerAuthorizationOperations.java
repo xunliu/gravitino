@@ -281,19 +281,19 @@ public class RangerAuthorizationOperations implements AuthorizationOperations, A
   }
 
   private String doAddSecurableObject(String roleName, RoleChange.AddSecurableObject change) {
-      try {
-        RangerPolicy policy = rangerClient.getPolicy(serviceName, roleName);
-        Map<String, RangerPolicy.RangerPolicyResource> resourceMap = new ImmutableMap.Builder<String, RangerPolicy.RangerPolicyResource>().build();
-
-        SecurableObjects.DOT.splitToList(change.getSecurableObject().fullName()).forEach(name -> {
-          RangerPolicy.RangerPolicyResource policyResource = new RangerPolicy.RangerPolicyResource();
-          policyResource.setValues(Lists.newArrayList(name));
-          resourceMap.put(name, policyResource);
-        });
-
-      } catch (RangerServiceException e) {
-          throw new RuntimeException(e);
-      }
+//      try {
+////        RangerPolicy policy = rangerClient.getPolicy(serviceName, roleName);
+////        Map<String, RangerPolicy.RangerPolicyResource> resourceMap = new ImmutableMap.Builder<String, RangerPolicy.RangerPolicyResource>().build();
+//
+//        SecurableObjects.DOT.splitToList(change.getSecurableObject().fullName()).forEach(name -> {
+//          RangerPolicy.RangerPolicyResource policyResource = new RangerPolicy.RangerPolicyResource();
+//          policyResource.setValues(Lists.newArrayList(name));
+////          resourceMap.put(name, policyResource);
+//        });
+//
+//      } catch (RangerServiceException e) {
+//          throw new RuntimeException(e);
+//      }
 
       LOG.info(roleName);
     return change.getSecurableObject().name();
