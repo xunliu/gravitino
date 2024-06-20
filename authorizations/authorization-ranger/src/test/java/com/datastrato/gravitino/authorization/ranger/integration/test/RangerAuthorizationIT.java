@@ -12,6 +12,7 @@ import com.datastrato.gravitino.authorization.RoleChange;
 import com.datastrato.gravitino.authorization.SecurableObject;
 import com.datastrato.gravitino.authorization.SecurableObjects;
 import com.datastrato.gravitino.authorization.ranger.RangerAuthorizationOperations;
+import com.datastrato.gravitino.authorization.ranger.RangerHttpClient;
 import com.datastrato.gravitino.integration.test.container.ContainerSuite;
 import com.datastrato.gravitino.integration.test.util.AbstractIT;
 import com.datastrato.gravitino.integration.test.util.GravitinoITUtils;
@@ -19,7 +20,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.apache.ranger.RangerClient;
 import org.apache.ranger.RangerServiceException;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -30,11 +33,13 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.ranger.plugin.util.SearchFilter.POLICY_NAME;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 //@Tag("gravitino-docker-it")
@@ -54,14 +59,31 @@ public class RangerAuthorizationIT {// extends AbstractIT {
   static RangerAuthorizationOperations rangerAuthorizationOperations;
 
   @BeforeAll
-  public static void setup() throws RangerServiceException {
+  public static void setup() throws RangerServiceException, IOException {
 //    containerSuite.startRangerContainer();
 //    rangerClient = containerSuite.getRangerContainer().rangerClient;
 
+//    RangerHttpClient client = new RangerHttpClient();
+//    Map<String,String> filter = Collections.emptyMap();
+//    List<RangerPolicy> policies = client.findPolicies(ImmutableMap.of(SearchFilter.SERVICE_NAME, "hivedev",
+//            SearchFilter.POLICY_NAME, "testRole_18a2b0c0",
+//            SearchFilter.RESOURCE_PREFIX + "database", "NEW_ROLE-c493a384-a33a-47e6-82b2-65e8cdc22a62")
+//    );
+
+    /**
+     * "database" -> {RangerPolicy$RangerPolicyResource@4219} "RangerPolicyResource={values={NEW_ROLE-c493a384-a33a-47e6-82b2-65e8cdc22a62 } isExcludes={false} isRecursive={false} }"
+     *  key = "database"
+     *  value = {RangerPolicy$RangerPolicyResource@4219} "RangerPolicyResource={values={NEW_ROLE-c493a384-a33a-47e6-82b2-65e8cdc22a62 } isExcludes={false} isRecursive={false} }"
+     *   values = {ArrayList@4222}  size = 1
+     *    0 = "NEW_ROLE-c493a384-a33a-47e6-82b2-65e8cdc22a62"
+     * */
     rangerAuthorizationOperations = new RangerAuthorizationOperations();
     rangerAuthorizationOperations.initialize(ImmutableMap.of("provider", "ranger"));
 
     initRangerClient();
+
+//    RangerPolicy policy = rangerClient.getPolicy(11);
+//    LOG.info("Policy: {}", policy);
   }
 
   @AfterAll
@@ -101,7 +123,7 @@ public class RangerAuthorizationIT {// extends AbstractIT {
   public void grantPrivilegeToObjectToRole() {
     SecurableObject securableObjectTable = SecurableObjects.ofNamespace(
             SecurableObject.Type.TABLE,
-            Namespace.of("default", "db1", "tab1"),
+            Namespace.of("db1", "tab1", "column1"),
             Lists.newArrayList(Privileges.TabularSelect.allow()));
     rangerAuthorizationOperations.updateRole(roleName,
             RoleChange.addSecurableObject(securableObjectTable));

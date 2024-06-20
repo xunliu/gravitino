@@ -9,7 +9,13 @@ import com.datastrato.gravitino.NameIdentifier;
 public interface AuthorizationRole {
   Role createRole(String name) throws UnsupportedOperationException;
 
-  boolean dropRole(String name) throws UnsupportedOperationException;
+  Role loadRole(String name) throws UnsupportedOperationException;
+
+  boolean dropRole(Role role) throws UnsupportedOperationException;
+
+  boolean toUser(String userName) throws UnsupportedOperationException;
+
+  boolean toGroup(String userName) throws UnsupportedOperationException;
 
   Role updateRole(String name, RoleChange... changes) throws UnsupportedOperationException;
 }

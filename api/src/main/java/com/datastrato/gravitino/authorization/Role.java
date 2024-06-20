@@ -39,6 +39,4 @@ public interface Role extends Auditable {
    * @return The securable objects of the role.
    */
   List<SecurableObject> securableObjects();
-
-  List<Policy> policies();
 }

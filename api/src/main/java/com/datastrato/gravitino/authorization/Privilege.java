@@ -20,10 +20,10 @@ public interface Privilege {
   String simpleString();
 
   /**
-   * @return The condition of the privilege. `ALLOW` means that you are allowed to use the
+   * @return The access type of the privilege. `ALLOW` means that you are allowed to use the
    *     privilege, `DENY` means that you are denied to use the privilege
    */
-  Condition condition();
+  AccessType accessType();
 
   /** The name of this privilege. */
   enum Name {
@@ -141,11 +141,11 @@ public interface Privilege {
   }
 
   /**
-   * The condition of this privilege. `ALLOW` means that you are allowed to use the privilege,
+   * The access type of this privilege. `ALLOW` means that you are allowed to use the privilege,
    * `DENY` means that you are denied to use the privilege. If you have `ALLOW` and `DENY` for the
    * same privilege name of the same securable object, the `DENY` will take effect.
    */
-  enum Condition {
+  enum AccessType {
     /** Allow to use the privilege */
     ALLOW,
     /** Deny to use the privilege */

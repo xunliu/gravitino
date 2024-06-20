@@ -30,6 +30,8 @@ dependencies {
     exclude("org.elasticsearch.plugin")
   }
 
+  implementation("com.sendgrid:java-http-client:4.5.1")
+
   testImplementation(project(":integration-test-common", "testArtifacts"))
   testImplementation(libs.commons.lang3)
   testImplementation(libs.guava)

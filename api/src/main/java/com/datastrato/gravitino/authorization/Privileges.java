@@ -269,16 +269,16 @@ public class Privileges {
     private static final CreateCatalog ALLOW_INSTANCE =
         new CreateCatalog() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final CreateCatalog DENY_INSTANCE =
         new CreateCatalog() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -303,7 +303,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " create catalog";
+      return accessType().name() + " create catalog";
     }
   }
 
@@ -313,16 +313,16 @@ public class Privileges {
     private static final AlterCatalog ALLOW_INSTANCE =
         new AlterCatalog() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final AlterCatalog DENY_INSTANCE =
         new AlterCatalog() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -347,7 +347,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " alter catalog";
+      return accessType().name() + " alter catalog";
     }
   }
 
@@ -357,16 +357,16 @@ public class Privileges {
     private static final DropCatalog ALLOW_INSTANCE =
         new DropCatalog() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final DropCatalog DENY_INSTANCE =
         new DropCatalog() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -391,7 +391,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " drop catalog";
+      return accessType().name() + " drop catalog";
     }
   }
 
@@ -400,16 +400,16 @@ public class Privileges {
     private static final UseCatalog ALLOW_INSTANCE =
         new UseCatalog() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final UseCatalog DENY_INSTANCE =
         new UseCatalog() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -434,7 +434,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " use catalog";
+      return accessType().name() + " use catalog";
     }
   }
 
@@ -444,16 +444,16 @@ public class Privileges {
     private static final UseSchema ALLOW_INSTANCE =
         new UseSchema() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final UseSchema DENY_INSTANCE =
         new UseSchema() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -478,7 +478,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " use schema";
+      return accessType().name() + " use schema";
     }
   }
 
@@ -488,16 +488,16 @@ public class Privileges {
     private static final CreateSchema ALLOW_INSTANCE =
         new CreateSchema() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final CreateSchema DENY_INSTANCE =
         new CreateSchema() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -522,7 +522,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " create schema";
+      return accessType().name() + " create schema";
     }
   }
 
@@ -532,16 +532,16 @@ public class Privileges {
     private static final AlterSchema ALLOW_INSTANCE =
         new AlterSchema() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final AlterSchema DENY_INSTANCE =
         new AlterSchema() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -566,7 +566,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " alter schema";
+      return accessType().name() + " alter schema";
     }
   }
 
@@ -576,16 +576,16 @@ public class Privileges {
     private static final DropSchema ALLOW_INSTANCE =
         new DropSchema() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final DropSchema DENY_INSTANCE =
         new DropSchema() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -610,7 +610,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " drop schema";
+      return accessType().name() + " drop schema";
     }
   }
 
@@ -620,16 +620,16 @@ public class Privileges {
     private static final CreateTable ALLOW_INSTANCE =
         new CreateTable() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final CreateTable DENY_INSTANCE =
         new CreateTable() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -654,7 +654,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " create table";
+      return accessType().name() + " create table";
     }
   }
 
@@ -664,16 +664,16 @@ public class Privileges {
     private static final DropTable ALLOW_INSTANCE =
         new DropTable() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final DropTable DENY_INSTANCE =
         new DropTable() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -696,7 +696,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " drop table";
+      return accessType().name() + " drop table";
     }
   }
 
@@ -706,16 +706,16 @@ public class Privileges {
     private static final ReadTable ALLOW_INSTANCE =
         new ReadTable() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final ReadTable DENY_INSTANCE =
         new ReadTable() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -738,7 +738,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " read table";
+      return accessType().name() + " read table";
     }
   }
 
@@ -748,16 +748,16 @@ public class Privileges {
     private static final WriteTable ALLOW_INSTANCE =
         new WriteTable() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final WriteTable DENY_INSTANCE =
         new WriteTable() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -780,7 +780,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " write table";
+      return accessType().name() + " write table";
     }
   }
 
@@ -790,16 +790,16 @@ public class Privileges {
     private static final CreateFileset ALLOW_INSTANCE =
         new CreateFileset() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final CreateFileset DENY_INSTANCE =
         new CreateFileset() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -822,7 +822,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " create fileset";
+      return accessType().name() + " create fileset";
     }
   }
 
@@ -832,16 +832,16 @@ public class Privileges {
     private static final DropFileset ALLOW_INSTANCE =
         new DropFileset() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final DropFileset DENY_INSTANCE =
         new DropFileset() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -864,7 +864,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " drop fileset";
+      return accessType().name() + " drop fileset";
     }
   }
 
@@ -874,16 +874,16 @@ public class Privileges {
     private static final ReadFileset ALLOW_INSTANCE =
         new ReadFileset() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final ReadFileset DENY_INSTANCE =
         new ReadFileset() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -906,7 +906,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " read fileset";
+      return accessType().name() + " read fileset";
     }
   }
 
@@ -916,16 +916,16 @@ public class Privileges {
     private static final WriteFileset ALLOW_INSTANCE =
         new WriteFileset() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final WriteFileset DENY_INSTANCE =
         new WriteFileset() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -948,7 +948,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " write fileset";
+      return accessType().name() + " write fileset";
     }
   }
 
@@ -958,16 +958,16 @@ public class Privileges {
     private static final CreateTopic ALLOW_INSTANCE =
         new CreateTopic() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final CreateTopic DENY_INSTANCE =
         new CreateTopic() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -992,7 +992,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " create topic";
+      return accessType().name() + " create topic";
     }
   }
 
@@ -1002,16 +1002,16 @@ public class Privileges {
     private static final DropTopic ALLOW_INSTANCE =
         new DropTopic() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final DropTopic DENY_INSTANCE =
         new DropTopic() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1034,7 +1034,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " drop topic";
+      return accessType().name() + " drop topic";
     }
   }
 
@@ -1044,16 +1044,16 @@ public class Privileges {
     private static final ReadTopic ALLOW_INSTANCE =
         new ReadTopic() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final ReadTopic DENY_INSTANCE =
         new ReadTopic() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1076,7 +1076,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " read topic";
+      return accessType().name() + " read topic";
     }
   }
 
@@ -1086,16 +1086,16 @@ public class Privileges {
     private static final WriteTopic ALLOW_INSTANCE =
         new WriteTopic() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final WriteTopic DENY_INSTANCE =
         new WriteTopic() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1118,7 +1118,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " write topic";
+      return accessType().name() + " write topic";
     }
   }
 
@@ -1128,16 +1128,16 @@ public class Privileges {
     private static final ManageMetalake ALLOW_INSTANCE =
         new ManageMetalake() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final ManageMetalake DENY_INSTANCE =
         new ManageMetalake() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1160,7 +1160,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " manage metalake";
+      return accessType().name() + " manage metalake";
     }
   }
 
@@ -1170,16 +1170,16 @@ public class Privileges {
     private static final CreateMetalake ALLOW_INSTANCE =
         new CreateMetalake() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final CreateMetalake DENY_INSTANCE =
         new CreateMetalake() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1202,7 +1202,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " create metalake";
+      return accessType().name() + " create metalake";
     }
   }
 
@@ -1212,16 +1212,16 @@ public class Privileges {
     private static final UseMetalake ALLOW_INSTANCE =
         new UseMetalake() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final UseMetalake DENY_INSTANCE =
         new UseMetalake() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1246,7 +1246,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " use metalake";
+      return accessType().name() + " use metalake";
     }
   }
 
@@ -1256,16 +1256,16 @@ public class Privileges {
     private static final GetUser ALLOW_INSTANCE =
         new GetUser() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final GetUser DENY_INSTANCE =
         new GetUser() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1288,7 +1288,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " get user";
+      return accessType().name() + " get user";
     }
   }
 
@@ -1298,16 +1298,16 @@ public class Privileges {
     private static final AddUser ALLOW_INSTANCE =
         new AddUser() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final AddUser DENY_INSTANCE =
         new AddUser() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1332,7 +1332,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " add user";
+      return accessType().name() + " add user";
     }
   }
 
@@ -1342,16 +1342,16 @@ public class Privileges {
     private static final RemoveUser ALLOW_INSTANCE =
         new RemoveUser() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final RemoveUser DENY_INSTANCE =
         new RemoveUser() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1374,7 +1374,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " remove user";
+      return accessType().name() + " remove user";
     }
   }
 
@@ -1384,16 +1384,16 @@ public class Privileges {
     private static final AddGroup ALLOW_INSTANCE =
         new AddGroup() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final AddGroup DENY_INSTANCE =
         new AddGroup() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1418,7 +1418,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " add group";
+      return accessType().name() + " add group";
     }
   }
 
@@ -1428,16 +1428,16 @@ public class Privileges {
     private static final RemoveGroup ALLOW_INSTANCE =
         new RemoveGroup() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final RemoveGroup DENY_INSTANCE =
         new RemoveGroup() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1462,7 +1462,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " remove group";
+      return accessType().name() + " remove group";
     }
   }
 
@@ -1472,16 +1472,16 @@ public class Privileges {
     private static final GetGroup ALLOW_INSTANCE =
         new GetGroup() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final GetGroup DENY_INSTANCE =
         new GetGroup() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1506,7 +1506,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " get group";
+      return accessType().name() + " get group";
     }
   }
 
@@ -1516,16 +1516,16 @@ public class Privileges {
     private static final CreateRole ALLOW_INSTANCE =
         new CreateRole() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final CreateRole DENY_INSTANCE =
         new CreateRole() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1548,7 +1548,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " create role";
+      return accessType().name() + " create role";
     }
   }
 
@@ -1558,16 +1558,16 @@ public class Privileges {
     private static final GetRole ALLOW_INSTANCE =
         new GetRole() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final GetRole DENY_INSTANCE =
         new GetRole() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1592,7 +1592,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " get role";
+      return accessType().name() + " get role";
     }
   }
 
@@ -1602,16 +1602,16 @@ public class Privileges {
     private static final DeleteRole ALLOW_INSTANCE =
         new DeleteRole() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final DeleteRole DENY_INSTANCE =
         new DeleteRole() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1636,7 +1636,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " delete role";
+      return accessType().name() + " delete role";
     }
   }
 
@@ -1646,16 +1646,16 @@ public class Privileges {
     private static final GrantRole ALLOW_INSTANCE =
         new GrantRole() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final GrantRole DENY_INSTANCE =
         new GrantRole() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1680,7 +1680,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " grant role";
+      return accessType().name() + " grant role";
     }
   }
 
@@ -1690,16 +1690,16 @@ public class Privileges {
     private static final RevokeRole ALLOW_INSTANCE =
         new RevokeRole() {
           @Override
-          public Condition condition() {
-            return Condition.ALLOW;
+          public AccessType accessType() {
+            return AccessType.ALLOW;
           }
         };
 
     private static final RevokeRole DENY_INSTANCE =
         new RevokeRole() {
           @Override
-          public Condition condition() {
-            return Condition.DENY;
+          public AccessType accessType() {
+            return AccessType.DENY;
           }
         };
 
@@ -1724,7 +1724,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " revoke role";
+      return accessType().name() + " revoke role";
     }
   }
 
@@ -1734,16 +1734,16 @@ public class Privileges {
     private static final TabularSelect ALLOW_INSTANCE =
             new TabularSelect() {
               @Override
-              public Condition condition() {
-                return Condition.ALLOW;
+              public AccessType accessType() {
+                return AccessType.ALLOW;
               }
             };
 
     private static final TabularSelect DENY_INSTANCE =
             new TabularSelect() {
               @Override
-              public Condition condition() {
-                return Condition.DENY;
+              public AccessType accessType() {
+                return AccessType.DENY;
               }
             };
 
@@ -1768,7 +1768,7 @@ public class Privileges {
     /** @return A readable string representation for the privilege. */
     @Override
     public String simpleString() {
-      return condition().name() + " get role";
+      return accessType().name() + " get role";
     }
   }
 }

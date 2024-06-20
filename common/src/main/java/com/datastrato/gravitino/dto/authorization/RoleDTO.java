@@ -5,7 +5,6 @@
 package com.datastrato.gravitino.dto.authorization;
 
 import com.datastrato.gravitino.Audit;
-import com.datastrato.gravitino.authorization.Policy;
 import com.datastrato.gravitino.authorization.Role;
 import com.datastrato.gravitino.authorization.SecurableObject;
 import com.datastrato.gravitino.dto.AuditDTO;
@@ -81,11 +80,6 @@ public class RoleDTO implements Role {
   @Override
   public List<SecurableObject> securableObjects() {
     return Arrays.asList(securableObjects);
-  }
-
-  @Override
-  public List<Policy> policies() {
-    return null;
   }
 
   /** @return The audit information of the Role DTO. */
