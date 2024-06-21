@@ -15,7 +15,16 @@ public class TestAuthorizationOperations implements AuthorizationOperations {
     }
 
     @Override
+    public String translatePrivilege(Privilege.Name name) {
+        return null;
+    }
+
+    @Override
     public void close() throws IOException {
 
+    }
+
+    public static String chainTest(String s) {
+        return s + "abc";
     }
 }
