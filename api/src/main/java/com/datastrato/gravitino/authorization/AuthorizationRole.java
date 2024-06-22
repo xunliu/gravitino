@@ -4,8 +4,6 @@
  */
 package com.datastrato.gravitino.authorization;
 
-import com.datastrato.gravitino.NameIdentifier;
-
 public interface AuthorizationRole {
   Role createRole(String name) throws UnsupportedOperationException;
 

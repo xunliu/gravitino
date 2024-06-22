@@ -22,9 +22,7 @@ package com.datastrato.gravitino.authorization;
 
 import com.datastrato.gravitino.annotation.Evolving;
 
-/**
- * The RoleChange interface defines the public API for managing roles in an authorization.
- */
+/** The RoleChange interface defines the public API for managing roles in an authorization. */
 @Evolving
 public interface RoleChange {
   /**

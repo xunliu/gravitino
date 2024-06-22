@@ -36,7 +36,7 @@ public class RoleEntity implements Role, Entity, Auditable, HasIdentifier {
       Field.required("securable_objects", List.class, "The securable objects of the role entity.");
 
   public static final Field POLICIES =
-          Field.required("policies", List.class, "The policies of the role entity.");
+      Field.required("policies", List.class, "The policies of the role entity.");
 
   private Long id;
   private String name;

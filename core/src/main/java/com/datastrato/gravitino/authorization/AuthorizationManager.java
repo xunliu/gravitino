@@ -118,7 +118,8 @@ public class AuthorizationManager implements Closeable {
       IsolatedClassLoader classLoader, CatalogEntity entity) {
     // Load Catalog class instance
     BaseAuthorization<?> authorization =
-        createAuthorizationInstance(classLoader, entity.getProperties().get(AUTHORIZATION_PROVIDER));
+        createAuthorizationInstance(
+            classLoader, entity.getProperties().get(AUTHORIZATION_PROVIDER));
     authorization.withAuthorizationConf(entity.getProperties()); // .withCatalogEntity(entity);
     return authorization;
   }

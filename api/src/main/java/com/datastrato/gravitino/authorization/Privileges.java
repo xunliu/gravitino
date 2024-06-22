@@ -1732,20 +1732,20 @@ public class Privileges {
   public abstract static class TabularSelect implements Privilege {
 
     private static final TabularSelect ALLOW_INSTANCE =
-            new TabularSelect() {
-              @Override
-              public AccessType accessType() {
-                return AccessType.ALLOW;
-              }
-            };
+        new TabularSelect() {
+          @Override
+          public AccessType accessType() {
+            return AccessType.ALLOW;
+          }
+        };
 
     private static final TabularSelect DENY_INSTANCE =
-            new TabularSelect() {
-              @Override
-              public AccessType accessType() {
-                return AccessType.DENY;
-              }
-            };
+        new TabularSelect() {
+          @Override
+          public AccessType accessType() {
+            return AccessType.DENY;
+          }
+        };
 
     private TabularSelect() {}
 

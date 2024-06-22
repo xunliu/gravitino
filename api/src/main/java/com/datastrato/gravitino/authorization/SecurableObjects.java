@@ -9,7 +9,6 @@ import com.datastrato.gravitino.Namespace;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -74,7 +73,8 @@ public class SecurableObjects {
     return of(SecurableObject.Type.TABLE, names, privileges);
   }
 
-  public static SecurableObject ofNamespace(MetadataObject.Type type, Namespace namespace, List<Privilege> privileges) {
+  public static SecurableObject ofNamespace(
+      MetadataObject.Type type, Namespace namespace, List<Privilege> privileges) {
     return of(type, Arrays.asList(namespace.levels()), privileges);
   }
 
@@ -272,10 +272,8 @@ public class SecurableObjects {
           "If the length of names is 3, it must be FILESET, TABLE or TOPIC");
     }
 
-    if (names.size() == 4
-            && type != MetadataObject.Type.COLUMN) {
-      throw new IllegalArgumentException(
-              "If the length of names is 4, it must be COLUMN");
+    if (names.size() == 4 && type != MetadataObject.Type.COLUMN) {
+      throw new IllegalArgumentException("If the length of names is 4, it must be COLUMN");
     }
 
     for (String name : names) {

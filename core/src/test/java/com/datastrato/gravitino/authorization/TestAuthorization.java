@@ -4,16 +4,15 @@ import java.util.Map;
 
 public class TestAuthorization extends BaseAuthorization<TestAuthorization> {
 
-    public TestAuthorization() {
-    }
+  public TestAuthorization() {}
 
-    @Override
-    public String shortName() {
-        return "test";
-    }
+  @Override
+  public String shortName() {
+    return "test";
+  }
 
-    @Override
-    protected AuthorizationOperations newOps(Map<String, String> config) {
-        return new TestAuthorizationOperations(config);
-    }
+  @Override
+  protected AuthorizationOperations newOps(Map<String, String> config) {
+    return new TestAuthorizationOperations(config);
+  }
 }
