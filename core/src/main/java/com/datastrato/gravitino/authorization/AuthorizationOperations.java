@@ -4,11 +4,6 @@
  */
 package com.datastrato.gravitino.authorization;
 
-import java.io.Closeable;
-import java.util.Map;
 
 public interface AuthorizationOperations extends AuthorizationRole {
-//  void initialize(Map<String, String> config) throws RuntimeException;
-
-//  public String translatePrivilege(Privilege.Name name);
 }

@@ -52,16 +52,13 @@ public class AuthorizationManager implements Closeable {
 
   private final Config config;
 
-  private final EntityStore store;
-
   @VisibleForTesting
   final Cache<CatalogEntity, AuthorizationWrapper> authorizationCache;
 
-  public AuthorizationManager(Config config, EntityStore store, IdGenerator idGenerator) {
+  public AuthorizationManager(Config config) {
     this.config = config;
-    this.store = store;
 
-    long cacheEvictionIntervalInMs = config.get(Configs.CATALOG_CACHE_EVICTION_INTERVAL_MS);
+    long cacheEvictionIntervalInMs = config.get(Configs.AUTHORIZATION_CACHE_EVICTION_INTERVAL_MS);
     this.authorizationCache =
             Caffeine.newBuilder()
                     .expireAfterAccess(cacheEvictionIntervalInMs, TimeUnit.MILLISECONDS)
@@ -87,22 +84,7 @@ public class AuthorizationManager implements Closeable {
   }
 
   public AuthorizationWrapper loadAuthorizationAndWrap(CatalogEntity entity) throws NoSuchCatalogException {
-    return authorizationCache.get(entity, this::loadAuthorizationInternal);
-  }
-
-  private AuthorizationWrapper loadAuthorizationInternal(CatalogEntity entity) throws NoSuchCatalogException {
-    return createAuthorizationWrapper(entity);
-//    try {
-////      CatalogEntity entity = store.get(ident, Entity.EntityType.CATALOG, CatalogEntity.class);
-//      return createAuthorizationWrapper(entity);
-//
-////    } catch (NoSuchEntityException ne) {
-////      LOG.warn("Authorization {} does not exist", ident, ne);
-////      throw new NoSuchCatalogException(AUTHORIZATION_DOES_NOT_EXIST_MSG, ident);
-//    } catch (IOException ioe) {
-////      LOG.error("Failed to load authorization {}", ident, ioe);
-//      throw new RuntimeException(ioe);
-//    }
+    return authorizationCache.get(entity, this::createAuthorizationWrapper);
   }
 
   /** Wrapper class for an Authorization instance and its class loader. */
@@ -158,38 +140,14 @@ public class AuthorizationManager implements Closeable {
     return loadAuthorizationAndWrap(entity).runAuthorizationChain(functions);
   }
 
-  public BaseAuthorization createAuthorization(CatalogEntity entity) {
-    return createAuthorizationWrapper(entity).authorization;
-  }
-
   private AuthorizationWrapper createAuthorizationWrapper(CatalogEntity entity) {
     Map<String, String> conf = entity.getProperties();
-    String provider = conf.get("AUTHORIZATION_PROVIDER");
+    String provider = conf.get(AUTHORIZATION_PROVIDER);
 
     IsolatedClassLoader classLoader = createClassLoader(provider, conf);
     BaseAuthorization<?> baseAuthorization = createBaseAuthorization(classLoader, entity);
 
-    AuthorizationWrapper wrapper = new AuthorizationWrapper(baseAuthorization, classLoader);
-    // Validate catalog properties and initialize the config
-    classLoader.withClassLoader(
-        cl -> {
-          //              Map<String, String> configWithoutId = Maps.newHashMap(conf);
-          //              configWithoutId.remove(ID_KEY);
-          //              validatePropertyForCreate(catalog.catalogPropertiesMetadata(),
-          // configWithoutId);
-
-          // Call wrapper.catalog.properties() to make BaseCatalog#properties in IsolatedClassLoader
-          // not null. Why we do this? Because wrapper.catalog.properties() need to be called in the
-          // IsolatedClassLoader, it needs to load the specific catalog class such as HiveCatalog or
-          // so. For simply, We will preload the value of properties and thus AppClassLoader can get
-          // the value of properties.
-          //              wrapper.authorization.properties();
-          //              wrapper.authorization.capability();
-          return null;
-        },
-        IllegalArgumentException.class);
-
-    return wrapper;
+    return new AuthorizationWrapper(baseAuthorization, classLoader);
   }
 
   private IsolatedClassLoader createClassLoader(String provider, Map<String, String> conf) {
@@ -210,7 +168,7 @@ public class AuthorizationManager implements Closeable {
     BaseAuthorization<?> authorization =
         createAuthorizationInstance(
             classLoader, entity.getProperties().get(AUTHORIZATION_PROVIDER));
-    authorization.withAuthorizationConf(entity.getProperties()); // .withCatalogEntity(entity);
+    authorization.withAuthorizationConf(entity.getProperties());
     return authorization;
   }
 
@@ -226,17 +184,17 @@ public class AuthorizationManager implements Closeable {
                       lookupAuthorizationProvider(provider, cl);
                   return (BaseAuthorization) providerClz.getDeclaredConstructor().newInstance();
                 } catch (Exception e) {
-                  LOG.error("Failed to load catalog with provider: {}", provider, e);
+                  LOG.error("Failed to load authorization with provider: {}", provider, e);
                   throw new RuntimeException(e);
                 }
               });
     } catch (Exception e) {
-      LOG.error("Failed to load catalog with class loader", e);
+      LOG.error("Failed to load authorization with class loader", e);
       throw new RuntimeException(e);
     }
 
     if (authorization == null) {
-      throw new RuntimeException("Failed to load catalog with provider: " + provider);
+      throw new RuntimeException("Failed to load authorization with provider: " + provider);
     }
     return authorization;
   }
@@ -253,9 +211,9 @@ public class AuthorizationManager implements Closeable {
             .collect(Collectors.toList());
 
     if (providers.isEmpty()) {
-      throw new IllegalArgumentException("No catalog provider found for: " + provider);
+      throw new IllegalArgumentException("No authorization provider found for: " + provider);
     } else if (providers.size() > 1) {
-      throw new IllegalArgumentException("Multiple catalog providers found for: " + provider);
+      throw new IllegalArgumentException("Multiple authorization providers found for: " + provider);
     } else {
       return Iterables.getOnlyElement(providers);
     }

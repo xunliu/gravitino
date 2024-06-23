@@ -11,7 +11,7 @@ public interface AuthorizationRole {
 
   Boolean toUser(String userName) throws UnsupportedOperationException;
 
-  Boolean toGroup(String userName) throws UnsupportedOperationException;
+  Boolean toGroup(String groupName) throws UnsupportedOperationException;
 
   Role updateRole(String name, RoleChange... changes) throws UnsupportedOperationException;
 }

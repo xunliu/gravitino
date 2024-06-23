@@ -152,6 +152,13 @@ public class Configs {
           .longConf()
           .createWithDefault(60 * 60 * 1000L);
 
+  public static final ConfigEntry<Long> AUTHORIZATION_CACHE_EVICTION_INTERVAL_MS =
+          new ConfigBuilder("gravitino.authorization.cache.evictionIntervalMs")
+                  .doc("The interval in milliseconds to evict the authorization cache")
+                  .version(ConfigConstants.VERSION_0_6_0)
+                  .longConf()
+                  .createWithDefault(60 * 60 * 1000L);
+
   public static final ConfigEntry<Boolean> CATALOG_LOAD_ISOLATED =
       new ConfigBuilder("gravitino.catalog.classloader.isolated")
           .doc("Whether to load the catalog in an isolated classloader")
