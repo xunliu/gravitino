@@ -1,10 +1,6 @@
 package com.datastrato.gravitino.authorization.chain2;
 
 import java.util.function.Function;
-import java.util.stream.Stream;
-
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public class AuthorizationChain {
 
@@ -25,13 +21,13 @@ public class AuthorizationChain {
 
   // 用于接收不同类型的函数和可变参数
   @SafeVarargs
-  public final boolean runChain(Function<AuthorizationOperations, Boolean>... functions) {
-    for (Function<AuthorizationOperations, Boolean> function : functions) {
-      boolean result = function.apply(operations);
-      if (!result) {
-        return false; // 如果任何一个函数返回 false，则中断并返回 false
-      }
+  public final <R> void runChain(Function<AuthorizationOperations, R>... functions) {
+    for (Function<AuthorizationOperations, R> function : functions) {
+      function.apply(operations);
+//      if (!result) {
+//        return false; // 如果任何一个函数返回 false，则中断并返回 false
+//      }
     }
-    return true;
+//    return true;
   }
 }

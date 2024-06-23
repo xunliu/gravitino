@@ -7,13 +7,11 @@ package com.datastrato.gravitino.authorization;
 public interface AuthorizationRole {
   Role createRole(String name) throws UnsupportedOperationException;
 
-  Role loadRole(String name) throws UnsupportedOperationException;
+  Boolean dropRole(Role role) throws UnsupportedOperationException;
 
-  boolean dropRole(Role role) throws UnsupportedOperationException;
+  Boolean toUser(String userName) throws UnsupportedOperationException;
 
-  boolean toUser(String userName) throws UnsupportedOperationException;
-
-  boolean toGroup(String userName) throws UnsupportedOperationException;
+  Boolean toGroup(String userName) throws UnsupportedOperationException;
 
   Role updateRole(String name, RoleChange... changes) throws UnsupportedOperationException;
 }

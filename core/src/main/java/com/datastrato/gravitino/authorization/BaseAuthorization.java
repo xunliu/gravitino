@@ -42,7 +42,7 @@ public abstract class BaseAuthorization<T extends BaseAuthorization>
           //                  entity != null && conf != null, "entity and conf must be set before
           // calling ops()");
           ops = newOps(conf);
-          ops.initialize(conf);
+//          ops.initialize(conf);
         }
       }
     }
@@ -53,7 +53,7 @@ public abstract class BaseAuthorization<T extends BaseAuthorization>
   @Override
   public void close() throws IOException {
     if (ops != null) {
-      ops.close();
+//      ops.close();
       ops = null;
     }
   }

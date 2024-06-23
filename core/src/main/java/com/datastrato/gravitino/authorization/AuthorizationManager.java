@@ -7,12 +7,21 @@ package com.datastrato.gravitino.authorization;
 import com.datastrato.gravitino.Catalog;
 import com.datastrato.gravitino.Config;
 import com.datastrato.gravitino.Configs;
+import com.datastrato.gravitino.Entity;
 import com.datastrato.gravitino.EntityStore;
+import com.datastrato.gravitino.NameIdentifier;
+import com.datastrato.gravitino.catalog.CatalogManager;
+import com.datastrato.gravitino.exceptions.NoSuchCatalogException;
+import com.datastrato.gravitino.exceptions.NoSuchEntityException;
 import com.datastrato.gravitino.meta.CatalogEntity;
 import com.datastrato.gravitino.rel.TableCatalog;
 import com.datastrato.gravitino.storage.IdGenerator;
 import com.datastrato.gravitino.utils.IsolatedClassLoader;
 import com.datastrato.gravitino.utils.ThrowableFunction;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Scheduler;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -24,7 +33,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,10 +48,61 @@ public class AuthorizationManager implements Closeable {
 
   public static final String AUTHORIZATION_PROVIDER = "AUTHORIZATION_PROVIDER";
 
+  private static final String AUTHORIZATION_DOES_NOT_EXIST_MSG = "AUTHORIZATION %s does not exist";
+
   private final Config config;
+
+  private final EntityStore store;
+
+  @VisibleForTesting
+  final Cache<CatalogEntity, AuthorizationWrapper> authorizationCache;
 
   public AuthorizationManager(Config config, EntityStore store, IdGenerator idGenerator) {
     this.config = config;
+    this.store = store;
+
+    long cacheEvictionIntervalInMs = config.get(Configs.CATALOG_CACHE_EVICTION_INTERVAL_MS);
+    this.authorizationCache =
+            Caffeine.newBuilder()
+                    .expireAfterAccess(cacheEvictionIntervalInMs, TimeUnit.MILLISECONDS)
+                    .removalListener(
+                            (k, v, c) -> {
+                              LOG.info("Closing authorization {}.", k);
+                              ((AuthorizationWrapper) v).close();
+                            })
+                    .scheduler(
+                            Scheduler.forScheduledExecutorService(
+                                    new ScheduledThreadPoolExecutor(
+                                            1,
+                                            new ThreadFactoryBuilder()
+                                                    .setDaemon(true)
+                                                    .setNameFormat("authorization-cleaner-%d")
+                                                    .build())))
+                    .build();
+  }
+
+  @Override
+  public void close() {
+    authorizationCache.invalidateAll();
+  }
+
+  public AuthorizationWrapper loadAuthorizationAndWrap(CatalogEntity entity) throws NoSuchCatalogException {
+    return authorizationCache.get(entity, this::loadAuthorizationInternal);
+  }
+
+  private AuthorizationWrapper loadAuthorizationInternal(CatalogEntity entity) throws NoSuchCatalogException {
+    return createAuthorizationWrapper(entity);
+//    try {
+////      CatalogEntity entity = store.get(ident, Entity.EntityType.CATALOG, CatalogEntity.class);
+//      return createAuthorizationWrapper(entity);
+//
+////    } catch (NoSuchEntityException ne) {
+////      LOG.warn("Authorization {} does not exist", ident, ne);
+////      throw new NoSuchCatalogException(AUTHORIZATION_DOES_NOT_EXIST_MSG, ident);
+//    } catch (IOException ioe) {
+////      LOG.error("Failed to load authorization {}", ident, ioe);
+//      throw new RuntimeException(ioe);
+//    }
   }
 
   /** Wrapper class for an Authorization instance and its class loader. */
@@ -51,24 +116,49 @@ public class AuthorizationManager implements Closeable {
       this.classLoader = classLoader;
     }
 
-    public <R> R doWithTableOps(ThrowableFunction<TableCatalog, R> fn) throws Exception {
-      return classLoader.withClassLoader(
-          cl -> {
-            if (asTables() == null) {
-              throw new UnsupportedOperationException("Catalog does not support table operations");
-            }
-            return fn.apply(asTables());
-          });
+    public <R> boolean runAuthorizationChain(Function<AuthorizationOperations, R>... functions) {
+        try {
+            return classLoader.withClassLoader(
+                    cl -> {
+                      for (Function<AuthorizationOperations, R> function : functions) {
+                        function.apply(authorization.ops());
+                      }
+                      return true;
+                    });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private TableCatalog asTables() {
-      return authorization.ops() instanceof TableCatalog
-          ? (TableCatalog) authorization.ops()
-          : null;
+    @VisibleForTesting
+    public AuthorizationOperations getOps() {
+      return authorization.ops();
+    }
+
+    public void close() {
+      try {
+        classLoader.withClassLoader(
+                cl -> {
+                  if (authorization != null) {
+                    authorization.close();
+                  }
+                  authorization = null;
+                  return null;
+                });
+      } catch (Exception e) {
+        LOG.warn("Failed to close authorization", e);
+      }
+
+      classLoader.close();
     }
   }
 
-  BaseAuthorization createAuthorization(CatalogEntity entity) {
+  @SafeVarargs
+  public final <R> boolean runAuthorizationChain(CatalogEntity entity, Function<AuthorizationOperations, R>... functions) {
+    return loadAuthorizationAndWrap(entity).runAuthorizationChain(functions);
+  }
+
+  public BaseAuthorization createAuthorization(CatalogEntity entity) {
     return createAuthorizationWrapper(entity).authorization;
   }
 
@@ -77,9 +167,9 @@ public class AuthorizationManager implements Closeable {
     String provider = conf.get("AUTHORIZATION_PROVIDER");
 
     IsolatedClassLoader classLoader = createClassLoader(provider, conf);
-    BaseAuthorization<?> catalog = createBaseAuthorization(classLoader, entity);
+    BaseAuthorization<?> baseAuthorization = createBaseAuthorization(classLoader, entity);
 
-    AuthorizationWrapper wrapper = new AuthorizationWrapper(catalog, classLoader);
+    AuthorizationWrapper wrapper = new AuthorizationWrapper(baseAuthorization, classLoader);
     // Validate catalog properties and initialize the config
     classLoader.withClassLoader(
         cl -> {
@@ -192,7 +282,7 @@ public class AuthorizationManager implements Closeable {
               "libs");
     } else {
       // In real environment, the catalog package is under the catalog directory.
-      pkgPath = String.join(File.separator, gravitinoHome, "catalogs", provider, "libs");
+      pkgPath = String.join(File.separator, gravitinoHome, "authorizations", provider, "libs");
     }
 
     return pkgPath;
@@ -222,7 +312,4 @@ public class AuthorizationManager implements Closeable {
     }
     return confPath;
   }
-
-  @Override
-  public void close() throws IOException {}
 }

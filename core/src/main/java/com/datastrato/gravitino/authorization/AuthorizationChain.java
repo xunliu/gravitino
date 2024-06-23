@@ -8,10 +8,32 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 /* Manages the authorization instances and operations. */
-public class AuthorizationChain<T> {
-  public Function<T, T> buildChain(Function<T, T>... functions) {
-    return Stream.of(functions)
-        .reduce((collected, next) -> collected.andThen(next))
-        .orElseThrow(() -> new IllegalArgumentException("Empty Chain found"));
+public class AuthorizationChain {
+
+  private AuthorizationOperations authorizationOperations;
+
+  public AuthorizationChain(String type) {
+//    switch (type) {
+//      case "Type1":
+//        operations = new AuthorizationOperations1();
+//        break;
+//      case "Type2":
+//        operations = new AuthorizationOperations2();
+//        break;
+//      default:
+//        throw new IllegalArgumentException("Unknown type: " + type);
+//    }
+  }
+
+  // 用于接收不同类型的函数和可变参数
+  @SafeVarargs
+  public final boolean runChain(Function<AuthorizationOperations, Boolean>... functions) {
+    for (Function<AuthorizationOperations, Boolean> function : functions) {
+      boolean result = function.apply(authorizationOperations);
+      if (!result) {
+        return false;
+      }
+    }
+    return true;
   }
 }

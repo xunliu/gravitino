@@ -5,7 +5,6 @@
 package com.datastrato.gravitino.authorization.ranger;
 
 import com.datastrato.gravitino.authorization.AuthorizationOperations;
-import com.datastrato.gravitino.authorization.AuthorizationRole;
 import com.datastrato.gravitino.authorization.Privilege;
 import com.datastrato.gravitino.authorization.Role;
 import com.datastrato.gravitino.authorization.RoleChange;
@@ -35,7 +34,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class RangerAuthorizationOperations implements AuthorizationOperations, AuthorizationRole {
+public class RangerAuthorizationOperations implements AuthorizationOperations {
   private static final Logger LOG = LoggerFactory.getLogger(RangerAuthorizationOperations.class);
 
   private static RangerClient rangerClient;
@@ -77,26 +76,26 @@ public class RangerAuthorizationOperations implements AuthorizationOperations, A
             .build();
   }
 
-  @Override
-  public void initialize(Map<String, String> config) throws RuntimeException {
-//    String usernameKey = "username";
-//    String usernameVal = "admin";
-//    String jdbcKey = "jdbc.driverClassName";
-//    String jdbcVal = "io.trino.jdbc.TrinoDriver";
-//    String jdbcUrlKey = "jdbc.url";
-//    String jdbcUrlVal = "http://localhost:8080";
-
-    rangerClient = new RangerClient(rangerUrl, authType, username, password, null);
-    LOG.info("Ranger client initialized");
-  }
-
-  @Override
+//  @Override
+//  public void initialize(Map<String, String> config) throws RuntimeException {
+////    String usernameKey = "username";
+////    String usernameVal = "admin";
+////    String jdbcKey = "jdbc.driverClassName";
+////    String jdbcVal = "io.trino.jdbc.TrinoDriver";
+////    String jdbcUrlKey = "jdbc.url";
+////    String jdbcUrlVal = "http://localhost:8080";
+//
+//    rangerClient = new RangerClient(rangerUrl, authType, username, password, null);
+//    LOG.info("Ranger client initialized");
+//  }
+//
+//  @Override
   public String translatePrivilege(Privilege.Name name) {
     return mapPrivileges.get(name);
   }
 
-  @Override
-  public void close() throws IOException {}
+//  @Override
+//  public void close() throws IOException {}
 
   /**
    * Because Ranger does not support roles, so we will create a policy with the role name as the
@@ -170,11 +169,6 @@ public class RangerAuthorizationOperations implements AuthorizationOperations, A
                     .withProperties(ImmutableMap.of())
                     .build();
     return role;
-  }
-
-  @Override
-  public Role loadRole(String name) throws UnsupportedOperationException {
-    return null;
   }
 
   public Role createRole2(String name) throws UnsupportedOperationException {
@@ -253,7 +247,7 @@ public class RangerAuthorizationOperations implements AuthorizationOperations, A
    * If the role's object privilege is not exist, then return true.
    * */
   @Override
-  public boolean dropRole(Role role) throws UnsupportedOperationException {
+  public Boolean dropRole(Role role) throws UnsupportedOperationException {
     // Check whether the role have object privilege
     Iterator<SecurableObject> iter = role.securableObjects().iterator();
     while(iter.hasNext()) {
@@ -270,12 +264,12 @@ public class RangerAuthorizationOperations implements AuthorizationOperations, A
   }
 
   @Override
-  public boolean toUser(String userName) throws UnsupportedOperationException {
+  public Boolean toUser(String userName) throws UnsupportedOperationException {
     return false;
   }
 
   @Override
-  public boolean toGroup(String userName) throws UnsupportedOperationException {
+  public Boolean toGroup(String userName) throws UnsupportedOperationException {
     return false;
   }
 
