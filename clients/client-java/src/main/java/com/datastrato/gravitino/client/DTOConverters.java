@@ -289,7 +289,7 @@ class DTOConverters {
                 .map(
                     privilege -> {
                       return PrivilegeDTO.builder()
-                          .withCondition(privilege.accessType())
+                          .withCondition(privilege.condition())
                           .withName(privilege.name())
                           .build();
                     })

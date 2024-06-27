@@ -94,8 +94,8 @@ public class RoleOperations {
                                     .map(
                                         privilege -> {
                                           if (privilege
-                                              .accessType()
-                                              .equals(Privilege.AccessType.ALLOW)) {
+                                              .condition()
+                                              .equals(Privilege.Condition.ALLOW)) {
                                             return Privileges.allow(privilege.name());
                                           } else {
                                             return Privileges.deny(privilege.name());
