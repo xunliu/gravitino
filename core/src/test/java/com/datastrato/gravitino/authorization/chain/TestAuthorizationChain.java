@@ -63,7 +63,7 @@ public class TestAuthorizationChain {
     Assertions.assertInstanceOf(TestAuthorizationHook1.class, authHook1);
     TestAuthorizationHook1 testAuthOps1 = (TestAuthorizationHook1) authHook1;
     Assertions.assertFalse(testAuthOps1.callOnCreateRole1);
-    authHook1.onCreateRole(null, null);
+    authHook1.onCreateRole(null);
     Assertions.assertTrue(testAuthOps1.callOnCreateRole1);
   }
 
@@ -73,7 +73,7 @@ public class TestAuthorizationChain {
     Assertions.assertInstanceOf(TestAuthorizationHook2.class, authHook2);
     TestAuthorizationHook2 testAuthOps2 = (TestAuthorizationHook2) authHook2;
     Assertions.assertFalse(testAuthOps2.callOnCreateRole2);
-    authHook2.onCreateRole(null, null);
+    authHook2.onCreateRole(null);
     Assertions.assertTrue(testAuthOps2.callOnCreateRole2);
   }
 }

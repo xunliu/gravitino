@@ -31,6 +31,7 @@ include(
   "clients:filesystem-hadoop3-runtime",
   "clients:client-python"
 )
+include("authorizations:authorization-ranger")
 include("trino-connector")
 include("spark-connector:spark-common")
 // kyuubi hive connector doesn't support 2.13 for Spark3.3

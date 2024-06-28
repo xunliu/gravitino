@@ -5,6 +5,7 @@
 
 package com.datastrato.gravitino.catalog.hive;
 
+import com.datastrato.gravitino.connector.AuthorizationPropertiesMeta;
 import com.datastrato.gravitino.connector.BaseCatalogPropertiesMetadata;
 import com.datastrato.gravitino.connector.PropertyEntry;
 import com.google.common.collect.ImmutableMap;
@@ -103,6 +104,7 @@ public class HiveCatalogPropertiesMeta extends BaseCatalogPropertiesMetadata {
                   false,
                   false))
           .putAll(BASIC_CATALOG_PROPERTY_ENTRIES)
+          .putAll(AuthorizationPropertiesMeta.RANGER_AUTHORIZATION_PROPERTY_ENTRIES)
           .build();
 
   @Override

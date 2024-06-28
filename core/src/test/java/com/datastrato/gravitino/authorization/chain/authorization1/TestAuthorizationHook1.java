@@ -8,7 +8,6 @@ import com.datastrato.gravitino.authorization.AuthorizationHook;
 import com.datastrato.gravitino.authorization.Group;
 import com.datastrato.gravitino.authorization.Role;
 import com.datastrato.gravitino.authorization.RoleChange;
-import com.datastrato.gravitino.authorization.SecurableObject;
 import com.datastrato.gravitino.authorization.User;
 import java.util.List;
 
@@ -16,8 +15,7 @@ public class TestAuthorizationHook1 implements AuthorizationHook {
   public boolean callOnCreateRole1 = false;
 
   @Override
-  public Boolean onCreateRole(Role role, List<SecurableObject> securableObjects)
-      throws RuntimeException {
+  public Boolean onCreateRole(Role role) throws RuntimeException {
     callOnCreateRole1 = true;
     return null;
   }

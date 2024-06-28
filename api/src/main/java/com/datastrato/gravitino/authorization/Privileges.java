@@ -1726,4 +1726,36 @@ public class Privileges {
       return condition().name() + " revoke role";
     }
   }
+
+  public static class TabularSelect extends GenericPrivilege<TabularSelect> {
+    private TabularSelect(Condition condition, Name name) {
+      super(condition, name);
+    }
+
+    /** @return The instance with allow condition of the privilege. */
+    public static TabularSelect allow() {
+      return GenericPrivilege.allow(Name.TABULAR_CREATE, TabularSelect::new);
+    }
+
+    /** @return The instance with deny condition of the privilege. */
+    public static TabularSelect deny() {
+      return GenericPrivilege.deny(Name.TABULAR_CREATE, TabularSelect::new);
+    }
+  }
+
+  public static class TabularDrop extends GenericPrivilege<TabularDrop> {
+    private TabularDrop(Condition condition, Name name) {
+      super(condition, name);
+    }
+
+    /** @return The instance with allow condition of the privilege. */
+    public static TabularDrop allow() {
+      return GenericPrivilege.allow(Name.TABULAR_DROP, TabularDrop::new);
+    }
+
+    /** @return The instance with deny condition of the privilege. */
+    public static TabularDrop deny() {
+      return GenericPrivilege.deny(Name.TABULAR_DROP, TabularDrop::new);
+    }
+  }
 }

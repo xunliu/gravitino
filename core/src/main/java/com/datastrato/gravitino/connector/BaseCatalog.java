@@ -178,13 +178,13 @@ public abstract class BaseCatalog<T extends BaseCatalog>
         }
       }
     }
-    return authorization.hook();
+    return authorization.hook(provider(), entity.getProperties());
   }
 
   private BaseAuthorization<?> createAuthorizationInstance() {
-    String provider = entity.getProperties().get(AUTHORIZATION_IMPL);
-    if (provider == null && provider.isEmpty()) {
-      throw new IllegalArgumentException("Authorization hook provider is not set");
+    String authImpl = entity.getProperties().get(AUTHORIZATION_IMPL);
+    if (authImpl == null && authImpl.isEmpty()) {
+      throw new IllegalArgumentException("Authorization hook implement is not set");
     }
 
     ServiceLoader<AuthorizationProvider> loader =
@@ -193,14 +193,14 @@ public abstract class BaseCatalog<T extends BaseCatalog>
 
     List<Class<? extends AuthorizationProvider>> providers =
         Streams.stream(loader.iterator())
-            .filter(p -> p.shortName().equalsIgnoreCase(provider))
+            .filter(p -> p.shortName().equalsIgnoreCase(authImpl))
             .map(AuthorizationProvider::getClass)
             .collect(Collectors.toList());
     if (providers.isEmpty()) {
-      throw new IllegalArgumentException("No authorization hook provider found for: " + provider);
+      throw new IllegalArgumentException("No authorization hook implement found for: " + authImpl);
     } else if (providers.size() > 1) {
       throw new IllegalArgumentException(
-          "Multiple authorization hook providers found for: " + provider);
+          "Multiple authorization hook implement found for: " + authImpl);
     }
     try {
       return (BaseAuthorization<?>)

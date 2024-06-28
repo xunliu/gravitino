@@ -6,6 +6,7 @@ package com.datastrato.gravitino.authorization;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * The abstract base class for Authorization implementations.
@@ -28,13 +29,13 @@ public abstract class BaseAuthorization<T extends BaseAuthorization>
    *
    * @return A new instance of AuthorizationHook.
    */
-  protected abstract AuthorizationHook newHook();
+  protected abstract AuthorizationHook newHook(String catalogProvider, Map<String, String> config);
 
-  public AuthorizationHook hook() {
+  public AuthorizationHook hook(String catalogProvider, Map<String, String> config) {
     if (hook == null) {
       synchronized (this) {
         if (hook == null) {
-          hook = newHook();
+          hook = newHook(catalogProvider, config);
         }
       }
     }
