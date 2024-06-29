@@ -4,20 +4,16 @@
  */
 package com.datastrato.gravitino.integration.test.authorization.ranger;
 
-import com.datastrato.gravitino.MetadataObject;
-import com.datastrato.gravitino.authorization.Privileges;
-import com.datastrato.gravitino.authorization.SecurableObjects;
 import com.datastrato.gravitino.integration.test.container.ContainerSuite;
 import com.datastrato.gravitino.integration.test.container.HiveContainer;
 import com.datastrato.gravitino.integration.test.container.RangerContainer;
 import com.google.common.collect.ImmutableMap;
-import org.apache.commons.compress.utils.Lists;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import com.datastrato.gravitino.authorization.SecurableObject;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -25,14 +21,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 @Tag("gravitino-docker-it")
 public class RangerHiveIT extends RangerIT {
   private static final ContainerSuite containerSuite = ContainerSuite.getInstance();
   private static Connection connection;
-  private static String userName = "hive";
+  private static String adminUser = "hive";
   @BeforeAll
   public static void setup() {
     RangerIT.setup();
@@ -49,7 +44,7 @@ public class RangerHiveIT extends RangerIT {
             HiveContainer.HIVE_SERVICE_PORT);
       try {
           Class.forName("org.apache.hive.jdbc.HiveDriver");
-        connection = DriverManager.getConnection(url, userName, "");
+        connection = DriverManager.getConnection(url, adminUser, "");
       } catch (ClassNotFoundException | SQLException e) {
           throw new RuntimeException(e);
       }
@@ -74,7 +69,7 @@ public class RangerHiveIT extends RangerIT {
     );
 
     RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
-    policyItem.setUsers(Arrays.asList(userName));
+    policyItem.setUsers(Arrays.asList(adminUser));
     policyItem.setAccesses(Arrays.asList(new RangerPolicy.RangerPolicyItemAccess("all")));
 
     createRangerHivePolicy("policy1", policyResourceMap, Collections.singletonList(policyItem));
