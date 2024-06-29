@@ -44,8 +44,6 @@ public class RangerHiveIT extends RangerIT {
                             RangerContainer.RANGER_SERVER_PORT),
             RangerContainer.DOCKER_ENV_RANGER_HIVE_REPOSITORY_NAME, RangerIT.RANGER_HIVE_REPO_NAME));
 
-    createRangerHiveRepository();
-
     // Create hive connection
     String url = String.format("jdbc:hive2://%s:%d/default", containerSuite.getHiveContainer().getContainerIpAddress(),
             HiveContainer.HIVE_SERVICE_PORT);
@@ -55,6 +53,8 @@ public class RangerHiveIT extends RangerIT {
       } catch (ClassNotFoundException | SQLException e) {
           throw new RuntimeException(e);
       }
+
+    createRangerHiveRepository(containerSuite.getHiveContainer().getContainerIpAddress());
   }
 
   @AfterAll

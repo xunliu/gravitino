@@ -99,12 +99,12 @@ RUN mkdir $ZK_HOME/data
 
 ################################################################################
 # install ranger hadoop plugin
-ADD packages/ranger-distro-${RANGER_VERSION}-hdfs-plugin.tar.gz /opt/
+ADD packages/ranger-${RANGER_VERSION}-hdfs-plugin.tar.gz /opt/
 RUN ln -s /opt/ranger-${RANGER_VERSION}-hdfs-plugin ${RANGER_HDFS_PLUGIN_HOME}
 
 ################################################################################
 # install ranger hive plugin
-ADD packages/ranger-distro-${RANGER_VERSION}-hive-plugin.tar.gz /opt/
+ADD packages/ranger-${RANGER_VERSION}-hive-plugin.tar.gz /opt/
 RUN ln -s /opt/ranger-${RANGER_VERSION}-hive-plugin ${RANGER_HIVE_PLUGIN_HOME}
 
 ################################################################################

@@ -6,6 +6,8 @@ package com.datastrato.gravitino.integration.test.authorization.ranger;
 
 import com.datastrato.gravitino.authorization.SecurableObject;
 import com.datastrato.gravitino.integration.test.container.ContainerSuite;
+import com.datastrato.gravitino.integration.test.container.RangerContainer;
+import com.datastrato.gravitino.integration.test.container.TrinoContainer;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
@@ -52,13 +54,13 @@ public class RangerIT {
     }
   }
 
-  public void createRangerTrinoRepository() {
+  public void createRangerTrinoRepository(String tirnoIp) {
     String usernameKey = "username";
     String usernameVal = "admin";
     String jdbcKey = "jdbc.driverClassName";
     String jdbcVal = "io.trino.jdbc.TrinoDriver";
     String jdbcUrlKey = "jdbc.url";
-    String jdbcUrlVal = "http://localhost:8080";
+    String jdbcUrlVal = String.format("http:hive2://%s:%d", tirnoIp, TrinoContainer.TRINO_PORT);
 
     RangerService service = new RangerService();
     service.setType(RANGER_TRINO_TYPE);
@@ -86,7 +88,7 @@ public class RangerIT {
     }
   }
 
-  public static void createRangerHiveRepository() {
+  public static void createRangerHiveRepository(String hiveIp) {
     try {
       if(null != rangerClient.getService(RANGER_HIVE_REPO_NAME)) {
         return;
@@ -102,7 +104,7 @@ public class RangerIT {
     String jdbcKey = "jdbc.driverClassName";
     String jdbcVal = "org.apache.hive.jdbc.HiveDriver";
     String jdbcUrlKey = "jdbc.url";
-    String jdbcUrlVal = "jdbc:hive2://172.17.0.2:10000";
+    String jdbcUrlVal = String.format("jdbc:hive2://%s:%d", hiveIp, RangerContainer.RANGER_SERVER_PORT);
 
     RangerService service = new RangerService();
     service.setType(RANGER_HIVE_TYPE);
