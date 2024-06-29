@@ -14,6 +14,8 @@ import com.datastrato.gravitino.integration.test.container.HiveContainer;
 import com.datastrato.gravitino.integration.test.util.GravitinoITUtils;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -29,7 +31,7 @@ public class IcebergRESTJdbcCatalogIT extends IcebergRESTServiceIT {
 
   @Override
   void initEnv() {
-    containerSuite.startHiveContainer();
+    containerSuite.startHiveContainer(false, ImmutableMap.of());
   }
 
   public Map<String, String> getCatalogConfig() {

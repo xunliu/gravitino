@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.SparkConf;
@@ -125,7 +127,7 @@ public abstract class SparkEnvIT extends SparkUtilIT {
   }
 
   private void initHiveEnv() {
-    containerSuite.startHiveContainer();
+    containerSuite.startHiveContainer(false, ImmutableMap.of());
     hiveMetastoreUri =
         String.format(
             "thrift://%s:%d",

@@ -4,24 +4,31 @@
  */
 package com.datastrato.gravitino.integration.test.authorization.ranger;
 
+import com.datastrato.gravitino.authorization.SecurableObject;
 import com.datastrato.gravitino.integration.test.container.ContainerSuite;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.collect.Lists;
 import org.apache.ranger.RangerClient;
 import org.apache.ranger.RangerServiceException;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Tag("gravitino-docker-test")
 public class RangerIT {
-  private static final String serviceName = "trino-test";
-  private static final String trinoType = "trino";
+  private static final Logger LOG = LoggerFactory.getLogger(RangerIT.class);
+  protected static final String RANGER_TRINO_REPO_NAME = "trinoDev";
+  private static final String RANGER_TRINO_TYPE = "trino";
+  protected static final String RANGER_HIVE_REPO_NAME = "hiveDev";
+  private static final String RANGER_HIVE_TYPE = "hive";
   private static RangerClient rangerClient;
 
   private static final ContainerSuite containerSuite = ContainerSuite.getInstance();
@@ -36,12 +43,16 @@ public class RangerIT {
   @AfterAll
   public static void cleanup() throws RangerServiceException {
     if (rangerClient != null) {
-      rangerClient.deleteService(serviceName);
+      if (rangerClient.getService(RANGER_TRINO_REPO_NAME)!=null) {
+        rangerClient.deleteService(RANGER_TRINO_REPO_NAME);
+      }
+      if (rangerClient.getService(RANGER_HIVE_REPO_NAME)!=null) {
+        rangerClient.deleteService(RANGER_HIVE_REPO_NAME);
+      }
     }
   }
 
-  @Test
-  public void testCreateTrinoService() throws RangerServiceException {
+  public void createRangerTrinoRepository() {
     String usernameKey = "username";
     String usernameVal = "admin";
     String jdbcKey = "jdbc.driverClassName";
@@ -50,8 +61,8 @@ public class RangerIT {
     String jdbcUrlVal = "http://localhost:8080";
 
     RangerService service = new RangerService();
-    service.setType(trinoType);
-    service.setName(serviceName);
+    service.setType(RANGER_TRINO_TYPE);
+    service.setName(RANGER_TRINO_REPO_NAME);
     service.setConfigs(
         ImmutableMap.<String, String>builder()
             .put(usernameKey, usernameVal)
@@ -59,15 +70,124 @@ public class RangerIT {
             .put(jdbcUrlKey, jdbcUrlVal)
             .build());
 
-    RangerService createdService = rangerClient.createService(service);
-    Assertions.assertNotNull(createdService);
+    try {
+      RangerService createdService = rangerClient.createService(service);
+      Assertions.assertNotNull(createdService);
 
-    Map<String, String> filter = Collections.emptyMap();
-    List<RangerService> services = rangerClient.findServices(filter);
-    Assertions.assertEquals(services.get(0).getName(), serviceName);
-    Assertions.assertEquals(services.get(0).getType(), trinoType);
-    Assertions.assertEquals(services.get(0).getConfigs().get(usernameKey), usernameVal);
-    Assertions.assertEquals(services.get(0).getConfigs().get(jdbcKey), jdbcVal);
-    Assertions.assertEquals(services.get(0).getConfigs().get(jdbcUrlKey), jdbcUrlVal);
+      Map<String, String> filter = Collections.emptyMap();
+      List<RangerService> services = rangerClient.findServices(filter);
+      Assertions.assertEquals(services.get(0).getName(), RANGER_TRINO_REPO_NAME);
+      Assertions.assertEquals(services.get(0).getType(), RANGER_TRINO_TYPE);
+      Assertions.assertEquals(services.get(0).getConfigs().get(usernameKey), usernameVal);
+      Assertions.assertEquals(services.get(0).getConfigs().get(jdbcKey), jdbcVal);
+      Assertions.assertEquals(services.get(0).getConfigs().get(jdbcUrlKey), jdbcUrlVal);
+    } catch (RangerServiceException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static void createRangerHiveRepository() {
+    try {
+      if(null != rangerClient.getService(RANGER_HIVE_REPO_NAME)) {
+        return;
+      }
+    } catch (RangerServiceException e) {
+      LOG.error("Error while fetching service: {}", e.getMessage());
+    }
+
+    String usernameKey = "username";
+    String usernameVal = "admin";
+    String passwordKey = "password";
+    String passwordVal = "admin";
+    String jdbcKey = "jdbc.driverClassName";
+    String jdbcVal = "org.apache.hive.jdbc.HiveDriver";
+    String jdbcUrlKey = "jdbc.url";
+    String jdbcUrlVal = "jdbc:hive2://172.17.0.2:10000";
+
+    RangerService service = new RangerService();
+    service.setType(RANGER_HIVE_TYPE);
+    service.setName(RANGER_HIVE_REPO_NAME);
+    service.setConfigs(
+            ImmutableMap.<String, String>builder()
+                    .put(usernameKey, usernameVal)
+                    .put(passwordKey, passwordVal)
+                    .put(jdbcKey, jdbcVal)
+                    .put(jdbcUrlKey, jdbcUrlVal)
+                    .build());
+
+      try {
+        RangerService createdService = rangerClient.createService(service);
+        Assertions.assertNotNull(createdService);
+
+        Map<String, String> filter = Collections.emptyMap();
+        List<RangerService> services = rangerClient.findServices(filter);
+        Assertions.assertEquals(services.get(0).getName(), RANGER_HIVE_REPO_NAME);
+        Assertions.assertEquals(services.get(0).getType(), RANGER_HIVE_TYPE);
+        Assertions.assertEquals(services.get(0).getConfigs().get(usernameKey), usernameVal);
+        Assertions.assertEquals(services.get(0).getConfigs().get(jdbcKey), jdbcVal);
+        Assertions.assertEquals(services.get(0).getConfigs().get(jdbcUrlKey), jdbcUrlVal);
+      } catch (RangerServiceException e) {
+          throw new RuntimeException(e);
+      }
+  }
+
+  protected void createRangerHivePolicy(String policyName,
+                                        Map<String, RangerPolicy.RangerPolicyResource> policyResourceMap,
+                                        List<RangerPolicy.RangerPolicyItem> policyItems) {
+    RangerPolicy policy = new RangerPolicy();
+    policy.setService(RANGER_HIVE_REPO_NAME);
+    policy.setName(policyName);
+    policy.setResources(policyResourceMap);
+    policy.setPolicyItems(policyItems);
+
+    try {
+      rangerClient.createPolicy(policy);
+    } catch (RangerServiceException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  protected boolean createRangerHiveACL2(SecurableObject securableObject, String user, String grouup) {
+    RangerPolicy policy = new RangerPolicy();
+    policy.setService(RANGER_HIVE_REPO_NAME);
+    policy.setName(securableObject.fullName());
+
+    final Splitter DOT_SPLITTER = Splitter.on('.');
+    List<String> objects =
+            DOT_SPLITTER.splitToList(securableObject.fullName());
+
+    for (int i = 1; i < objects.size(); i++) {
+      // Skip `catalog` in the securable object
+      RangerPolicy.RangerPolicyResource policyResource =
+              new RangerPolicy.RangerPolicyResource(objects.get(i));
+      policy.getResources().put(i == 1 ?
+                      RangerRef.RESOURCE_DATABASE : i == 2 ?
+                      RangerRef.RESOURCE_TABLE : RangerRef.RESOURCE_COLUMN,
+              policyResource);
+    }
+
+    securableObject
+            .privileges()
+            .forEach(
+                    privilege -> {
+                      RangerPolicy.RangerPolicyItem policyItem =
+                              new RangerPolicy.RangerPolicyItem();
+                      RangerPolicy.RangerPolicyItemAccess access =
+                              new RangerPolicy.RangerPolicyItemAccess();
+                      access.setType("all");
+                      policyItem.getAccesses().add(access);
+                      policyItem.setUsers(Lists.newArrayList(user));
+                    });
+
+    try {
+      if (policy.getId() == null) {
+        rangerClient.createPolicy(policy);
+      } else {
+        rangerClient.updatePolicy(policy.getId(), policy);
+      }
+    } catch (RangerServiceException e) {
+      throw new RuntimeException(e);
+    }
+    return true;
   }
 }

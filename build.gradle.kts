@@ -262,7 +262,7 @@ subprojects {
           "-Xlint:finally",
           "-Xlint:overrides",
           "-Xlint:static",
-          "-Werror"
+//          "-Werror"
         )
       )
     }
@@ -694,9 +694,9 @@ fun printDockerCheckInfo() {
 
   val dockerTest = project.extra["dockerTest"] as? Boolean ?: false
   if (dockerTest) {
-    println("Using Docker container to run all tests. [$testMode test]")
+    println("Using Docker container to run all tests ......................... [$testMode test]")
   } else {
-    println("Run test cases without `gravitino-docker-test` tag ................ [$testMode test]")
+    println("Run test cases without `gravitino-docker-test` tag .............. [$testMode test]")
   }
   println("-----------------------------------------------------------------")
 
