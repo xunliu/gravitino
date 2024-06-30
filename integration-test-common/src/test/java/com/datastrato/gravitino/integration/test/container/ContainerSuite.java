@@ -94,7 +94,7 @@ public class ContainerSuite implements Closeable {
                       .withRangerEnable(enableRanger)
                   .withEnvVars(
                       ImmutableMap.<String, String>builder()
-                          .put("HADOOP_USER_NAME", "hive")
+                          .put("HADOOP_USER_NAME", "datastrato")
                               .putAll(envVars)
                           .build())
                   .withNetwork(network);

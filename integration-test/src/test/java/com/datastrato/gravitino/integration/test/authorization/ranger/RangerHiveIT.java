@@ -26,8 +26,10 @@ import java.util.Map;
 @Tag("gravitino-docker-it")
 public class RangerHiveIT extends RangerIT {
   private static final ContainerSuite containerSuite = ContainerSuite.getInstance();
-  private static Connection connection;
-  private static String adminUser = "hive";
+  private static Connection adminConnection;
+  private static Connection anonymousConnection;
+  private static final String adminUser = "datastrato";
+  private static String anonymouslUser = "anonymous";
   @BeforeAll
   public static void setup() {
     RangerIT.setup();
@@ -42,12 +44,13 @@ public class RangerHiveIT extends RangerIT {
     // Create hive connection
     String url = String.format("jdbc:hive2://%s:%d/default", containerSuite.getHiveContainer().getContainerIpAddress(),
             HiveContainer.HIVE_SERVICE_PORT);
-      try {
-          Class.forName("org.apache.hive.jdbc.HiveDriver");
-        connection = DriverManager.getConnection(url, adminUser, "");
-      } catch (ClassNotFoundException | SQLException e) {
-          throw new RuntimeException(e);
-      }
+    try {
+        Class.forName("org.apache.hive.jdbc.HiveDriver");
+      adminConnection = DriverManager.getConnection(url, adminUser, "");
+      anonymousConnection = DriverManager.getConnection(url, anonymouslUser, "");
+    } catch (ClassNotFoundException | SQLException e) {
+        throw new RuntimeException(e);
+    }
 
     createRangerHiveRepository(containerSuite.getHiveContainer().getContainerIpAddress());
   }
@@ -75,12 +78,24 @@ public class RangerHiveIT extends RangerIT {
     createRangerHivePolicy("policy1", policyResourceMap, Collections.singletonList(policyItem));
 
     System.out.println("*** List the existing Databases....");
-    Statement stmt = connection.createStatement();
+    Statement stmt = adminConnection.createStatement();
+    stmt.execute(String.format("CREATE DATABASE %s IF NOT EXISTS", dbName));
+
     String sql = "show databases";
     System.out.println("Executing Query: " + sql);
     ResultSet rs = stmt.executeQuery(sql);
     while (rs.next()) {
       System.out.println(rs.getString(1));
     }
+
+    Statement stmt2 = anonymousConnection.createStatement();
+    String sql2 = "show databases";
+    System.out.println("Executing Query: " + sql2);
+    ResultSet rs2 = stmt2.executeQuery(sql);
+    while (rs2.next()) {
+      System.out.println(rs2.getString(1));
+    }
+
+
   }
 }
