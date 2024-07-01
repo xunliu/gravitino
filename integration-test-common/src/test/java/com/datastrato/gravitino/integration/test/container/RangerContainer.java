@@ -64,7 +64,7 @@ public class RangerContainer extends BaseContainer {
   public void start() {
     super.start();
 
-    rangerUrl = String.format("http://localhost:%s", this.getMappedPort(6080));
+    rangerUrl = String.format("http://localhost:%s", this.getMappedPort(RANGER_SERVER_PORT));
     rangerClient = new RangerClient(rangerUrl, authType, username, password, null);
 
     Preconditions.check("Ranger container startup failed!", checkContainerStatus(10));
