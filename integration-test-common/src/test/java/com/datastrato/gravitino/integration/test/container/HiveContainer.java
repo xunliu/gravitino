@@ -7,7 +7,6 @@ package com.datastrato.gravitino.integration.test.container;
 import static java.lang.String.format;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -29,8 +28,7 @@ public class HiveContainer extends BaseContainer {
   public static final String KERBEROS_IMAGE =
       System.getenv("GRAVITINO_CI_KERBEROS_HIVE_DOCKER_IMAGE");
 
-  public static final String RANGER_IMAGE =
-          System.getenv("GRAVITINO_CI_RANGER_HIVE_DOCKER_IMAGE");
+  public static final String RANGER_IMAGE = System.getenv("GRAVITINO_CI_RANGER_HIVE_DOCKER_IMAGE");
   public static final String HOST_NAME = "gravitino-ci-hive";
   private static final int MYSQL_PORT = 3306;
   public static final int HDFS_DEFAULTFS_PORT = 9000;
@@ -197,7 +195,8 @@ public class HiveContainer extends BaseContainer {
     private Builder() {
       this.image = DEFAULT_IMAGE;
       this.hostName = HOST_NAME;
-      this.exposePorts = ImmutableSet.of(MYSQL_PORT, HDFS_DEFAULTFS_PORT, HIVE_METASTORE_PORT, HIVE_SERVICE_PORT);
+      this.exposePorts =
+          ImmutableSet.of(MYSQL_PORT, HDFS_DEFAULTFS_PORT, HIVE_METASTORE_PORT, HIVE_SERVICE_PORT);
     }
 
     public Builder withRangerEnable(Boolean enable) {
@@ -228,8 +227,8 @@ public class HiveContainer extends BaseContainer {
     @Override
     public HiveContainer build() {
       return new HiveContainer(
-              generateImageName(),
-              generateHostName(),
+          generateImageName(),
+          generateHostName(),
           exposePorts,
           extraHosts,
           filesToMount,

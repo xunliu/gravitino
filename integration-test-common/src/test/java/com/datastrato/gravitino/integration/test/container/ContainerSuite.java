@@ -91,11 +91,11 @@ public class ContainerSuite implements Closeable {
           HiveContainer.Builder hiveBuilder =
               HiveContainer.builder()
                   .withHostName("gravitino-ci-hive")
-                      .withRangerEnable(enableRanger)
+                  .withRangerEnable(enableRanger)
                   .withEnvVars(
                       ImmutableMap.<String, String>builder()
                           .put("HADOOP_USER_NAME", "datastrato")
-                              .putAll(envVars)
+                          .putAll(envVars)
                           .build())
                   .withNetwork(network);
           HiveContainer container = closer.register(hiveBuilder.build());
