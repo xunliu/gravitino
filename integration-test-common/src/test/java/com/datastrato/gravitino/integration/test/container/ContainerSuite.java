@@ -52,6 +52,8 @@ public class ContainerSuite implements Closeable {
 
   private static Network network = null;
   private static volatile HiveContainer hiveContainer;
+  // Enable Ranger plugin in the Hive container
+  private static volatile HiveContainer hiveRangerContainer;
   private static volatile TrinoContainer trinoContainer;
   private static volatile TrinoITContainers trinoITContainers;
   private static volatile RangerContainer rangerContainer;
@@ -107,12 +109,36 @@ public class ContainerSuite implements Closeable {
                   .withHostName("gravitino-ci-hive")
                   .withEnvVars(
                       ImmutableMap.<String, String>builder()
-                          .put("HADOOP_USER_NAME", "datastrato")
+                          .put("HADOOP_USER_NAME", "gravitino")
                           .build())
                   .withNetwork(network);
           HiveContainer container = closer.register(hiveBuilder.build());
           container.start();
           hiveContainer = container;
+        }
+      }
+    }
+  }
+
+  public void startHiveRangerContainer(Map<String, String> envVars) {
+    if (hiveRangerContainer == null) {
+      synchronized (ContainerSuite.class) {
+        if (hiveRangerContainer == null) {
+          if (!envVars.containsKey(HiveContainer.HADOOP_USER_NAME)) {
+            // Set default HADOOP_USER_NAME
+            envVars.put(HiveContainer.HADOOP_USER_NAME, "datastrato");
+          }
+
+          // Start Hive container
+          HiveContainer.Builder hiveBuilder =
+              HiveContainer.builder()
+                  .withHostName("gravitino-ci-hive")
+                  .withEnableRangerPlugin(true)
+                  .withEnvVars(ImmutableMap.<String, String>builder().putAll(envVars).build())
+                  .withNetwork(network);
+          HiveContainer container = closer.register(hiveBuilder.build());
+          container.start();
+          hiveRangerContainer = container;
         }
       }
     }
@@ -317,6 +343,10 @@ public class ContainerSuite implements Closeable {
 
   public HiveContainer getHiveContainer() {
     return hiveContainer;
+  }
+
+  public HiveContainer getHiveRangerContainer() {
+    return hiveRangerContainer;
   }
 
   public void startRangerContainer() {
