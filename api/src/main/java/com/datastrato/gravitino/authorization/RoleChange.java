@@ -5,6 +5,10 @@
 package com.datastrato.gravitino.authorization;
 
 import com.datastrato.gravitino.annotation.Evolving;
+import com.datastrato.gravitino.rel.TableChange;
+
+import java.util.Arrays;
+import java.util.Objects;
 
 /** The RoleChange interface defines the public API for managing roles in an authorization. */
 @Evolving
@@ -136,6 +140,82 @@ public interface RoleChange {
     @Override
     public String toString() {
       return "REMOVESECURABLEOBJECT " + securableObject;
+    }
+  }
+
+  /** A UpdateSecurableObject to update securable object's privilege from role. */
+  final class UpdateSecurableObject implements RoleChange {
+    private final SecurableObject securableObject;
+    private final SecurableObject newSecurableObject;
+
+    private UpdateSecurableObject(SecurableObject securableObject, SecurableObject newSecurableObject) {
+      this.securableObject = securableObject;
+      this.newSecurableObject = newSecurableObject;
+    }
+
+    /**
+     * Returns the securable object to be updated.
+     *
+     * @return return a securable object.
+     */
+    public SecurableObject getSecurableObject() {
+      return this.securableObject;
+    }
+
+    /**
+     * Returns the new securable object.
+     *
+     * @return return a securable object.
+     */
+    public SecurableObject getNewSecurableObject() {
+      return this.newSecurableObject;
+    }
+
+    /**
+     * Compares this RenameColumn instance with another object for equality. The comparison is based
+     * on the field name array and the new name.
+     *
+     * @param o The object to compare with this instance.
+     * @return true if the given object represents the same column renaming; false otherwise.
+     */
+
+    /**
+     * Compares this UpdateSecurableObject instance with another object for equality. The comparison
+     * is based on the old securable object and new securable object.
+     *
+     * @param o The object to compare with this instance.
+     * @return true if the given object represents the same add securable object; false otherwise.
+     */
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      UpdateSecurableObject that = (UpdateSecurableObject) o;
+      return securableObject.equals(that.securableObject) && newSecurableObject.equals(that.newSecurableObject);
+    }
+
+    /**
+     * Generates a hash code for this RemoveSecurableObject instance. The hash code is based on the
+     * old securable object and new securable object.
+     *
+     * @return A hash code value for this update securable object operation.
+     */
+    @Override
+    public int hashCode() {
+      int result = Objects.hash(securableObject);
+      result = 31 * result + Objects.hashCode(newSecurableObject);
+      return result;
+    }
+
+    /**
+     * Returns a string representation of the RemoveSecurableObject instance. This string format
+     * includes the class name followed by the add securable object operation.
+     *
+     * @return A string representation of the RemoveSecurableObject instance.
+     */
+    @Override
+    public String toString() {
+      return "UPDATESECURABLEOBJECT " + securableObject;
     }
   }
 }
