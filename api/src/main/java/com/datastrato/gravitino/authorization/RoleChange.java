@@ -143,12 +143,24 @@ public interface RoleChange {
     }
   }
 
-  /** A UpdateSecurableObject to update securable object's privilege from role. */
+  /**
+   * A UpdateSecurableObject to update securable object's privilege from role. <br/>
+   * The securable object's metadata entity must same as new securable object's metadata entity. <br/>
+   * The securable object's privilege must be different as new securable object's privilege. <br/>
+   * */
   final class UpdateSecurableObject implements RoleChange {
     private final SecurableObject securableObject;
     private final SecurableObject newSecurableObject;
 
     private UpdateSecurableObject(SecurableObject securableObject, SecurableObject newSecurableObject) {
+      if (!securableObject.fullName().equals(newSecurableObject.fullName())) {
+        throw new IllegalArgumentException(
+            "The securable object's metadata entity must be same as new securable object's metadata entity.");
+      }
+      if (securableObject.privileges().containsAll(newSecurableObject.privileges())) {
+        throw new IllegalArgumentException("The securable object's privilege must be different as new securable object's privilege.");
+      }
+
       this.securableObject = securableObject;
       this.newSecurableObject = newSecurableObject;
     }
@@ -172,14 +184,6 @@ public interface RoleChange {
     }
 
     /**
-     * Compares this RenameColumn instance with another object for equality. The comparison is based
-     * on the field name array and the new name.
-     *
-     * @param o The object to compare with this instance.
-     * @return true if the given object represents the same column renaming; false otherwise.
-     */
-
-    /**
      * Compares this UpdateSecurableObject instance with another object for equality. The comparison
      * is based on the old securable object and new securable object.
      *
@@ -195,7 +199,7 @@ public interface RoleChange {
     }
 
     /**
-     * Generates a hash code for this RemoveSecurableObject instance. The hash code is based on the
+     * Generates a hash code for this UpdateSecurableObject instance. The hash code is based on the
      * old securable object and new securable object.
      *
      * @return A hash code value for this update securable object operation.
@@ -208,7 +212,7 @@ public interface RoleChange {
     }
 
     /**
-     * Returns a string representation of the RemoveSecurableObject instance. This string format
+     * Returns a string representation of the UpdateSecurableObject instance. This string format
      * includes the class name followed by the add securable object operation.
      *
      * @return A string representation of the RemoveSecurableObject instance.

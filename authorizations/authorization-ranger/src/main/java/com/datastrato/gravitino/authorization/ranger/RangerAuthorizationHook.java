@@ -9,13 +9,13 @@ import com.datastrato.gravitino.authorization.Privilege;
 import com.datastrato.gravitino.authorization.SecurableObject;
 import com.datastrato.gravitino.authorization.SecurableObjects;
 import com.datastrato.gravitino.exceptions.AuthorizationHookException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.ranger.RangerClient;
 import org.apache.ranger.RangerServiceException;
@@ -65,7 +65,7 @@ public abstract class RangerAuthorizationHook implements AuthorizationHook {
     }
   }
 
-  protected RangerPolicy findManagedPolicy(SecurableObject securableObject)
+  protected RangerPolicy findManagedPolicy(SecurableObject securableObject, boolean samePrivilege)
       throws AuthorizationHookException {
     List<String> objects = SecurableObjects.DOT_SPLITTER.splitToList(securableObject.fullName());
     List<String> filterKeys =
@@ -113,6 +113,26 @@ public abstract class RangerAuthorizationHook implements AuthorizationHook {
       if (policies.size() > 1) {
         throw new AuthorizationHookException(
             "Each metadata object only have one Gravitino management enable policies.");
+      }
+
+      if (samePrivilege && policies.size() == 1) {
+        RangerPolicy policy = policies.get(0);
+        Set<String> policyPrivileges =
+            policy.getPolicyItems().stream()
+                .flatMap(policyItem -> policyItem.getAccesses().stream())
+                .map(RangerPolicy.RangerPolicyItemAccess::getType)
+                .collect(Collectors.toSet());
+        Set<String> newPrivileges =
+            securableObject.privileges().stream()
+                .map(privilege -> translatePrivilege(privilege.name()))
+                .collect(Collectors.toSet());
+        if (!policyPrivileges.containsAll(newPrivileges)) {
+          LOG.info(
+              "The privilege of the securable object {} is different from the delegate Gravitino management policy{} ",
+              newPrivileges,
+              policyPrivileges);
+          return null;
+        }
       }
 
       // Didn't contain duplicate privilege in the delegate Gravitino management policy

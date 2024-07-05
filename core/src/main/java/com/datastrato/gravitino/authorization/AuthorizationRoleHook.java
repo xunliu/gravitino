@@ -22,7 +22,7 @@ public interface AuthorizationRoleHook {
    * @return The getting Role instance.
    * @throws RuntimeException If getting the Role encounters storage issues.
    */
-  Role onGetRole(String role) throws RuntimeException;
+  Boolean onGetRole(Role role) throws RuntimeException;
 
   /**
    * Deletes a Role from underlying access control system.

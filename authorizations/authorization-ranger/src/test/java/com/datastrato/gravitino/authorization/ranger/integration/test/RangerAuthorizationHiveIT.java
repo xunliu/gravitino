@@ -4,8 +4,10 @@
  */
 package com.datastrato.gravitino.authorization.ranger.integration.test;
 
+import static com.datastrato.gravitino.authorization.ranger.RangerAuthorizationHook.MANAGED_BY_GRAVITINO;
+import static com.datastrato.gravitino.authorization.ranger.RangerAuthorizationHook.POLICY_ITEM_OWNER_USER;
+
 import com.datastrato.gravitino.Namespace;
-import com.datastrato.gravitino.authorization.Privilege;
 import com.datastrato.gravitino.authorization.Privileges;
 import com.datastrato.gravitino.authorization.SecurableObject;
 import com.datastrato.gravitino.authorization.SecurableObjects;
@@ -20,23 +22,18 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.ranger.RangerClient;
 import org.apache.ranger.RangerServiceException;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.plugin.util.SearchFilter;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.datastrato.gravitino.authorization.ranger.RangerAuthorizationHook.MANAGED_BY_GRAVITINO;
-import static com.datastrato.gravitino.authorization.ranger.RangerAuthorizationHook.POLICY_ITEM_OWNER_USER;
 
 // @Tag("gravitino-docker-it")
 // @TestInstance(Lifecycle.PER_CLASS)
@@ -47,7 +44,7 @@ public class RangerAuthorizationHiveIT { // extends AbstractIT {
 
   //  private static final ContainerSuite containerSuite = ContainerSuite.getInstance();
 
-//  private static String roleName = GravitinoITUtils.genRandomName("testRole");
+  //  private static String roleName = GravitinoITUtils.genRandomName("testRole");
 
   //  static RangerAuthorizationOperations rangerAuthorizationOperations;
 
@@ -228,149 +225,185 @@ public class RangerAuthorizationHiveIT { // extends AbstractIT {
   @Test
   public void testCreateRole2() {
     SecurableObject securableObject1 =
-            SecurableObjects.ofNamespace(
-                    SecurableObject.Type.COLUMN,
-                    Namespace.of("catalog", "db1", "tab1", "column1"),
-                    Lists.newArrayList(Privileges.TabularSelect.allow(), Privileges.TabularDrop.allow()));
+        SecurableObjects.ofNamespace(
+            SecurableObject.Type.COLUMN,
+            Namespace.of("catalog", "db1", "tab1", "column1"),
+            Lists.newArrayList(Privileges.TabularSelect.allow(), Privileges.TabularDrop.allow()));
 
     SecurableObject securableObject2 =
-            SecurableObjects.ofNamespace(
-                    SecurableObject.Type.COLUMN,
-                    Namespace.of("catalog", "db2", "tab2", "column2"),
-                    Lists.newArrayList(Privileges.TabularSelect.allow(), Privileges.TabularDrop.allow()));
+        SecurableObjects.ofNamespace(
+            SecurableObject.Type.COLUMN,
+            Namespace.of("catalog", "db2", "tab2", "column2"),
+            Lists.newArrayList(Privileges.TabularSelect.allow(), Privileges.TabularDrop.allow()));
 
     String roleName = GravitinoITUtils.genRandomName("testRole1");
     RoleEntity role =
-            RoleEntity.builder()
-                    .withId(1L)
-                    .withName(roleName)
-                    .withAuditInfo(auditInfo)
-                    .withSecurableObjects(Lists.newArrayList(securableObject1, securableObject2))
-                    .build();
+        RoleEntity.builder()
+            .withId(1L)
+            .withName(roleName)
+            .withAuditInfo(auditInfo)
+            .withSecurableObjects(Lists.newArrayList(securableObject1, securableObject2))
+            .build();
 
     createRoleAndVerify(role);
   }
-
 
   public void testCreateRole1() throws RangerServiceException {
     String dbName = "db1";
     String tabName = "tab1";
     String colName = "column1";
     SecurableObject securableObject1 =
-            SecurableObjects.ofNamespace(
-                    SecurableObject.Type.COLUMN,
-                    Namespace.of("catalog", dbName, tabName, colName),
-                    Lists.newArrayList(Privileges.TabularSelect.allow(), Privileges.TabularDrop.allow()));
+        SecurableObjects.ofNamespace(
+            SecurableObject.Type.COLUMN,
+            Namespace.of("catalog", dbName, tabName, colName),
+            Lists.newArrayList(Privileges.TabularSelect.allow(), Privileges.TabularDrop.allow()));
 
     String roleName = GravitinoITUtils.genRandomName("testRole1");
     RoleEntity role =
-            RoleEntity.builder()
-                    .withId(1L)
-                    .withName(roleName)
-                    .withAuditInfo(auditInfo)
-                    .withSecurableObjects(Lists.newArrayList(securableObject1))
-                    .build();
+        RoleEntity.builder()
+            .withId(1L)
+            .withName(roleName)
+            .withAuditInfo(auditInfo)
+            .withSecurableObjects(Lists.newArrayList(securableObject1))
+            .build();
 
     Assertions.assertTrue(rangerHiveAuthHook.onCreateRole(role));
 
-    String policyName = rangerHiveAuthHook.formatPolicyName(role.name(), securableObject1.fullName());
+    String policyName =
+        rangerHiveAuthHook.formatPolicyName(role.name(), securableObject1.fullName());
     RangerPolicy policy = rangerClient.getPolicy(hiveServiceName, policyName);
     Assertions.assertEquals(policy.getName(), policyName);
     Assertions.assertTrue(policy.getPolicyLabels().contains(MANAGED_BY_GRAVITINO));
-    Assertions.assertTrue(policy.getResources().get(RangerRef.RESOURCE_DATABASE).getValues().contains(dbName));
-    Assertions.assertTrue(policy.getResources().get(RangerRef.RESOURCE_TABLE).getValues().contains(tabName));
-    Assertions.assertTrue(policy.getResources().get(RangerRef.RESOURCE_COLUMN).getValues().contains(colName));
+    Assertions.assertTrue(
+        policy.getResources().get(RangerRef.RESOURCE_DATABASE).getValues().contains(dbName));
+    Assertions.assertTrue(
+        policy.getResources().get(RangerRef.RESOURCE_TABLE).getValues().contains(tabName));
+    Assertions.assertTrue(
+        policy.getResources().get(RangerRef.RESOURCE_COLUMN).getValues().contains(colName));
 
-    Assertions.assertEquals(rangerHiveAuthHook.translatePrivilege(Privileges.TabularSelect.allow().name()),
-            policy.getPolicyItems().get(0).getAccesses().get(0).getType());
+    Assertions.assertEquals(
+        rangerHiveAuthHook.translatePrivilege(Privileges.TabularSelect.allow().name()),
+        policy.getPolicyItems().get(0).getAccesses().get(0).getType());
 
     List<String> accessTypes = Lists.newArrayList();
-    policy.getPolicyItems().forEach(
+    policy
+        .getPolicyItems()
+        .forEach(
             policyItem -> {
               Assertions.assertEquals(policyItem.getUsers().size(), 1);
               Assertions.assertEquals(policyItem.getUsers().get(0), POLICY_ITEM_OWNER_USER);
               Assertions.assertEquals(policyItem.getAccesses().size(), 1);
               accessTypes.add(policyItem.getAccesses().get(0).getType());
             });
-    Assertions.assertTrue(accessTypes.contains(rangerHiveAuthHook.translatePrivilege(Privileges.TabularSelect.allow().name())));
-    Assertions.assertTrue(accessTypes.contains(rangerHiveAuthHook.translatePrivilege(Privileges.TabularDrop.allow().name())));
+    Assertions.assertTrue(
+        accessTypes.contains(
+            rangerHiveAuthHook.translatePrivilege(Privileges.TabularSelect.allow().name())));
+    Assertions.assertTrue(
+        accessTypes.contains(
+            rangerHiveAuthHook.translatePrivilege(Privileges.TabularDrop.allow().name())));
   }
-
 
   public void createRoleAndVerify(RoleEntity role) {
     Assertions.assertTrue(rangerHiveAuthHook.onCreateRole(role));
 
-    role.securableObjects().forEach(securableObject -> {
-      // Each securableObject creates a policy
-      String policyName = rangerHiveAuthHook.formatPolicyName(role.name(), securableObject.fullName());
-      RangerPolicy policy = null;
-      try {
-          policy = rangerClient.getPolicy(hiveServiceName, policyName);
-      } catch (RangerServiceException e) {
-          throw new RuntimeException(e);
-      }
-      Assertions.assertEquals(policy.getName(), policyName);
-      Assertions.assertTrue(policy.getPolicyLabels().contains(MANAGED_BY_GRAVITINO));
+    role.securableObjects()
+        .forEach(
+            securableObject -> {
+              // Each securableObject creates a policy
+              String policyName =
+                  rangerHiveAuthHook.formatPolicyName(role.name(), securableObject.fullName());
+              RangerPolicy policy = null;
+              try {
+                policy = rangerClient.getPolicy(hiveServiceName, policyName);
+              } catch (RangerServiceException e) {
+                throw new RuntimeException(e);
+              }
+              Assertions.assertEquals(policy.getName(), policyName);
+              Assertions.assertTrue(policy.getPolicyLabels().contains(MANAGED_BY_GRAVITINO));
 
-      // verify namespace
-      List<String> resRole = Lists.newArrayList(SecurableObjects.DOT_SPLITTER.splitToList(securableObject.fullName()));
-      resRole.remove(0); // skip catalog
-      List<String> resPolicy = Lists.newArrayList(policy.getResources().get(RangerRef.RESOURCE_DATABASE).getValues().get(0),
-              policy.getResources().get(RangerRef.RESOURCE_TABLE).getValues().get(0),
-              policy.getResources().get(RangerRef.RESOURCE_COLUMN).getValues().get(0));
-      Assertions.assertEquals(resRole, resPolicy);
+              // verify namespace
+              List<String> resRole =
+                  Lists.newArrayList(
+                      SecurableObjects.DOT_SPLITTER.splitToList(securableObject.fullName()));
+              resRole.remove(0); // skip catalog
+              List<String> resPolicy =
+                  Lists.newArrayList(
+                      policy.getResources().get(RangerRef.RESOURCE_DATABASE).getValues().get(0),
+                      policy.getResources().get(RangerRef.RESOURCE_TABLE).getValues().get(0),
+                      policy.getResources().get(RangerRef.RESOURCE_COLUMN).getValues().get(0));
+              Assertions.assertEquals(resRole, resPolicy);
 
-      // verify role's privileges and policy's accesses
-      RangerPolicy finalPolicy = policy;
-      securableObject.privileges().forEach(privilege -> {
-        Assertions.assertTrue(finalPolicy.getPolicyItems().stream().anyMatch(policyItem -> {
-          return policyItem.getAccesses().stream().anyMatch(access -> {
-            return access.getType().equals(rangerHiveAuthHook.translatePrivilege(privilege.name()));
-          });
-        }));
-      });
-    });
+              // verify role's privileges and policy's accesses
+              RangerPolicy finalPolicy = policy;
+              securableObject
+                  .privileges()
+                  .forEach(
+                      privilege -> {
+                        Assertions.assertTrue(
+                            finalPolicy.getPolicyItems().stream()
+                                .anyMatch(
+                                    policyItem -> {
+                                      return policyItem.getAccesses().stream()
+                                          .anyMatch(
+                                              access -> {
+                                                return access
+                                                    .getType()
+                                                    .equals(
+                                                        rangerHiveAuthHook.translatePrivilege(
+                                                            privilege.name()));
+                                              });
+                                    }));
+                      });
+            });
 
-//
-//    String policyName = rangerHiveAuthHook.formatPolicyName(role.name(), role.securableObjects().get(0).fullName());
-//    RangerPolicy policy = rangerClient.getPolicy(hiveServiceName, policyName);
-//    Assertions.assertEquals(policy.getName(), policyName);
-//    Assertions.assertTrue(policy.getPolicyLabels().contains(MANAGED_BY_GRAVITINO));
-//
-//    // verify namespace
-//    List<String> resRole = Lists.newArrayList(SecurableObjects.DOT_SPLITTER.splitToList(role.securableObjects().get(0).fullName()));
-//    resRole.remove(0); // skip catalog
-//    List<String> resPolicy = Lists.newArrayList(policy.getResources().get(RangerRef.RESOURCE_DATABASE).getValues().get(0),
-//            policy.getResources().get(RangerRef.RESOURCE_TABLE).getValues().get(0),
-//            policy.getResources().get(RangerRef.RESOURCE_COLUMN).getValues().get(0));
-//    Assertions.assertEquals(resRole, resPolicy);
-//
-//    Assertions.assertEquals(role.securableObjects().size(), policy.getPolicyItems().size());
-//    role.securableObjects().forEach(securableObject -> {
-//      securableObject.privileges().forEach(privilege -> {
-//        Assertions.assertTrue(policy.getPolicyItems().stream().anyMatch(policyItem -> {
-//          return policyItem.getAccesses().stream().anyMatch(access -> {
-//            return access.getType().equals(rangerHiveAuthHook.translatePrivilege(privilege.name()));
-//          });
-//        }));
-//      });
-//    });
-//
-////    Assertions.assertEquals(rangerHiveAuthHook.translatePrivilege(Privileges.TabularSelect.allow().name()),
-////            policy.getPolicyItems().get(0).getAccesses().get(0).getType());
-//
-////    List<String> accessTypes = Lists.newArrayList();
-//    policy.getPolicyItems().forEach(
-//            policyItem -> {
-//              Assertions.assertEquals(policyItem.getUsers().size(), 1);
-//              Assertions.assertEquals(policyItem.getUsers().get(0), POLICY_ITEM_OWNER_USER);
-//              Assertions.assertEquals(policyItem.getAccesses().size(), 1);
-//              Assertions.assertTrue(policyItem.getAccesses().stream().anyMatch(access -> {
-//                return access.getType().equals(rangerHiveAuthHook.translatePrivilege(Privileges.TabularSelect.allow().name()));
-//              }));
-//            });
-////    Assertions.assertTrue(accessTypes.contains(rangerHiveAuthHook.translatePrivilege(Privileges.TabularSelect.allow().name())));
-////    Assertions.assertTrue(accessTypes.contains(rangerHiveAuthHook.translatePrivilege(Privileges.TabularDrop.allow().name())));
+    //
+    //    String policyName = rangerHiveAuthHook.formatPolicyName(role.name(),
+    // role.securableObjects().get(0).fullName());
+    //    RangerPolicy policy = rangerClient.getPolicy(hiveServiceName, policyName);
+    //    Assertions.assertEquals(policy.getName(), policyName);
+    //    Assertions.assertTrue(policy.getPolicyLabels().contains(MANAGED_BY_GRAVITINO));
+    //
+    //    // verify namespace
+    //    List<String> resRole =
+    // Lists.newArrayList(SecurableObjects.DOT_SPLITTER.splitToList(role.securableObjects().get(0).fullName()));
+    //    resRole.remove(0); // skip catalog
+    //    List<String> resPolicy =
+    // Lists.newArrayList(policy.getResources().get(RangerRef.RESOURCE_DATABASE).getValues().get(0),
+    //            policy.getResources().get(RangerRef.RESOURCE_TABLE).getValues().get(0),
+    //            policy.getResources().get(RangerRef.RESOURCE_COLUMN).getValues().get(0));
+    //    Assertions.assertEquals(resRole, resPolicy);
+    //
+    //    Assertions.assertEquals(role.securableObjects().size(), policy.getPolicyItems().size());
+    //    role.securableObjects().forEach(securableObject -> {
+    //      securableObject.privileges().forEach(privilege -> {
+    //        Assertions.assertTrue(policy.getPolicyItems().stream().anyMatch(policyItem -> {
+    //          return policyItem.getAccesses().stream().anyMatch(access -> {
+    //            return
+    // access.getType().equals(rangerHiveAuthHook.translatePrivilege(privilege.name()));
+    //          });
+    //        }));
+    //      });
+    //    });
+    //
+    ////
+    // Assertions.assertEquals(rangerHiveAuthHook.translatePrivilege(Privileges.TabularSelect.allow().name()),
+    ////            policy.getPolicyItems().get(0).getAccesses().get(0).getType());
+    //
+    ////    List<String> accessTypes = Lists.newArrayList();
+    //    policy.getPolicyItems().forEach(
+    //            policyItem -> {
+    //              Assertions.assertEquals(policyItem.getUsers().size(), 1);
+    //              Assertions.assertEquals(policyItem.getUsers().get(0), POLICY_ITEM_OWNER_USER);
+    //              Assertions.assertEquals(policyItem.getAccesses().size(), 1);
+    //              Assertions.assertTrue(policyItem.getAccesses().stream().anyMatch(access -> {
+    //                return
+    // access.getType().equals(rangerHiveAuthHook.translatePrivilege(Privileges.TabularSelect.allow().name()));
+    //              }));
+    //            });
+    ////
+    // Assertions.assertTrue(accessTypes.contains(rangerHiveAuthHook.translatePrivilege(Privileges.TabularSelect.allow().name())));
+    ////
+    // Assertions.assertTrue(accessTypes.contains(rangerHiveAuthHook.translatePrivilege(Privileges.TabularDrop.allow().name())));
   }
 
   /**

@@ -20,15 +20,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.apache.ranger.RangerClient;
 import org.apache.ranger.RangerServiceException;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -66,13 +63,14 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
 
   /**
    * Because Ranger does not have Role concept, Each metadata object will have a unique Ranger
-   * policy. we can use one or more Ranger policy to simulate the role.
-   * <p>1. Create a policy for each metadata object.</p>
-   * <p>2. Save role name in the Policy properties.</p>
-   * <p>3. Set `MANAGED_BY_GRAVITINO` label in the policy to distinguish between created by other ways.</p>
-   * <p>4. For easy manage, each privilege will create a RangerPolicyItemAccess in the policy.</p>
-   * <p>5. The policy will only have one user, the user is the {OWNER} of the policy.</p>
-   * <p>6. The policy will not have group.</p>
+   * policy. we can use one or more Ranger policy to simulate the role. <br>
+   * 1. Create a policy for each metadata object. <br>
+   * 2. Save role name in the Policy properties. <br>
+   * 3. Set `MANAGED_BY_GRAVITINO` label in the policy to distinguish between created by other ways.
+   * <br>
+   * 4. For easy manage, each privilege will create a RangerPolicyItemAccess in the policy. <br>
+   * 5. The policy will only have one user, the user is the {OWNER} of the policy. <br>
+   * 6. The policy will not have group. <br>
    */
   @Override
   public Boolean onCreateRole(Role role) throws RuntimeException {
@@ -80,7 +78,7 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
       role.securableObjects()
           .forEach(
               securableObject -> {
-                RangerPolicy policy = findManagedPolicy(securableObject);
+                RangerPolicy policy = findManagedPolicy(securableObject, false);
                 if (policy == null) {
                   policy = new RangerPolicy();
                   policy.setService(rangerServiceName);
@@ -112,30 +110,7 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
                   policy.getPolicyItems().clear();
                 }
 
-                RangerPolicy finalPolicy = policy;
-                securableObject
-                    .privileges()
-                    .forEach(
-                        privilege -> {
-                          check(
-                              checkPrivilege(privilege.name()),
-                              "This privilege %s is not support in the Ranger",
-                              privilege.simpleString());
-
-                          RangerPolicy.RangerPolicyItem policyItem =
-                              new RangerPolicy.RangerPolicyItem();
-                          RangerPolicy.RangerPolicyItemAccess access =
-                              new RangerPolicy.RangerPolicyItemAccess();
-                          access.setType(translatePrivilege(privilege.name()));
-                          policyItem.getAccesses().add(access);
-                          policyItem.setUsers(Lists.newArrayList(POLICY_ITEM_OWNER_USER));
-                          if (Privilege.Condition.ALLOW == privilege.condition()) {
-                            finalPolicy.getPolicyItems().add(policyItem);
-                          } else {
-                            finalPolicy.getDenyPolicyItems().add(policyItem);
-                          }
-                        });
-
+                updatePolicyItemAccess(policy, securableObject);
                 try {
                   if (policy.getId() == null) {
                     rangerClient.createPolicy(policy);
@@ -153,14 +128,14 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
     return Boolean.TRUE;
   }
 
-  private RangerPolicy createPolicyBySecurableObject(String roleName, SecurableObject securableObject) {
+  private RangerPolicy createPolicyBySecurableObject(
+      String roleName, SecurableObject securableObject) {
     RangerPolicy policy = new RangerPolicy();
     policy.setService(rangerServiceName);
     policy.setName(formatPolicyName(roleName, securableObject.fullName()));
     policy.setPolicyLabels(Lists.newArrayList(MANAGED_BY_GRAVITINO));
 
-    List<String> objects =
-            SecurableObjects.DOT_SPLITTER.splitToList(securableObject.fullName());
+    List<String> objects = SecurableObjects.DOT_SPLITTER.splitToList(securableObject.fullName());
     if (objects.size() > 5) {
       // The max level of the securable object is `metalake.catalog.db.table.column`
       throw new RuntimeException("The securable object than 5");
@@ -168,20 +143,20 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
 
     for (int i = 1; i < objects.size(); i++) {
       RangerPolicy.RangerPolicyResource policyResource =
-              new RangerPolicy.RangerPolicyResource(objects.get(i));
+          new RangerPolicy.RangerPolicyResource(objects.get(i));
       policy
-              .getResources()
-              .put(
-                      i == 1
-                              ? RangerRef.RESOURCE_DATABASE
-                              : i == 2 ? RangerRef.RESOURCE_TABLE : RangerRef.RESOURCE_COLUMN,
-                      policyResource);
+          .getResources()
+          .put(
+              i == 1
+                  ? RangerRef.RESOURCE_DATABASE
+                  : i == 2 ? RangerRef.RESOURCE_TABLE : RangerRef.RESOURCE_COLUMN,
+              policyResource);
     }
     return policy;
   }
 
   @Override
-  public Role onGetRole(String role) throws RuntimeException {
+  public Boolean onGetRole(Role role) throws RuntimeException {
     return null;
   }
 
@@ -189,17 +164,17 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
   public Boolean onDeleteRole(Role role) throws RuntimeException {
     try {
       role.securableObjects()
-              .forEach(
-                      securableObject -> {
-                        RangerPolicy policy = findManagedPolicy(securableObject);
-                        if (policy != null) {
-                            try {
-                                rangerClient.deletePolicy(policy.getId());
-                            } catch (RangerServiceException e) {
-                                throw new RuntimeException(e);
-                            }
-                          }
-                      });
+          .forEach(
+              securableObject -> {
+                RangerPolicy policy = findManagedPolicy(securableObject, false);
+                if (policy != null) {
+                  try {
+                    rangerClient.deletePolicy(policy.getId());
+                  } catch (RangerServiceException e) {
+                    throw new RuntimeException(e);
+                  }
+                }
+              });
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -471,7 +446,7 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
     while (iter.hasNext()) {
       SecurableObject securableObject = iter.next();
 
-      RangerPolicy policy = findManagedPolicy(securableObject);
+      RangerPolicy policy = findManagedPolicy(securableObject, false);
       if (policy != null) {
         LOG.warn(
             "The role({}) have object privilege({}) is exist!",
@@ -482,14 +457,6 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
     }
 
     return true;
-  }
-
-  public Boolean toUser1(String roleName, String userName) throws UnsupportedOperationException {
-    return false;
-  }
-
-  public Boolean toGroup1(String roleName, String userName) throws UnsupportedOperationException {
-    return false;
   }
 
   public Role updateRole1(String roleName, RoleChange... changes)
@@ -507,91 +474,57 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
   }
 
   private boolean doAddSecurableObject(String roleName, RoleChange.AddSecurableObject change) {
-    RangerPolicy policy = findManagedPolicy(change.getSecurableObject());
+    RangerPolicy policy = findManagedPolicy(change.getSecurableObject(), false);
 
     if (policy != null) {
-      // If exist policy have same privilege, then return false.
+      // If exist policy and have same privilege, then directly return true.
       Set<String> policyPrivileges =
-              policy.getPolicyItems().stream()
-                      .flatMap(policyItem -> policyItem.getAccesses().stream())
-                      .map(RangerPolicy.RangerPolicyItemAccess::getType)
-                      .collect(Collectors.toSet());
+          policy.getPolicyItems().stream()
+              .flatMap(policyItem -> policyItem.getAccesses().stream())
+              .map(RangerPolicy.RangerPolicyItemAccess::getType)
+              .collect(Collectors.toSet());
       Set<String> newPrivileges =
-              change.getSecurableObject().privileges().stream()
-                      .map(privilege -> translatePrivilege(privilege.name()))
-                      .collect(Collectors.toSet());
+          change.getSecurableObject().privileges().stream()
+              .map(privilege -> translatePrivilege(privilege.name()))
+              .collect(Collectors.toSet());
       if (policyPrivileges.containsAll(newPrivileges)) {
-        LOG.warn(
-                "The policy({}) have same privilege({}) is exist!",
-                policy.getName(),
-                change.getSecurableObject().fullName());
-        return false;
+        LOG.info(
+            "The policy({}) have same privilege({})!",
+            policy.getName(),
+            change.getSecurableObject().fullName());
+        return true;
       }
+      // Update the policy name
+      policy.setName(formatPolicyName(roleName, change.getSecurableObject().fullName()));
+      // Clear exist policy items for support idempotent operation.
+      policy.getPolicyItems().clear();
     } else {
       policy = new RangerPolicy();
       policy.setService(rangerServiceName);
       policy.setName(formatPolicyName(roleName, change.getSecurableObject().fullName()));
       policy.setPolicyLabels(Lists.newArrayList(MANAGED_BY_GRAVITINO));
 
-      List<String> objects =
-              SecurableObjects.DOT_SPLITTER.splitToList(change.getSecurableObject().fullName());
-      if (objects.size() != 3) {
-        throw new RuntimeException("The securable object than 3");
+      List<String> entities =
+          SecurableObjects.DOT_SPLITTER.splitToList(change.getSecurableObject().fullName());
+      if (entities.size() > 5) {
+        // The max level of the securable object is `metalake.catalog.db.table.column`
+        throw new RuntimeException("The securable object than 5");
       }
 
-      for (int i = 0; i < objects.size(); i++) {
+      for (int i = 0; i < entities.size(); i++) {
         RangerPolicy.RangerPolicyResource policyResource =
-                new RangerPolicy.RangerPolicyResource(objects.get(i));
+            new RangerPolicy.RangerPolicyResource(entities.get(i));
         policy
-                .getResources()
-                .put(i == 0 ? "database" : i == 1 ? "table" : "column", policyResource);
+            .getResources()
+            .put(
+                i == 1
+                    ? RangerRef.RESOURCE_DATABASE
+                    : i == 2 ? RangerRef.RESOURCE_TABLE : RangerRef.RESOURCE_COLUMN,
+                policyResource);
       }
     }
 
-    Map<String, RangerPolicy.RangerPolicyItemAccess> mapAccesses = new HashMap<>();
-    policy
-        .getPolicyItems()
-        .forEach(
-            policyItem -> {
-              policyItem
-                  .getAccesses()
-                  .forEach(
-                      access -> {
-                        // e.g., `select` -> `RangerPolicyItemAccess`
-                        mapAccesses.put(access.getType(), access);
-                      });
-            });
-
-    RangerPolicy finalPolicy = policy;
-    change
-        .getSecurableObject()
-        .privileges()
-        .forEach(
-            privilege -> {
-              if (!mapAccesses.containsKey(translatePrivilege(privilege.name()))) {
-                RangerPolicy.RangerPolicyItem newPolicyItem = new RangerPolicy.RangerPolicyItem();
-                // Create a new access item for the privilege
-                RangerPolicy.RangerPolicyItemAccess newAccess =
-                    new RangerPolicy.RangerPolicyItemAccess();
-                newAccess.setType(translatePrivilege(privilege.name()));
-                newPolicyItem.getAccesses().add(newAccess);
-                // Only owner can access the new access item
-                newPolicyItem.setUsers(Lists.newArrayList(POLICY_ITEM_OWNER_USER));
-                // Add the new access item to the policy
-                if (Privilege.Condition.ALLOW == privilege.condition()) {
-                  finalPolicy.getPolicyItems().add(newPolicyItem);
-                } else {
-                  finalPolicy.getDenyPolicyItems().add(newPolicyItem);
-                }
-              } else {
-                LOG.info(
-                    "The access type({}:{}) is exist in the policy({})",
-                    privilege.name(),
-                    translatePrivilege(privilege.name()),
-                    finalPolicy.getName());
-              }
-            });
-
+    updatePolicyItemAccess(policy, change.getSecurableObject());
     try {
       if (policy.getId() == null) {
         rangerClient.createPolicy(policy);
@@ -605,41 +538,95 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
     return true;
   }
 
-  private boolean doRemoveSecurableObject(String roleName, RoleChange.RemoveSecurableObject change) {
-    RangerPolicy policy = findManagedPolicy(change.getSecurableObject());
+  private boolean doRemoveSecurableObject(
+      String roleName, RoleChange.RemoveSecurableObject change) {
+    RangerPolicy policy = findManagedPolicy(change.getSecurableObject(), false);
 
     if (policy != null) {
-      // If exist policy, must have same privileges.
+      // If exist policy and have same privileges.
       Set<String> policyPrivileges =
-              policy.getPolicyItems().stream()
-                      .flatMap(policyItem -> policyItem.getAccesses().stream())
-                      .map(RangerPolicy.RangerPolicyItemAccess::getType)
-                      .collect(Collectors.toSet());
+          policy.getPolicyItems().stream()
+              .flatMap(policyItem -> policyItem.getAccesses().stream())
+              .map(RangerPolicy.RangerPolicyItemAccess::getType)
+              .collect(Collectors.toSet());
       Set<String> newPrivileges =
-              change.getSecurableObject().privileges().stream()
-                      .map(privilege -> translatePrivilege(privilege.name()))
-                      .collect(Collectors.toSet());
+          change.getSecurableObject().privileges().stream()
+              .map(privilege -> translatePrivilege(privilege.name()))
+              .collect(Collectors.toSet());
       if (policyPrivileges.containsAll(newPrivileges)) {
         try {
           rangerClient.deletePolicy(policy.getId());
         } catch (RangerServiceException e) {
           throw new RuntimeException(e);
         }
+      } else {
+        LOG.warn(
+            "The policy({}) have different privilege({})!",
+            policy.getName(),
+            change.getSecurableObject().fullName());
       }
+    } else {
+      LOG.warn(
+          "Cannot find the policy({}) for the securable object({})!",
+          roleName,
+          change.getSecurableObject().fullName());
     }
     return true;
   }
 
-  private boolean doUpdateSecurableObject(String roleName, RoleChange.UpdateSecurableObject change) {
+  /**
+   * 1. Find the policy by the securable object. <br>
+   * 2. If the policy is exist, then user new securable object's privilege to update this policy.
+   * <br>
+   * 3. If the policy is not exist return false. <br>
+   */
+  private boolean doUpdateSecurableObject(
+      String roleName, RoleChange.UpdateSecurableObject change) {
     // Must same entity
-    RangerPolicy policy1 = findManagedPolicy(change.getSecurableObject());
-    RangerPolicy policy2 = findManagedPolicy(change.getNewSecurableObject());
+    RangerPolicy policy = findManagedPolicy(change.getSecurableObject(), false);
 
-    if (policy1 != null && policy2 != null && Objects.equals(policy1.getId(), policy2.getId())) {
-
-
+    if (policy != null) {
+      updatePolicyItemAccess(policy, change.getNewSecurableObject());
+      try {
+        if (policy.getId() == null) {
+          rangerClient.createPolicy(policy);
+        } else {
+          rangerClient.updatePolicy(policy.getId(), policy);
+        }
+      } catch (RangerServiceException e) {
+        throw new RuntimeException(e);
+      }
+    } else {
+      LOG.warn(
+          "Cannot find the policy({}) for the securable object({})!",
+          roleName,
+          change.getSecurableObject().fullName());
+      return false;
     }
-
     return true;
+  }
+
+  private void updatePolicyItemAccess(RangerPolicy policy, SecurableObject securableObject) {
+    securableObject
+        .privileges()
+        .forEach(
+            privilege -> {
+              check(
+                  checkPrivilege(privilege.name()),
+                  "This privilege %s is not support in the Ranger hive authorization",
+                  privilege.simpleString());
+
+              RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+              RangerPolicy.RangerPolicyItemAccess access =
+                  new RangerPolicy.RangerPolicyItemAccess();
+              access.setType(translatePrivilege(privilege.name()));
+              policyItem.getAccesses().add(access);
+              policyItem.setUsers(Lists.newArrayList(POLICY_ITEM_OWNER_USER));
+              if (Privilege.Condition.ALLOW == privilege.condition()) {
+                policy.getPolicyItems().add(policyItem);
+              } else {
+                policy.getDenyPolicyItems().add(policyItem);
+              }
+            });
   }
 }
