@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -608,7 +609,7 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
     RangerPolicy policy = findManagedPolicy(change.getSecurableObject());
 
     if (policy != null) {
-      // If exist policy have must have same privileges.
+      // If exist policy, must have same privileges.
       Set<String> policyPrivileges =
               policy.getPolicyItems().stream()
                       .flatMap(policyItem -> policyItem.getAccesses().stream())
@@ -619,145 +620,24 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
                       .map(privilege -> translatePrivilege(privilege.name()))
                       .collect(Collectors.toSet());
       if (policyPrivileges.containsAll(newPrivileges)) {
-        LOG.warn(
-                "The policy({}) have same privilege({}) is exist!",
-                policy.getName(),
-                change.getSecurableObject().fullName());
-    }
-
-    Map<String, RangerPolicy.RangerPolicyItemAccess> mapAccesses = new HashMap<>();
-    policy
-            .getPolicyItems()
-            .forEach(
-                    policyItem -> {
-                      policyItem
-                              .getAccesses()
-                              .forEach(
-                                      access -> {
-                                        // e.g., `select` -> `RangerPolicyItemAccess`
-                                        mapAccesses.put(access.getType(), access);
-                                      });
-                    });
-
-    RangerPolicy finalPolicy = policy;
-    change
-            .getSecurableObject()
-            .privileges()
-            .forEach(
-                    privilege -> {
-                      if (!mapAccesses.containsKey(translatePrivilege(privilege.name()))) {
-                        RangerPolicy.RangerPolicyItem newPolicyItem = new RangerPolicy.RangerPolicyItem();
-                        // Create a new access item for the privilege
-                        RangerPolicy.RangerPolicyItemAccess newAccess =
-                                new RangerPolicy.RangerPolicyItemAccess();
-                        newAccess.setType(translatePrivilege(privilege.name()));
-                        newPolicyItem.getAccesses().add(newAccess);
-                        // Only owner can access the new access item
-                        newPolicyItem.setUsers(Lists.newArrayList(POLICY_ITEM_OWNER_USER));
-                        // Add the new access item to the policy
-                        if (Privilege.Condition.ALLOW == privilege.condition()) {
-                          finalPolicy.getPolicyItems().add(newPolicyItem);
-                        } else {
-                          finalPolicy.getDenyPolicyItems().add(newPolicyItem);
-                        }
-                      } else {
-                        LOG.info(
-                                "The access type({}:{}) is exist in the policy({})",
-                                privilege.name(),
-                                translatePrivilege(privilege.name()),
-                                finalPolicy.getName());
-                      }
-                    });
-
-    try {
-      if (policy.getId() == null) {
-        rangerClient.createPolicy(policy);
-      } else {
-        rangerClient.updatePolicy(policy.getId(), policy);
+        try {
+          rangerClient.deletePolicy(policy.getId());
+        } catch (RangerServiceException e) {
+          throw new RuntimeException(e);
+        }
       }
-    } catch (RangerServiceException e) {
-      throw new RuntimeException(e);
     }
-
     return true;
   }
 
   private boolean doUpdateSecurableObject(String roleName, RoleChange.UpdateSecurableObject change) {
-    RangerPolicy policy = findManagedPolicy(change.getSecurableObject());
+    // Must same entity
+    RangerPolicy policy1 = findManagedPolicy(change.getSecurableObject());
+    RangerPolicy policy2 = findManagedPolicy(change.getNewSecurableObject());
 
-    if (policy == null) {
-      policy = new RangerPolicy();
-      policy.setService(rangerServiceName);
-      policy.setName(roleName);
-      policy.setPolicyLabels(Lists.newArrayList(MANAGED_BY_GRAVITINO));
+    if (policy1 != null && policy2 != null && Objects.equals(policy1.getId(), policy2.getId())) {
 
-      List<String> objects =
-              SecurableObjects.DOT_SPLITTER.splitToList(change.getSecurableObject().fullName());
-      if (objects.size() != 3) {
-        throw new RuntimeException("The securable object than 3");
-      }
 
-      for (int i = 0; i < objects.size(); i++) {
-        RangerPolicy.RangerPolicyResource policyResource =
-                new RangerPolicy.RangerPolicyResource(objects.get(i));
-        policy
-                .getResources()
-                .put(i == 0 ? "database" : i == 1 ? "table" : "column", policyResource);
-      }
-    }
-
-    Map<String, RangerPolicy.RangerPolicyItemAccess> mapAccesses = new HashMap<>();
-    policy
-            .getPolicyItems()
-            .forEach(
-                    policyItem -> {
-                      policyItem
-                              .getAccesses()
-                              .forEach(
-                                      access -> {
-                                        // e.g., `select` -> `RangerPolicyItemAccess`
-                                        mapAccesses.put(access.getType(), access);
-                                      });
-                    });
-
-    RangerPolicy finalPolicy = policy;
-    change
-            .getSecurableObject()
-            .privileges()
-            .forEach(
-                    privilege -> {
-                      if (!mapAccesses.containsKey(translatePrivilege(privilege.name()))) {
-                        RangerPolicy.RangerPolicyItem newPolicyItem = new RangerPolicy.RangerPolicyItem();
-                        // Create a new access item for the privilege
-                        RangerPolicy.RangerPolicyItemAccess newAccess =
-                                new RangerPolicy.RangerPolicyItemAccess();
-                        newAccess.setType(translatePrivilege(privilege.name()));
-                        newPolicyItem.getAccesses().add(newAccess);
-                        // Only owner can access the new access item
-                        newPolicyItem.setUsers(Lists.newArrayList(POLICY_ITEM_OWNER_USER));
-                        // Add the new access item to the policy
-                        if (Privilege.Condition.ALLOW == privilege.condition()) {
-                          finalPolicy.getPolicyItems().add(newPolicyItem);
-                        } else {
-                          finalPolicy.getDenyPolicyItems().add(newPolicyItem);
-                        }
-                      } else {
-                        LOG.info(
-                                "The access type({}:{}) is exist in the policy({})",
-                                privilege.name(),
-                                translatePrivilege(privilege.name()),
-                                finalPolicy.getName());
-                      }
-                    });
-
-    try {
-      if (policy.getId() == null) {
-        rangerClient.createPolicy(policy);
-      } else {
-        rangerClient.updatePolicy(policy.getId(), policy);
-      }
-    } catch (RangerServiceException e) {
-      throw new RuntimeException(e);
     }
 
     return true;
