@@ -6,7 +6,8 @@ package com.datastrato.gravitino.authorization;
 
 import com.datastrato.gravitino.MetadataObject;
 import com.datastrato.gravitino.annotation.Unstable;
-import java.util.Set;
+
+import java.util.List;
 
 /**
  * The securable object is the entity which access can be granted. Unless allowed by a grant, access
@@ -50,5 +51,5 @@ public interface SecurableObject extends MetadataObject {
    *
    * @return The privileges of the role.
    */
-  Set<Privilege> privileges();
+  List<Privilege> privileges();
 }

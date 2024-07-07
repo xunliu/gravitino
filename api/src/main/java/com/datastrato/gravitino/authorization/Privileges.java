@@ -1758,4 +1758,20 @@ public class Privileges {
       return GenericPrivilege.deny(Name.TABULAR_DROP, TabularDrop::new);
     }
   }
+
+  public static class TabularAlter extends GenericPrivilege<TabularAlter> {
+    private TabularAlter(Condition condition, Name name) {
+      super(condition, name);
+    }
+
+    /** @return The instance with allow condition of the privilege. */
+    public static TabularAlter allow() {
+      return GenericPrivilege.allow(Name.TABULAR_ALTER, TabularAlter::new);
+    }
+
+    /** @return The instance with deny condition of the privilege. */
+    public static TabularAlter deny() {
+      return GenericPrivilege.deny(Name.TABULAR_ALTER, TabularAlter::new);
+    }
+  }
 }

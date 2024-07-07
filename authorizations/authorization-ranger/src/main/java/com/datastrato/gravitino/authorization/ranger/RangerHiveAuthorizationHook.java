@@ -157,7 +157,17 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
 
   @Override
   public Boolean onGetRole(Role role) throws RuntimeException {
-    return null;
+    Boolean findAll = Boolean.FALSE;
+    try {
+      findAll = role.securableObjects().stream().filter(securableObject -> {
+        RangerPolicy policy = findManagedPolicy(securableObject, false);
+        return policy != null;
+      }).count() == role.securableObjects().size();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
+    return findAll;
   }
 
   @Override
@@ -198,11 +208,12 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
       }
     }
 
-    return null;
+    return true;
   }
 
   @Override
   public Boolean onAddUser(User user) throws RuntimeException {
+    rangerClient.
     return null;
   }
 
@@ -489,7 +500,7 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
               .collect(Collectors.toSet());
       if (policyPrivileges.containsAll(newPrivileges)) {
         LOG.info(
-            "The policy({}) have same privilege({})!",
+            "The privilege({}) already added to Ranger policy({})!",
             policy.getName(),
             change.getSecurableObject().fullName());
         return true;
@@ -606,16 +617,32 @@ public class RangerHiveAuthorizationHook extends RangerAuthorizationHook {
     return true;
   }
 
+  /**
+   * Use the securable object's privileges to update policy item access items.
+   * */
   private void updatePolicyItemAccess(RangerPolicy policy, SecurableObject securableObject) {
+    // First check the privilege is support in the Ranger
+    securableObject
+            .privileges()
+            .forEach(
+                    privilege -> {
+                      check(
+                              checkPrivilege(privilege.name()),
+                              "This privilege %s is not support in the Ranger hive authorization",
+                              privilege.name());
+                    });
+
+    // Clean the policy items
+    policy.getPolicyItems().clear();
+    policy.getDenyPolicyItems().clear();
+    policy.getDataMaskPolicyItems().clear();
+    policy.getRowFilterPolicyItems().clear();
+
+    // Update the policy items
     securableObject
         .privileges()
         .forEach(
             privilege -> {
-              check(
-                  checkPrivilege(privilege.name()),
-                  "This privilege %s is not support in the Ranger hive authorization",
-                  privilege.simpleString());
-
               RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
               RangerPolicy.RangerPolicyItemAccess access =
                   new RangerPolicy.RangerPolicyItemAccess();

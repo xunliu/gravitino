@@ -21,7 +21,7 @@ public class TestAuthorizationHook2 implements AuthorizationHook {
   }
 
   @Override
-  public Role onGetRole(String role) throws RuntimeException {
+  public Boolean onGetRole(Role role) throws RuntimeException {
     return null;
   }
 

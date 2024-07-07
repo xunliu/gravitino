@@ -33,6 +33,17 @@ public interface RoleChange {
     return new RemoveSecurableObject(securableObject);
   }
 
+  /**
+   * Update a securable object RoleChange.
+   *
+   * @param securableObject The securable object.
+   * @param newSecurableObject The new securable object.
+   * @return return a RoleChange for the update securable object.
+   */
+  static RoleChange updateSecurableObject(SecurableObject securableObject, SecurableObject newSecurableObject) {
+    return new UpdateSecurableObject(securableObject, newSecurableObject);
+  }
+
   /** A AddSecurableObject to add securable object to role. */
   final class AddSecurableObject implements RoleChange {
     private final SecurableObject securableObject;
