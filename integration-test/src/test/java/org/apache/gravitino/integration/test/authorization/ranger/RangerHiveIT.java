@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.gravitino.authorization.ranger.RangerDefines;
 import org.apache.gravitino.integration.test.container.ContainerSuite;
 import org.apache.gravitino.integration.test.container.HiveContainer;
 import org.apache.gravitino.integration.test.container.RangerContainer;
@@ -40,7 +41,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("gravitino-docker-test")
-public class RangerHiveIT extends AbstractRangerIT {
+public class RangerHiveIT extends RangerITEnv {
   private static final ContainerSuite containerSuite = ContainerSuite.getInstance();
   private static Connection adminConnection;
   private static Connection anonymousConnection;
@@ -49,7 +50,7 @@ public class RangerHiveIT extends AbstractRangerIT {
 
   @BeforeAll
   public static void setup() {
-    AbstractRangerIT.setup();
+    RangerITEnv.setup();
 
     containerSuite.startHiveRangerContainer(
         new HashMap<>(
@@ -62,9 +63,9 @@ public class RangerHiveIT extends AbstractRangerIT {
                     containerSuite.getRangerContainer().getContainerIpAddress(),
                     RangerContainer.RANGER_SERVER_PORT),
                 RangerContainer.DOCKER_ENV_RANGER_HIVE_REPOSITORY_NAME,
-                AbstractRangerIT.RANGER_HIVE_REPO_NAME,
+                RangerITEnv.RANGER_HIVE_REPO_NAME,
                 RangerContainer.DOCKER_ENV_RANGER_HDFS_REPOSITORY_NAME,
-                AbstractRangerIT.RANGER_HDFS_REPO_NAME,
+                RangerITEnv.RANGER_HDFS_REPO_NAME,
                 HiveContainer.HADOOP_USER_NAME,
                 adminUser)));
 

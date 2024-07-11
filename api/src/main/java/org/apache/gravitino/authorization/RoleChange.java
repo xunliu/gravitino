@@ -18,6 +18,7 @@
  */
 package org.apache.gravitino.authorization;
 
+import java.util.Objects;
 import org.apache.gravitino.annotation.Evolving;
 
 /** The RoleChange interface defines the public API for managing roles in an authorization. */
@@ -41,6 +42,18 @@ public interface RoleChange {
    */
   static RoleChange removeSecurableObject(SecurableObject securableObject) {
     return new RemoveSecurableObject(securableObject);
+  }
+
+  /**
+   * Update a securable object RoleChange.
+   *
+   * @param securableObject The securable object.
+   * @param newSecurableObject The new securable object.
+   * @return return a RoleChange for the update securable object.
+   */
+  static RoleChange updateSecurableObject(
+      SecurableObject securableObject, SecurableObject newSecurableObject) {
+    return new UpdateSecurableObject(securableObject, newSecurableObject);
   }
 
   /** A AddSecurableObject to add securable object to role. */
@@ -150,6 +163,90 @@ public interface RoleChange {
     @Override
     public String toString() {
       return "REMOVESECURABLEOBJECT " + securableObject;
+    }
+  }
+
+  /**
+   * A UpdateSecurableObject to update securable object's privilege from role. <br>
+   * The securable object's metadata entity must same as new securable object's metadata entity.
+   * <br>
+   * The securable object's privilege must be different as new securable object's privilege. <br>
+   */
+  final class UpdateSecurableObject implements RoleChange {
+    private final SecurableObject securableObject;
+    private final SecurableObject newSecurableObject;
+
+    private UpdateSecurableObject(
+        SecurableObject securableObject, SecurableObject newSecurableObject) {
+      if (!securableObject.fullName().equals(newSecurableObject.fullName())) {
+        throw new IllegalArgumentException(
+            "The securable object's metadata entity must be same as new securable object's metadata entity.");
+      }
+      if (securableObject.privileges().containsAll(newSecurableObject.privileges())) {
+        throw new IllegalArgumentException(
+            "The securable object's privilege must be different as new securable object's privilege.");
+      }
+
+      this.securableObject = securableObject;
+      this.newSecurableObject = newSecurableObject;
+    }
+
+    /**
+     * Returns the securable object to be updated.
+     *
+     * @return return a securable object.
+     */
+    public SecurableObject getSecurableObject() {
+      return this.securableObject;
+    }
+
+    /**
+     * Returns the new securable object.
+     *
+     * @return return a securable object.
+     */
+    public SecurableObject getNewSecurableObject() {
+      return this.newSecurableObject;
+    }
+
+    /**
+     * Compares this UpdateSecurableObject instance with another object for equality. The comparison
+     * is based on the old securable object and new securable object.
+     *
+     * @param o The object to compare with this instance.
+     * @return true if the given object represents the same add securable object; false otherwise.
+     */
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      UpdateSecurableObject that = (UpdateSecurableObject) o;
+      return securableObject.equals(that.securableObject)
+          && newSecurableObject.equals(that.newSecurableObject);
+    }
+
+    /**
+     * Generates a hash code for this UpdateSecurableObject instance. The hash code is based on the
+     * old securable object and new securable object.
+     *
+     * @return A hash code value for this update securable object operation.
+     */
+    @Override
+    public int hashCode() {
+      int result = Objects.hash(securableObject);
+      result = 31 * result + Objects.hashCode(newSecurableObject);
+      return result;
+    }
+
+    /**
+     * Returns a string representation of the UpdateSecurableObject instance. This string format
+     * includes the class name followed by the add securable object operation.
+     *
+     * @return A string representation of the RemoveSecurableObject instance.
+     */
+    @Override
+    public String toString() {
+      return "UPDATESECURABLEOBJECT " + securableObject;
     }
   }
 }

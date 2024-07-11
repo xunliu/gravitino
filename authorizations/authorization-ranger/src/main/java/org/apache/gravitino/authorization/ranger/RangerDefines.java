@@ -16,17 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.gravitino.integration.test.authorization.ranger;
+package org.apache.gravitino.authorization.ranger;
 
 import org.apache.ranger.plugin.util.SearchFilter;
 
 public class RangerDefines {
   // In the Ranger 2.4.0
-  // security-admin/src/main/java/org/apache/ranger/service/RangerServiceDefService.java:L43
+  // apache/ranger/security-admin/src/main/java/org/apache/ranger/service/RangerServiceDefService.java:L43
   public static final String IMPLICIT_CONDITION_EXPRESSION_NAME = "_expression";
 
   // In the Ranger 2.4.0
-  // security-admin/src/main/java/org/apache/ranger/common/RangerSearchUtil.java:L159
+  // apache/ranger/security-admin/src/main/java/org/apache/ranger/common/RangerSearchUtil.java:L159
   public static final String SEARCH_FILTER_SERVICE_NAME = SearchFilter.SERVICE_NAME;
   public static final String RESOURCE_DATABASE = "database"; // Hive resource database name
   public static final String RESOURCE_TABLE = "table"; // Hive resource table name
@@ -42,10 +42,12 @@ public class RangerDefines {
   public static final String OWNER_USER = "{OWNER}"; // {OWNER}: resource owner user variable
   public static final String CURRENT_USER = "{USER}"; // {USER}: current user variable
   public static final String PUBLIC_GROUP = "public"; // public group
+
   public static final String ACCESS_TYPE_HDFS_READ = "read"; // Read access type in the HDFS
   public static final String ACCESS_TYPE_HDFS_WRITE = "write"; // Write access type in the HDFS
   public static final String ACCESS_TYPE_HDFS_EXECUTE =
       "execute"; // execute access type in the HDFS
+
   public static final String ACCESS_TYPE_HIVE_ALL = "all"; // All access type in the Hive
   public static final String ACCESS_TYPE_HIVE_SELECT = "select"; // Select access type in the Hive
 }

@@ -37,6 +37,7 @@ dependencies {
   testImplementation(project(":integration-test-common", "testArtifacts"))
   testImplementation(project(":server"))
   testImplementation(project(":server-common"))
+  testImplementation(project(":authorizations:authorization-ranger"))
 
   testImplementation(libs.awaitility)
   testImplementation(libs.commons.cli)
@@ -52,6 +53,16 @@ dependencies {
   }
   testImplementation(libs.hadoop2.mapreduce.client.core) {
     exclude("*")
+  }
+  testImplementation(libs.ranger.intg) {
+    exclude("org.apache.hadoop", "hadoop-common")
+    exclude("org.apache.hive", "hive-storage-api")
+    exclude("org.apache.lucene")
+    exclude("org.apache.solr")
+    exclude("org.apache.kafka")
+    exclude("org.elasticsearch")
+    exclude("org.elasticsearch.client")
+    exclude("org.elasticsearch.plugin")
   }
   testImplementation(libs.hadoop2.hdfs)
   testImplementation(libs.hive2.common) {
