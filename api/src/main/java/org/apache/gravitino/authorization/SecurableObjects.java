@@ -34,6 +34,17 @@ public class SecurableObjects {
   private static final Splitter DOT_SPLITTER = Splitter.on('.');
 
   /**
+   * Create the metalake {@link SecurableObject} with the given metalake name.
+   *
+   * @param metalake The metalake name
+   * @param privileges The privileges of the metalake
+   * @return The created metalake {@link SecurableObject}
+   */
+  public static SecurableObject ofMetalake(String metalake, List<Privilege> privileges) {
+    return of(MetadataObject.Type.METALAKE, Lists.newArrayList(metalake), privileges);
+  }
+
+  /**
    * Create the catalog {@link SecurableObject} with the given catalog name.
    *
    * @param catalog The catalog name
