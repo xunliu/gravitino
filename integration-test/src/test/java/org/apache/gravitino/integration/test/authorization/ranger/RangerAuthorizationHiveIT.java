@@ -957,8 +957,7 @@ public class RangerAuthorizationHiveIT extends RangerHiveIT {
         .forEach(
             securableObject -> {
               // Find policy by each securable Object
-              String policyName =
-                  rangerHiveAuthPlugin.formatPolicyName(role.name(), securableObject.fullName());
+              String policyName = securableObject.fullName();
               RangerPolicy policy;
               try {
                 policy = rangerClient.getPolicy(RangerITEnv.RANGER_HIVE_REPO_NAME, policyName);
@@ -1137,12 +1136,5 @@ public class RangerAuthorizationHiveIT extends RangerHiveIT {
                         }
                       });
             });
-  }
-
-  /**
-   * Didn't call this function in the Lambda function body, It will return a random function name
-   */
-  public static String currentFunName() {
-    return Thread.currentThread().getStackTrace()[2].getMethodName();
   }
 }

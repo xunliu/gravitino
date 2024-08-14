@@ -34,6 +34,7 @@ import org.apache.gravitino.authorization.ranger.RangerDefines;
 import org.apache.gravitino.integration.test.container.ContainerSuite;
 import org.apache.gravitino.integration.test.container.HiveContainer;
 import org.apache.gravitino.integration.test.container.RangerContainer;
+import org.apache.ranger.RangerServiceException;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -93,6 +94,17 @@ public class RangerHiveIT extends RangerITEnv {
 
   /** Currently we only test Ranger Hive, So wo Allow anyone to visit HDFS */
   static void allowAnyoneAccessHDFS() {
+    String policyName = currentFunName();
+    RangerPolicy policy;
+    try {
+      policy = rangerClient.getPolicy(RangerDefines.SERVICE_TYPE_HDFS, policyName);
+    } catch (RangerServiceException e) {
+      throw new RuntimeException(e);
+    }
+    if (policy != null) {
+      return;
+    }
+
     Map<String, RangerPolicy.RangerPolicyResource> policyResourceMap =
         ImmutableMap.of(RangerDefines.RESOURCE_PATH, new RangerPolicy.RangerPolicyResource("/*"));
     RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
@@ -105,7 +117,7 @@ public class RangerHiveIT extends RangerITEnv {
     updateOrCreateRangerPolicy(
         RangerDefines.SERVICE_TYPE_HDFS,
         RANGER_HDFS_REPO_NAME,
-        "allowAnyoneAccessHDFS",
+        policyName,
         policyResourceMap,
         Collections.singletonList(policyItem));
   }
@@ -115,6 +127,17 @@ public class RangerHiveIT extends RangerITEnv {
    * `tables` and `columns`
    */
   static void allowAnyoneAccessInformationSchema() {
+    String policyName = currentFunName();
+    RangerPolicy policy;
+    try {
+      policy = rangerClient.getPolicy(RangerDefines.SERVICE_TYPE_HIVE, policyName);
+    } catch (RangerServiceException e) {
+      throw new RuntimeException(e);
+    }
+    if (policy != null) {
+      return;
+    }
+
     Map<String, RangerPolicy.RangerPolicyResource> policyResourceMap =
         ImmutableMap.of(
             RangerDefines.RESOURCE_DATABASE,
@@ -131,7 +154,7 @@ public class RangerHiveIT extends RangerITEnv {
     updateOrCreateRangerPolicy(
         RangerDefines.SERVICE_TYPE_HIVE,
         RANGER_HIVE_REPO_NAME,
-        "allowAnyoneAccessInformationSchema",
+        policyName,
         policyResourceMap,
         Collections.singletonList(policyItem));
   }

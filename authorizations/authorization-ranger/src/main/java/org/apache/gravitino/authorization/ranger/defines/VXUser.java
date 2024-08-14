@@ -19,21 +19,17 @@
 package org.apache.gravitino.authorization.ranger.defines;
 
 import java.util.Collection;
-import javax.xml.bind.annotation.XmlRootElement;
-import lombok.Getter;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 // apache/ranger/security-admin/src/main/java/org/apache/ranger/view/VXUser.java
-@Getter
 @JsonAutoDetect(
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE,
     fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@XmlRootElement
 public class VXUser extends VXDataObject implements java.io.Serializable {
   private static final long serialVersionUID = 1L;
 
@@ -55,16 +51,13 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
   protected Collection<Long> groupIdList;
 
   protected Collection<String> groupNameList;
-
   protected int status = RangerCommonEnums.STATUS_ENABLED;
   protected Integer isVisible = RangerCommonEnums.IS_VISIBLE;
   protected int userSource;
   /** List of roles for this user */
   protected Collection<String> userRoleList;
-
   /** Additional store attributes. */
   protected String otherAttributes;
-
   /** Sync Source */
   protected String syncSource;
 

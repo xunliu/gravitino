@@ -46,16 +46,11 @@ dependencies {
     exclude("org.elasticsearch.plugin")
     exclude("org.apache.ranger", "ranger-plugins-audit")
     exclude("org.apache.ranger", "ranger-plugins-cred")
-    exclude("org.apache.ranger", "ranger-plugin-classloader")
+    exclude("org.apache.ranger", "ranger-plugins-classloader")
   }
-
-  testImplementation(project(":integration-test-common", "testArtifacts"))
-  testImplementation(libs.commons.lang3)
-  testImplementation(libs.guava)
-  testImplementation(libs.junit.jupiter.api)
-  testImplementation(libs.junit.jupiter.params)
-
-  testRuntimeOnly(libs.junit.jupiter.engine)
+  implementation(libs.javax.jaxb.api)
+  implementation(libs.javax.activation)
+  implementation(libs.glassfish.jaxb.runtime)
 }
 
 tasks {
@@ -66,7 +61,7 @@ tasks {
 }
 
 tasks.build {
-  dependsOn("runtimeJars")
+  dependsOn("runtimeJars", "javadoc")
 }
 
 tasks.getByName("generateMetadataFileForMavenJavaPublication") {

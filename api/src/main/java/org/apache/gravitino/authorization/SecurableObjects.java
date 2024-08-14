@@ -31,6 +31,7 @@ import org.apache.gravitino.MetadataObjects.MetadataObjectImpl;
 /** The helper class for {@link SecurableObject}. */
 public class SecurableObjects {
 
+  /** The splitter for splitting the names. */
   public static final Splitter DOT_SPLITTER = Splitter.on('.');
 
   /**

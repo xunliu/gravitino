@@ -22,32 +22,8 @@ package org.apache.gravitino.authorization.ranger.defines;
 public class RangerCommonEnums {
   /** IS_VISIBLE is an element of enum VisibilityStatus. Its value is "IS_VISIBLE". */
   public static final int IS_VISIBLE = 1;
-  /** IS_HIDDEN is an element of enum VisibilityStatus. Its value is "IS_HIDDEN". */
-  public static final int IS_HIDDEN = 0;
-
-  /** STATUS_DISABLED is an element of enum ActiveStatus. Its value is "STATUS_DISABLED". */
-  public static final int STATUS_DISABLED = 0;
   /** STATUS_ENABLED is an element of enum ActiveStatus. Its value is "STATUS_ENABLED". */
   public static final int STATUS_ENABLED = 1;
-  /** STATUS_DELETED is an element of enum ActiveStatus. Its value is "STATUS_DELETED". */
-  public static final int STATUS_DELETED = 2;
-
-  /** Max value for enum ActiveStatus_MAX */
-  public static final int ActiveStatus_MAX = 2;
-
-  /** USER_APP is an element of enum UserSource. Its value is "USER_APP". */
-  public static final int USER_APP = 0;
-
-  public static final int USER_EXTERNAL = 1;
-  public static final int USER_AD = 2;
-  public static final int USER_LDAP = 3;
-  public static final int USER_UNIX = 4;
-  public static final int USER_REPO = 5;
-
+  /** internal group */
   public static final int GROUP_INTERNAL = 0;
-  public static final int GROUP_EXTERNAL = 1;
-  public static final int GROUP_AD = 2;
-  public static final int GROUP_LDAP = 3;
-  public static final int GROUP_UNIX = 4;
-  public static final int GROUP_REPO = 5;
 }

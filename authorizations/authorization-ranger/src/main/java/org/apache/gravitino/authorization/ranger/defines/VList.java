@@ -19,11 +19,9 @@
 package org.apache.gravitino.authorization.ranger.defines;
 
 import java.util.List;
-import javax.xml.bind.annotation.XmlRootElement;
 import lombok.Setter;
 
 // apache/ranger/security-admin/src/main/java/org/apache/ranger/view/VList.java
-@XmlRootElement
 public abstract class VList implements java.io.Serializable {
   private static final long serialVersionUID = 1L;
 
@@ -44,21 +42,6 @@ public abstract class VList implements java.io.Serializable {
 
   /** Default constructor. This will set all the attributes to default value. */
   public VList() {}
-
-  /** Initialize with existing list */
-  public VList(@SuppressWarnings("rawtypes") List objectList) {
-    int size = 0;
-    if (objectList != null) {
-      size = objectList.size();
-    }
-
-    startIndex = 0;
-    pageSize = size;
-    totalCount = size;
-    resultSize = size;
-    sortType = null;
-    sortBy = null;
-  }
 
   public abstract int getListSize();
 

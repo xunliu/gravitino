@@ -18,7 +18,6 @@
  */
 package org.apache.gravitino.authorization.ranger.defines;
 
-import javax.xml.bind.annotation.XmlRootElement;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -30,7 +29,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
     fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@XmlRootElement
 public class VXGroup extends VXDataObject implements java.io.Serializable {
   private static final long serialVersionUID = 1L;
 
@@ -44,13 +42,10 @@ public class VXGroup extends VXDataObject implements java.io.Serializable {
   protected int groupSource = RangerCommonEnums.GROUP_INTERNAL;
   /** Id of the credential store */
   protected Long credStoreId;
-
   /** Group visibility */
   protected Integer isVisible;
-
   /** Additional store attributes. */
   protected String otherAttributes;
-
   /** Sync Source Attribute */
   protected String syncSource;
 

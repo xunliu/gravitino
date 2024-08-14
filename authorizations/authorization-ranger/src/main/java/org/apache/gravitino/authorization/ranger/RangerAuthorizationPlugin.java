@@ -51,7 +51,6 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
   public static final String OWNER_ROLE_NAME = "OWNER";
 
   public static final String MANAGED_BY_GRAVITINO = "MANAGED_BY_GRAVITINO";
-  public static final String POLICY_ITEM_OWNER_USER = "{OWNER}";
 
   public RangerAuthorizationPlugin() {
     initMapPrivileges();
@@ -65,12 +64,20 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
 
   /**
    * Translate the privilege name to the corresponding privilege name in the underlying permission
+   *
+   * @param name The privilege name to translate
+   * @return The corresponding privilege name in the underlying permission system
    */
   public Set<String> translatePrivilege(Privilege.Name name) {
     return mapPrivileges.get(name);
   }
 
-  /** Whether this privilege is underlying permission system supported */
+  /**
+   * Whether this privilege is underlying permission system supported
+   *
+   * @param name The privilege name to check
+   * @return true if the privilege is supported, otherwise false
+   */
   protected boolean checkPrivilege(Privilege.Name name) {
     return mapPrivileges.containsKey(name);
   }
@@ -82,12 +89,12 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
     }
   }
 
-  @VisibleForTesting
-  public String formatPolicyName(String roleName, String securableObjectFullName) {
-    return roleName + "-" + securableObjectFullName;
-  }
-
-  /** Find the managed policy for the securable object. */
+  /**
+   * Find the managed policy for the securable object.
+   *
+   * @param metadataObject The metadata object to find the managed policy.
+   * @return The managed policy for the metadata object.
+   */
   @VisibleForTesting
   public RangerPolicy findManagedPolicy(MetadataObject metadataObject)
       throws AuthorizationHookException {
@@ -157,7 +164,12 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
     }
   }
 
-  /** For easy manage, each privilege will create a RangerPolicyItemAccess in the policy. */
+  /**
+   * For easy manage, each privilege will create a RangerPolicyItemAccess in the policy.
+   *
+   * @param policyItem The policy item to check
+   * @throws AuthorizationHookException If the policy item contains more than one access type
+   */
   void checkPolicyItemAccess(RangerPolicy.RangerPolicyItem policyItem)
       throws AuthorizationHookException {
     if (policyItem.getAccesses().size() != 1) {

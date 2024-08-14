@@ -91,10 +91,22 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
   protected void initMapPrivileges() {
     mapPrivileges =
         ImmutableMap.<Privilege.Name, Set<String>>builder()
-            .put(Privilege.Name.CREATE_SCHEMA, ImmutableSet.of("create"))
-            .put(Privilege.Name.CREATE_TABLE, ImmutableSet.of("create"))
-            .put(Privilege.Name.MODIFY_TABLE, ImmutableSet.of("update", "drop", "alter", "write"))
-            .put(Privilege.Name.SELECT_TABLE, ImmutableSet.of("read", "select"))
+            .put(
+                Privilege.Name.CREATE_SCHEMA,
+                ImmutableSet.of(RangerDefines.ACCESS_TYPE_HIVE_SELECT))
+            .put(
+                Privilege.Name.CREATE_TABLE, ImmutableSet.of(RangerDefines.ACCESS_TYPE_HIVE_CREATE))
+            .put(
+                Privilege.Name.MODIFY_TABLE,
+                ImmutableSet.of(
+                    RangerDefines.ACCESS_TYPE_HIVE_UPDATE,
+                    RangerDefines.ACCESS_TYPE_HIVE_DROP,
+                    RangerDefines.ACCESS_TYPE_HIVE_ALTER,
+                    RangerDefines.ACCESS_TYPE_HIVE_WRITE))
+            .put(
+                Privilege.Name.SELECT_TABLE,
+                ImmutableSet.of(
+                    RangerDefines.ACCESS_TYPE_HIVE_READ, RangerDefines.ACCESS_TYPE_HIVE_SELECT))
             .build();
   }
 
@@ -156,7 +168,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
     for (RoleChange change : changes) {
       boolean execResult;
       if (change instanceof RoleChange.AddSecurableObject) {
-        execResult = doAddSecurableObject(role.name(), (RoleChange.AddSecurableObject) change);
+        execResult = doAddSecurableObject((RoleChange.AddSecurableObject) change);
       } else if (change instanceof RoleChange.RemoveSecurableObject) {
         execResult =
             doRemoveSecurableObject(role.name(), (RoleChange.RemoveSecurableObject) change);
@@ -579,7 +591,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
    * policy maybe contain multiple Gravitino securable object <br>
    * 4. If the policy is not exist, then create a new policy. <br>
    */
-  private boolean doAddSecurableObject(String roleName, RoleChange.AddSecurableObject change) {
+  private boolean doAddSecurableObject(RoleChange.AddSecurableObject change) {
     RangerPolicy policy = findManagedPolicy(change.getSecurableObject());
 
     if (policy != null) {
@@ -606,7 +618,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
     } else {
       policy = new RangerPolicy();
       policy.setService(rangerServiceName);
-      policy.setName(formatPolicyName(roleName, change.getSecurableObject().fullName()));
+      policy.setName(change.getSecurableObject().fullName());
       policy.setPolicyLabels(Lists.newArrayList(MANAGED_BY_GRAVITINO));
 
       List<String> metadataObjectNamespaces =
@@ -680,7 +692,9 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
                           boolean notHasUserAndGroup =
                               (policyItem.getUsers().isEmpty()
                                       || policyItem.getUsers().size() == 1
-                                          && policyItem.getUsers().contains(POLICY_ITEM_OWNER_USER))
+                                          && policyItem
+                                              .getUsers()
+                                              .contains(RangerDefines.OWNER_USER))
                                   && policyItem.getGroups().isEmpty();
 
                           if (findAccess && notHasUserAndGroup) {
@@ -786,7 +800,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
                             new RangerPolicy.RangerPolicyItemAccess();
                         access.setType(rangerPrivilege);
                         policyItem.getAccesses().add(access);
-                        policyItem.setUsers(Lists.newArrayList(POLICY_ITEM_OWNER_USER));
+                        policyItem.setUsers(Lists.newArrayList(RangerDefines.OWNER_USER));
                         if (Privilege.Condition.ALLOW == gravitinoPrivilege.condition()) {
                           policy.getPolicyItems().add(policyItem);
                         } else {

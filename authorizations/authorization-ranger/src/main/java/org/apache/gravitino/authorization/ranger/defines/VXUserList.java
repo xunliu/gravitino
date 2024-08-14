@@ -20,9 +20,6 @@ package org.apache.gravitino.authorization.ranger.defines;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
@@ -32,10 +29,10 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
     setterVisibility = JsonAutoDetect.Visibility.NONE,
     fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class VXUserList extends VList {
   private static final long serialVersionUID = 1L;
+
+  /** List of users */
   List<VXUser> vXUsers = new ArrayList<>();
 
   @Override

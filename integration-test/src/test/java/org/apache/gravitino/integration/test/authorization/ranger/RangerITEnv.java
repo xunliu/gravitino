@@ -319,4 +319,11 @@ public class RangerITEnv {
       throw new RuntimeException(e);
     }
   }
+
+  /**
+   * Didn't call this function in the Lambda function body, It will return a random function name
+   */
+  public static String currentFunName() {
+    return Thread.currentThread().getStackTrace()[2].getMethodName();
+  }
 }
