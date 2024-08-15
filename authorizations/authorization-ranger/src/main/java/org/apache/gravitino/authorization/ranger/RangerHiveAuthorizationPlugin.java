@@ -24,7 +24,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -46,6 +48,7 @@ import org.apache.gravitino.authorization.ranger.defines.VXGroupList;
 import org.apache.gravitino.authorization.ranger.defines.VXUser;
 import org.apache.gravitino.authorization.ranger.defines.VXUserList;
 import org.apache.gravitino.connector.AuthorizationPropertiesMeta;
+import org.apache.gravitino.exceptions.AuthorizationPluginException;
 import org.apache.gravitino.meta.AuditInfo;
 import org.apache.gravitino.meta.GroupEntity;
 import org.apache.gravitino.meta.RoleEntity;
@@ -53,6 +56,8 @@ import org.apache.gravitino.meta.UserEntity;
 import org.apache.gravitino.utils.PrincipalUtils;
 import org.apache.ranger.RangerServiceException;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,6 +127,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
    */
   @Override
   public Boolean onRoleCreated(Role role) throws RuntimeException {
+    createRangerRole(role.name());
     return onRoleUpdated(
         role,
         role.securableObjects().stream()
@@ -149,18 +155,43 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
     return findAll;
   }
 
+  private RangerRole createRangerRole(String roleName) {
+    RangerRole rangerRole = null;
+    try {
+      rangerRole = rangerClient.getRole(roleName, RANGER_ADMIN_NAME, rangerServiceName);
+    } catch (RangerServiceException e) {
+      // ignore exception, If the role is not exist, then create it.
+    }
+    try {
+      if (rangerRole == null) {
+        rangerRole = new RangerRole(roleName, MANAGED_BY_GRAVITINO, null, null, null);
+        rangerClient.createRole(rangerServiceName, rangerRole);
+      }
+    } catch (RangerServiceException e) {
+      throw new RuntimeException(e);
+    }
+    return rangerRole;
+  }
+
   /**
    * Because one Ranger policy maybe contain multiple securable objects, so we didn't directly
    * remove the policy. <br>
-   * Reference: https://github.com/apache/gravitino/issues/4509
    */
   @Override
   public Boolean onRoleDeleted(Role role) throws RuntimeException {
-    return onRoleUpdated(
+    // First remove the role in the Ranger policy
+    onRoleUpdated(
         role,
         role.securableObjects().stream()
-            .map(securableObject -> RoleChange.removeSecurableObject(securableObject))
+            .map(securableObject -> RoleChange.removeSecurableObject(role.name(), securableObject))
             .toArray(RoleChange[]::new));
+    // Lastly, remove the role in the Ranger
+    try {
+      rangerClient.deleteRole(role.name(), RANGER_ADMIN_NAME, rangerServiceName);
+    } catch (RangerServiceException e) {
+      // Ignore exception to support idempotent operation
+    }
+    return Boolean.TRUE;
   }
 
   @Override
@@ -210,7 +241,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
     RoleEntity role =
         RoleEntity.builder()
             .withId(0L)
-            .withName(OWNER_ROLE_NAME)
+            .withName(metadataObject.fullName())
             .withAuditInfo(auditInfo)
             .withSecurableObjects(Lists.newArrayList(securableObjects))
             .build();
@@ -286,63 +317,124 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
    */
   @Override
   public Boolean onGrantedRolesToUser(List<Role> roles, User user) throws RuntimeException {
-    AtomicReference<Boolean> execResult = new AtomicReference<>(Boolean.TRUE);
-    for (Role role : roles) {
-      role.securableObjects()
-          .forEach(
-              securableObject -> {
-                RangerPolicy policy = findManagedPolicy(securableObject);
-                if (policy == null) {
-                  LOG.warn("The policy is not exist for the securable object({})", securableObject);
-                  execResult.set(Boolean.FALSE);
-                  return;
-                }
+    // If the user is not exist, then create it.
+    onUserAdded(user);
 
-                securableObject
-                    .privileges()
-                    .forEach(
-                        privilege -> {
-                          // Convert Gravitino privilege to Ranger privilege
-                          mapPrivileges
-                              .getOrDefault(privilege.name(), Collections.emptySet())
-                              .forEach(
-                                  // Use the Ranger privilege name to search
-                                  rangerPrivilegeName -> {
-                                    policy
-                                        /**
-                                         * TODO: Maybe we need to add the user to the
-                                         * Deny/DataMask/RowFilter policy item in the future.
-                                         */
-                                        .getPolicyItems()
-                                        .forEach(
-                                            policyItem -> {
-                                              if (policyItem.getAccesses().stream()
-                                                  .anyMatch(
-                                                      policyItemAccess ->
-                                                          policyItemAccess
-                                                              .getType()
-                                                              .equals(rangerPrivilegeName))) {
-                                                // If the user is not exist in the policy item, then
-                                                // add it.
-                                                if (!policyItem.getUsers().contains(user.name())) {
-                                                  policyItem.getUsers().add(user.name());
-                                                }
-                                              }
-                                            });
-                                    try {
-                                      rangerClient.updatePolicy(policy.getId(), policy);
-                                    } catch (RangerServiceException e) {
-                                      throw new RuntimeException(e);
-                                    }
-                                  });
-                        });
-              });
-      if (!execResult.get()) {
-        return Boolean.FALSE;
+    AtomicReference<Boolean> execResult = new AtomicReference<>(Boolean.TRUE);
+    roles.stream().forEach(role -> {
+      createRangerRole(role.name());
+      GrantRevokeRoleRequest grantRevokeRoleRequest = createGrantRevokeRoleRequest(role.name(), user.name(), null);
+      try {
+        rangerClient.grantRole(rangerServiceName, grantRevokeRoleRequest);
+      } catch (RangerServiceException e) {
+        // ignore exception, support idempotent operation
       }
-    }
+
+      role.securableObjects().stream().forEach(securableObject -> {
+        RangerPolicy policy = findManagedPolicy(securableObject);
+        if (policy == null) {
+          LOG.warn("The policy is not exist for the securable object({})", securableObject);
+          execResult.set(Boolean.FALSE);
+          return;
+        }
+
+        securableObject.privileges().stream().forEach(privilege -> {
+          mapPrivileges.getOrDefault(privilege.name(), Collections.emptySet()).stream().forEach(rangerPrivilegeName -> {
+            policy.getPolicyItems().stream().forEach(policyItem -> {
+              if (policyItem.getAccesses().stream().anyMatch(policyItemAccess -> policyItemAccess.getType().equals(rangerPrivilegeName))) {
+                if (!policyItem.getRoles().contains(role.name())) {
+                  policyItem.getRoles().add(role.name());
+                }
+              }
+            });
+            try {
+              rangerClient.updatePolicy(policy.getId(), policy);
+            } catch (RangerServiceException e) {
+              throw new RuntimeException(e);
+            }
+          });
+        });
+      });
+    });
+
+//    for (Role role : roles) {
+//      role.securableObjects()
+//          .forEach(
+//              securableObject -> {
+//                RangerPolicy policy = findManagedPolicy(securableObject);
+//                if (policy == null) {
+//                  LOG.warn("The policy is not exist for the securable object({})", securableObject);
+//                  execResult.set(Boolean.FALSE);
+//                  return;
+//                }
+//
+//                securableObject
+//                    .privileges()
+//                    .forEach(
+//                        privilege -> {
+//                          // Convert Gravitino privilege to Ranger privilege
+//                          mapPrivileges
+//                              .getOrDefault(privilege.name(), Collections.emptySet())
+//                              .forEach(
+//                                  // Use the Ranger privilege name to search
+//                                  rangerPrivilegeName -> {
+//                                    policy
+//                                        /**
+//                                         * TODO: Maybe we need to add the user to the
+//                                         * Deny/DataMask/RowFilter policy item in the future.
+//                                         */
+//                                        .getPolicyItems()
+//                                        .forEach(
+//                                            policyItem -> {
+//                                              if (policyItem.getAccesses().stream()
+//                                                  .anyMatch(
+//                                                      policyItemAccess ->
+//                                                          policyItemAccess
+//                                                              .getType()
+//                                                              .equals(rangerPrivilegeName))) {
+//                                                // If the user is not exist in the policy item, then
+//                                                // add it.
+//                                                if (!policyItem.getUsers().contains(user.name())) {
+//                                                  policyItem.getUsers().add(user.name());
+//                                                }
+//                                              }
+//                                            });
+//                                    try {
+//                                      rangerClient.updatePolicy(policy.getId(), policy);
+//                                    } catch (RangerServiceException e) {
+//                                      throw new RuntimeException(e);
+//                                    }
+//                                  });
+//                        });
+//              });
+//      if (!execResult.get()) {
+//        return Boolean.FALSE;
+//      }
+//    }
 
     return Boolean.TRUE;
+  }
+
+  private GrantRevokeRoleRequest createGrantRevokeRoleRequest(String roleName, String userName, String groupName) {
+    Set<String> users;
+    if (userName == null || userName.isEmpty()) {
+      users = new HashSet<>();
+    } else {
+      users = new HashSet<>(Arrays.asList(userName));
+    }
+    Set<String> groups;
+    if (groupName == null || groupName.isEmpty()) {
+      groups = new HashSet<>();
+    } else {
+      groups = new HashSet<>(Arrays.asList(groupName));
+    }
+
+    GrantRevokeRoleRequest roleRequest = new GrantRevokeRoleRequest();
+    roleRequest.setUsers(users);
+    roleRequest.setGroups(groups);
+    roleRequest.setGrantor(RANGER_ADMIN_NAME);
+    roleRequest.setTargetRoles(new HashSet<>(Arrays.asList(roleName)));
+    return roleRequest;
   }
 
   /**
@@ -351,175 +443,299 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
    */
   @Override
   public Boolean onRevokedRolesFromUser(List<Role> roles, User user) throws RuntimeException {
-    AtomicReference<Boolean> result = new AtomicReference<>(Boolean.TRUE);
-    for (Role role : roles) {
-      role.securableObjects()
-          .forEach(
-              securableObject -> {
-                RangerPolicy policy = findManagedPolicy(securableObject);
-                if (policy == null) {
-                  LOG.warn("The policy is not exist for the securable object({})", securableObject);
-                  result.set(Boolean.FALSE);
-                  return;
-                }
+//    AtomicReference<Boolean> result = new AtomicReference<>(Boolean.TRUE);
 
-                securableObject
-                    .privileges()
-                    .forEach(
-                        privilege -> {
-                          // Convert Gravitino privilege to Ranger privilege
-                          mapPrivileges
-                              .getOrDefault(privilege.name(), Collections.emptySet())
-                              .forEach(
-                                  // Use the Ranger privilege name to search
-                                  rangerPrivilegeName -> {
-                                    policy
-                                        // TODO: Maybe we need to add the user to the
-                                        // Deny/DataMask/RowFilter policy item in the future.
-                                        .getPolicyItems()
-                                        .forEach(
-                                            policyItem -> {
-                                              if (policyItem.getAccesses().stream()
-                                                  .anyMatch(
-                                                      policyItemAccess ->
-                                                          policyItemAccess
-                                                              .getType()
-                                                              .equals(rangerPrivilegeName))) {
-                                                // If the user is exist in the policy item, then
-                                                // remove it.
-                                                policyItem.getUsers().removeIf(user.name()::equals);
-                                              }
-                                            });
-                                    try {
-                                      rangerClient.updatePolicy(policy.getId(), policy);
-                                    } catch (RangerServiceException e) {
-                                      throw new RuntimeException(e);
-                                    }
-                                  });
-                        });
-              });
-      if (!result.get()) {
-        return Boolean.FALSE;
+    roles.stream().forEach(role -> {
+      checkRangerRole(role.name());
+      GrantRevokeRoleRequest grantRevokeRoleRequest = createGrantRevokeRoleRequest(role.name(), user.name(), null);
+      try {
+        rangerClient.revokeRole(rangerServiceName, grantRevokeRoleRequest);
+      } catch (RangerServiceException e) {
+        // Ignore exception to support idempotent operation
       }
-    }
+
+//      role.securableObjects().stream().forEach(securableObject -> {
+//      RangerPolicy policy = findManagedPolicy(securableObject);
+//      if (policy == null) {
+//        LOG.warn("The policy is not exist for the securable object({})", securableObject);
+//        result.set(Boolean.FALSE);
+//        return;
+//      }
+//
+//      securableObject.privileges().stream().forEach(privilege -> {
+//        mapPrivileges.getOrDefault(privilege.name(), Collections.emptySet()).stream().forEach(mappedPrivilege -> {
+//          policy.getPolicyItems().stream().forEach(policyItem -> {
+//            if (policyItem.getAccesses().stream().anyMatch(policyItemAccess -> policyItemAccess.getType().equals(mappedPrivilege))) {
+//              policyItem.getRoles().removeIf(role.name()::equals);
+//            }
+//          });
+//
+//          // Clean up the policy item if it doesn't have any roles, users, or groups
+//          policy.getPolicyItems().removeIf(policyItem -> policyItem.getRoles().isEmpty() && policyItem.getUsers().isEmpty() && policyItem.getGroups().isEmpty());
+//          try {
+//            rangerClient.updatePolicy(policy.getId(), policy);
+//          } catch (RangerServiceException e) {
+//            throw new RuntimeException(e);
+//          }
+//        });
+//      });
+//    });
+    });
+
+//    for (Role role : roles) {
+//      role.securableObjects()
+//          .forEach(
+//              securableObject -> {
+//                RangerPolicy policy = findManagedPolicy(securableObject);
+//                if (policy == null) {
+//                  LOG.warn("The policy is not exist for the securable object({})", securableObject);
+//                  result.set(Boolean.FALSE);
+//                  return;
+//                }
+//
+//                securableObject
+//                    .privileges()
+//                    .forEach(
+//                        privilege -> {
+//                          // Convert Gravitino privilege to Ranger privilege
+//                          mapPrivileges
+//                              .getOrDefault(privilege.name(), Collections.emptySet())
+//                              .forEach(
+//                                  // Use the Ranger privilege name to search
+//                                  rangerPrivilegeName -> {
+//                                    policy
+//                                        // TODO: Maybe we need to add the user to the
+//                                        // Deny/DataMask/RowFilter policy item in the future.
+//                                        .getPolicyItems()
+//                                        .forEach(
+//                                            policyItem -> {
+//                                              if (policyItem.getAccesses().stream()
+//                                                  .anyMatch(
+//                                                      policyItemAccess ->
+//                                                          policyItemAccess
+//                                                              .getType()
+//                                                              .equals(rangerPrivilegeName))) {
+//                                                // If the user is exist in the policy item, then
+//                                                // remove it.
+//                                                policyItem.getUsers().removeIf(user.name()::equals);
+//                                              }
+//                                            });
+//                                    try {
+//                                      rangerClient.updatePolicy(policy.getId(), policy);
+//                                    } catch (RangerServiceException e) {
+//                                      throw new RuntimeException(e);
+//                                    }
+//                                  });
+//                        });
+//              });
+//      if (!result.get()) {
+//        return Boolean.FALSE;
+//      }
+//    }
     return Boolean.TRUE;
   }
 
   @Override
   public Boolean onGrantedRolesToGroup(List<Role> roles, Group group) throws RuntimeException {
-    AtomicReference<Boolean> result = new AtomicReference<>(Boolean.TRUE);
-    for (Role role : roles) {
-      role.securableObjects()
-          .forEach(
-              securableObject -> {
-                RangerPolicy policy = findManagedPolicy(securableObject);
-                if (policy == null) {
-                  LOG.warn("The policy is not exist for the securable object({})", securableObject);
-                  result.set(Boolean.FALSE);
-                  return;
-                }
+    // If the group is not exist, then create it.
+    onGroupAdded(group);
 
-                securableObject
-                    .privileges()
-                    .forEach(
-                        privilege -> {
-                          // Convert Gravitino privilege to Ranger privilege
-                          mapPrivileges
-                              .getOrDefault(privilege.name(), Collections.emptySet())
-                              .forEach(
-                                  // Use the Ranger privilege name to search
-                                  rangerPrivilegeName -> {
-                                    policy
-                                        // TODO: Maybe we need to add the user to the
-                                        // Deny/DataMask/RowFilter policy item in the future.
-                                        .getPolicyItems()
-                                        .forEach(
-                                            policyItem -> {
-                                              if (policyItem.getAccesses().stream()
-                                                  .anyMatch(
-                                                      policyItemAccess ->
-                                                          policyItemAccess
-                                                              .getType()
-                                                              .equals(rangerPrivilegeName))) {
-                                                // If the user is not exist in the policy item, then
-                                                // add it.
-                                                if (!policyItem
-                                                    .getGroups()
-                                                    .contains(group.name())) {
-                                                  policyItem.getGroups().add(group.name());
-                                                }
-                                              }
-                                            });
-                                    try {
-                                      rangerClient.updatePolicy(policy.getId(), policy);
-                                    } catch (RangerServiceException e) {
-                                      throw new RuntimeException(e);
-                                    }
-                                  });
-                        });
-              });
-      if (!result.get()) {
-        return Boolean.FALSE;
+    AtomicReference<Boolean> execResult = new AtomicReference<>(Boolean.TRUE);
+    roles.stream().forEach(role -> {
+      createRangerRole(role.name());
+      GrantRevokeRoleRequest grantRevokeRoleRequest = createGrantRevokeRoleRequest(role.name(), null, group.name());
+      try {
+        rangerClient.grantRole(rangerServiceName, grantRevokeRoleRequest);
+      } catch (RangerServiceException e) {
+        // Ignore exception to support idempotent operation
       }
+
+      role.securableObjects().stream().forEach(securableObject -> {
+      RangerPolicy policy = findManagedPolicy(securableObject);
+      if (policy == null) {
+        LOG.warn("The policy is not exist for the securable object({})", securableObject);
+        execResult.set(Boolean.FALSE);
+        return;
+      }
+
+      securableObject.privileges().stream().forEach(privilege -> {
+        mapPrivileges.getOrDefault(privilege.name(), Collections.emptySet()).stream().forEach(rangerPrivilege -> {
+          policy.getPolicyItems().stream().forEach(policyItem -> {
+            if (policyItem.getAccesses().stream().anyMatch(policyItemAccess -> policyItemAccess.getType().equals(rangerPrivilege))) {
+              if (!policyItem.getRoles().contains(role.name())) {
+                policyItem.getRoles().add(role.name());
+              }
+            }
+          });
+          try {
+            rangerClient.updatePolicy(policy.getId(), policy);
+          } catch (RangerServiceException e) {
+            throw new RuntimeException(e);
+          }
+        });
+      });
+    });
+    });
+    if (!execResult.get()) {
+      return Boolean.FALSE;
     }
+
+//    for (Role role : roles) {
+//      role.securableObjects()
+//          .forEach(
+//              securableObject -> {
+//                RangerPolicy policy = findManagedPolicy(securableObject);
+//                if (policy == null) {
+//                  LOG.warn("The policy is not exist for the securable object({})", securableObject);
+//                  result.set(Boolean.FALSE);
+//                  return;
+//                }
+//
+//                securableObject
+//                    .privileges()
+//                    .forEach(
+//                        privilege -> {
+//                          // Convert Gravitino privilege to Ranger privilege
+//                          mapPrivileges
+//                              .getOrDefault(privilege.name(), Collections.emptySet())
+//                              .forEach(
+//                                  // Use the Ranger privilege name to search
+//                                  rangerPrivilegeName -> {
+//                                    policy
+//                                        // TODO: Maybe we need to add the user to the
+//                                        // Deny/DataMask/RowFilter policy item in the future.
+//                                        .getPolicyItems()
+//                                        .forEach(
+//                                            policyItem -> {
+//                                              if (policyItem.getAccesses().stream()
+//                                                  .anyMatch(
+//                                                      policyItemAccess ->
+//                                                          policyItemAccess
+//                                                              .getType()
+//                                                              .equals(rangerPrivilegeName))) {
+//                                                // If the user is not exist in the policy item, then
+//                                                // add it.
+//                                                if (!policyItem
+//                                                    .getGroups()
+//                                                    .contains(group.name())) {
+//                                                  policyItem.getGroups().add(group.name());
+//                                                }
+//                                              }
+//                                            });
+//                                    try {
+//                                      rangerClient.updatePolicy(policy.getId(), policy);
+//                                    } catch (RangerServiceException e) {
+//                                      throw new RuntimeException(e);
+//                                    }
+//                                  });
+//                        });
+//              });
+//      if (!result.get()) {
+//        return Boolean.FALSE;
+//      }
+//    }
     return Boolean.TRUE;
+  }
+
+  private boolean checkRangerRole(String roleName) throws AuthorizationPluginException {
+    try {
+      rangerClient.getRole(roleName, RANGER_ADMIN_NAME, rangerServiceName);
+    } catch (RangerServiceException e) {
+      throw new AuthorizationPluginException(e);
+    }
+    return true;
   }
 
   @Override
   public Boolean onRevokedRolesFromGroup(List<Role> roles, Group group) throws RuntimeException {
-    AtomicReference<Boolean> result = new AtomicReference<>(Boolean.TRUE);
-    for (Role role : roles) {
-      role.securableObjects()
-          .forEach(
-              securableObject -> {
-                RangerPolicy policy = findManagedPolicy(securableObject);
-                if (policy == null) {
-                  LOG.warn("The policy is not exist for the securable object({})", securableObject);
-                  result.set(Boolean.FALSE);
-                  return;
-                }
+//    AtomicReference<Boolean> result = new AtomicReference<>(Boolean.TRUE);
 
-                securableObject
-                    .privileges()
-                    .forEach(
-                        privilege -> {
-                          // Convert Gravitino privilege to Ranger privilege
-                          mapPrivileges
-                              .getOrDefault(privilege.name(), Collections.emptySet())
-                              .forEach(
-                                  // Use the Ranger privilege name to search
-                                  rangerPrivilegeName -> {
-                                    policy
-                                        // TODO: Maybe we need to add the user to the
-                                        // Deny/DataMask/RowFilter policy item in the future.
-                                        .getPolicyItems()
-                                        .forEach(
-                                            policyItem -> {
-                                              if (policyItem.getAccesses().stream()
-                                                  .anyMatch(
-                                                      policyItemAccess ->
-                                                          policyItemAccess
-                                                              .getType()
-                                                              .equals(rangerPrivilegeName))) {
-                                                // If the user is exist in the policy item, then
-                                                // remove it.
-                                                policyItem
-                                                    .getGroups()
-                                                    .removeIf(group.name()::equals);
-                                              }
-                                            });
-                                    try {
-                                      rangerClient.updatePolicy(policy.getId(), policy);
-                                    } catch (RangerServiceException e) {
-                                      throw new RuntimeException(e);
-                                    }
-                                  });
-                        });
-              });
-      if (!result.get()) {
-        return Boolean.FALSE;
+    roles.stream().forEach(role -> {
+      checkRangerRole(role.name());
+      GrantRevokeRoleRequest grantRevokeRoleRequest = createGrantRevokeRoleRequest(role.name(), null, group.name());
+      try {
+        rangerClient.revokeRole(rangerServiceName, grantRevokeRoleRequest);
+      } catch (RangerServiceException e) {
+        // Ignore exception to support idempotent operation
       }
-    }
+
+//      role.securableObjects().stream().forEach(securableObject -> {
+//        RangerPolicy policy = findManagedPolicy(securableObject);
+//        if (policy == null) {
+//          LOG.warn("The policy is not exist for the securable object({})", securableObject);
+//          result.set(Boolean.FALSE);
+//          return;
+//        }
+//
+//        securableObject.privileges().stream().forEach(privilege -> {
+//          mapPrivileges.getOrDefault(privilege.name(), Collections.emptySet()).stream().forEach(rangerPrivilege -> {
+//            policy.getPolicyItems().stream().forEach(policyItem -> {
+//              if (policyItem.getAccesses().stream().anyMatch(policyItemAccess -> policyItemAccess.getType().equals(rangerPrivilege))) {
+//                policyItem.getRoles().removeIf(role.name()::equals);
+//              }
+//            });
+//            try {
+//              rangerClient.updatePolicy(policy.getId(), policy);
+//            } catch (RangerServiceException e) {
+//              throw new RuntimeException(e);
+//            }
+//          });
+//        });
+//      });
+    });
+
+//    for (Role role : roles) {
+//      role.securableObjects()
+//          .forEach(
+//              securableObject -> {
+//                RangerPolicy policy = findManagedPolicy(securableObject);
+//                if (policy == null) {
+//                  LOG.warn("The policy is not exist for the securable object({})", securableObject);
+//                  result.set(Boolean.FALSE);
+//                  return;
+//                }
+//
+//                securableObject
+//                    .privileges()
+//                    .forEach(
+//                        privilege -> {
+//                          // Convert Gravitino privilege to Ranger privilege
+//                          mapPrivileges
+//                              .getOrDefault(privilege.name(), Collections.emptySet())
+//                              .forEach(
+//                                  // Use the Ranger privilege name to search
+//                                  rangerPrivilegeName -> {
+//                                    policy
+//                                        // TODO: Maybe we need to add the user to the
+//                                        // Deny/DataMask/RowFilter policy item in the future.
+//                                        .getPolicyItems()
+//                                        .forEach(
+//                                            policyItem -> {
+//                                              if (policyItem.getAccesses().stream()
+//                                                  .anyMatch(
+//                                                      policyItemAccess ->
+//                                                          policyItemAccess
+//                                                              .getType()
+//                                                              .equals(rangerPrivilegeName))) {
+//                                                // If the user is exist in the policy item, then
+//                                                // remove it.
+//                                                policyItem
+//                                                    .getGroups()
+//                                                    .removeIf(group.name()::equals);
+//                                              }
+//                                            });
+//                                    try {
+//                                      rangerClient.updatePolicy(policy.getId(), policy);
+//                                    } catch (RangerServiceException e) {
+//                                      throw new RuntimeException(e);
+//                                    }
+//                                  });
+//                        });
+//              });
+//      if (!result.get()) {
+//        return Boolean.FALSE;
+//      }
+//    }
 
     return Boolean.TRUE;
   }
@@ -584,7 +800,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
 
   /**
    * Add the securable object's privilege to the policy. <br>
-   * 1. Find the policy base the securable object. <br>
+   * 1. Find the policy base the metadata object. <br>
    * 2. If the policy is exist and have same privilege, because support idempotent operation, so
    * return true. <br>
    * 3. If the policy is exist but have different privilege, also return true. Because one Ranger
@@ -595,8 +811,11 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
     RangerPolicy policy = findManagedPolicy(change.getSecurableObject());
 
     if (policy != null) {
+      // Check the policy item's accesses and roles equal the Gravition securable object's privilege
+      // and roleName
       Set<String> policyPrivileges =
           policy.getPolicyItems().stream()
+              .filter(policyItem -> policyItem.getRoles().contains(change.getRoleName()))
               .flatMap(policyItem -> policyItem.getAccesses().stream())
               .map(RangerPolicy.RangerPolicyItemAccess::getType)
               .collect(Collectors.toSet());
@@ -621,18 +840,18 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
       policy.setName(change.getSecurableObject().fullName());
       policy.setPolicyLabels(Lists.newArrayList(MANAGED_BY_GRAVITINO));
 
-      List<String> metadataObjectNamespaces =
+      List<String> nsMetadataObject =
           Lists.newArrayList(
               SecurableObjects.DOT_SPLITTER.splitToList(change.getSecurableObject().fullName()));
-      if (metadataObjectNamespaces.size() > 4) {
+      if (nsMetadataObject.size() > 4) {
         // The max level of the securable object is `catalog.db.table.column`
         throw new RuntimeException("The securable object than 4");
       }
-      metadataObjectNamespaces.remove(0); // remove `catalog`
+      nsMetadataObject.remove(0); // remove `catalog`
 
-      for (int i = 0; i < metadataObjectNamespaces.size(); i++) {
+      for (int i = 0; i < nsMetadataObject.size(); i++) {
         RangerPolicy.RangerPolicyResource policyResource =
-            new RangerPolicy.RangerPolicyResource(metadataObjectNamespaces.get(i));
+            new RangerPolicy.RangerPolicyResource(nsMetadataObject.get(i));
         policy
             .getResources()
             .put(
@@ -670,7 +889,6 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
       String roleName, RoleChange.RemoveSecurableObject change) {
     RangerPolicy policy = findManagedPolicy(change.getSecurableObject());
 
-    final boolean[] hasChange = {false};
     if (policy != null) {
       policy
           .getPolicyItems()
@@ -682,25 +900,21 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
                         // Remove the policy item's accesses equal the Gravition securable object's
                         access -> {
                           // Use Gravitino privilege to search the Ranger policy item's access
-                          boolean findAccess =
+                          boolean matchPrivilege =
                               change.getSecurableObject().privileges().stream()
                                   .filter(Objects::nonNull)
                                   .flatMap(
                                       privilege -> translatePrivilege(privilege.name()).stream())
                                   .filter(Objects::nonNull)
                                   .anyMatch(privilege -> privilege.equals(access.getType()));
-                          boolean notHasUserAndGroup =
-                              (policyItem.getUsers().isEmpty()
-                                      || policyItem.getUsers().size() == 1
-                                          && policyItem
-                                              .getUsers()
-                                              .contains(RangerDefines.OWNER_USER))
-                                  && policyItem.getGroups().isEmpty();
 
-                          if (findAccess && notHasUserAndGroup) {
-                            hasChange[0] = true;
+                          if (matchPrivilege) {
+                            if (!policyItem.getRoles().isEmpty()) {
+                              // Remove the role from the policy item
+                              policyItem.getRoles().removeIf(roleName::equals);
+                            }
                           }
-                          return findAccess && notHasUserAndGroup;
+                          return matchPrivilege && policyItem.getRoles().isEmpty();
                         });
               });
 
@@ -712,17 +926,15 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
                   // Didn't need check users and groups
                   policyItem.getAccesses().isEmpty());
 
-      if (hasChange[0]) {
-        try {
-          if (policy.getPolicyItems().size() == 0) {
-            rangerClient.deletePolicy(policy.getId());
-          } else {
-            rangerClient.updatePolicy(policy.getId(), policy);
-          }
-        } catch (RangerServiceException e) {
-          LOG.error("Failed to remove the policy item from the Ranger policy {}!", policy);
-          throw new RuntimeException(e);
+      try {
+        if (policy.getPolicyItems().size() == 0) {
+          rangerClient.deletePolicy(policy.getId());
+        } else {
+          rangerClient.updatePolicy(policy.getId(), policy);
         }
+      } catch (RangerServiceException e) {
+        LOG.error("Failed to remove the policy item from the Ranger policy {}!", policy);
+        throw new RuntimeException(e);
       }
     } else {
       LOG.warn(
@@ -770,7 +982,8 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
    * We didn't clean the policy items, because one Ranger policy maybe contain multiple Gravitino
    * securable objects. <br>
    */
-  private void addPolicyItem(RangerPolicy policy, String roleName, SecurableObject securableObject) {
+  private void addPolicyItem(
+      RangerPolicy policy, String roleName, SecurableObject securableObject) {
     // First check the privilege if support in the Ranger Hive
     checkSecurableObject(securableObject);
 
@@ -779,18 +992,22 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
         .privileges()
         .forEach(
             gravitinoPrivilege -> {
+              // Translate the Gravitino privilege to mapped Ranger privilege
               translatePrivilege(gravitinoPrivilege.name())
                   .forEach(
-                      rangerPrivilege -> {
-                        boolean matchPrivilege =
+                      mappedPrivilege -> {
+                        // Find the policy item that match access and role
+                        boolean exist =
                             policy.getPolicyItems().stream()
                                 .anyMatch(
-                                    policyItem ->
-                                        policyItem.getAccesses().stream()
-                                            .anyMatch(
-                                                access ->
-                                                    access.getType().equals(rangerPrivilege)));
-                        if (matchPrivilege) {
+                                    policyItem -> {
+                                      return policyItem.getRoles().contains(roleName)
+                                          && policyItem.getAccesses().stream()
+                                              .anyMatch(
+                                                  access ->
+                                                      access.getType().equals(mappedPrivilege));
+                                    });
+                        if (exist) {
                           return;
                         }
 
@@ -798,7 +1015,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
                             new RangerPolicy.RangerPolicyItem();
                         RangerPolicy.RangerPolicyItemAccess access =
                             new RangerPolicy.RangerPolicyItemAccess();
-                        access.setType(rangerPrivilege);
+                        access.setType(mappedPrivilege);
                         policyItem.getAccesses().add(access);
                         policyItem.getRoles().add(roleName);
                         if (Privilege.Condition.ALLOW == gravitinoPrivilege.condition()) {
@@ -811,33 +1028,37 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
   }
 
   /**
-   * Remove policy item access items base the securable object's privileges. <br>
-   * We didn't clean the policy items, because one Ranger policy maybe contain multiple Gravitino
-   * privilege objects. <br>
+   * Remove policy item base the securable object's privileges and role name. <br>
+   * We didn't directly clean the policy items, because one Ranger policy maybe contain multiple
+   * Gravitino privilege objects. <br>
    */
-  private void removePolicyItem(RangerPolicy policy, String roleName, SecurableObject securableObject) {
+  private void removePolicyItem(
+      RangerPolicy policy, String roleName, SecurableObject securableObject) {
     // First check the privilege if support in the Ranger Hive
     checkSecurableObject(securableObject);
 
     // Delete the policy role base the securable object's privileges
-    policy.getPolicyItems().stream().forEach(policyItem -> {
-      policyItem
-          .getAccesses()
-          .forEach(
-              access -> {
-                boolean match = securableObject.privileges().stream()
-                    .filter(Objects::nonNull)
-                    .flatMap(privilege -> translatePrivilege(privilege.name()).stream())
-                    .filter(Objects::nonNull)
-                    .anyMatch(
-                        privilege -> {
-                          return access.getType().equals(privilege);
-                        });
-                if (match) {
-                  policyItem.getRoles().removeIf(roleName::equals);
-                }
-              });
-    });
+    policy.getPolicyItems().stream()
+        .forEach(
+            policyItem -> {
+              policyItem
+                  .getAccesses()
+                  .forEach(
+                      access -> {
+                        boolean matchPrivilege =
+                            securableObject.privileges().stream()
+                                .filter(Objects::nonNull)
+                                .flatMap(privilege -> translatePrivilege(privilege.name()).stream())
+                                .filter(Objects::nonNull)
+                                .anyMatch(
+                                    privilege -> {
+                                      return access.getType().equals(privilege);
+                                    });
+                        if (matchPrivilege) {
+                          policyItem.getRoles().removeIf(roleName::equals);
+                        }
+                      });
+            });
 
     // Delete the policy items if the roles is empty
     policy

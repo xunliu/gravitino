@@ -31,7 +31,7 @@ import org.apache.gravitino.MetadataObject;
 import org.apache.gravitino.authorization.Privilege;
 import org.apache.gravitino.authorization.SecurableObjects;
 import org.apache.gravitino.connector.authorization.AuthorizationPlugin;
-import org.apache.gravitino.exceptions.AuthorizationHookException;
+import org.apache.gravitino.exceptions.AuthorizationPluginException;
 import org.apache.ranger.RangerServiceException;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -44,13 +44,10 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
   /** Mapping Gravitino privilege name to the underlying authorization system privileges. */
   protected Map<Privilege.Name, Set<String>> mapPrivileges = null;
 
-  /**
-   * Because UserGroupAuthorizationPlugin::onOwnerSet() interface function didn't have param Role,
-   * So we need predefine a role name
-   */
-  public static final String OWNER_ROLE_NAME = "OWNER";
-
   public static final String MANAGED_BY_GRAVITINO = "MANAGED_BY_GRAVITINO";
+
+  // TODO: Maybe need to move to the configuration in the future
+  public static final String RANGER_ADMIN_NAME = "admin";
 
   public RangerAuthorizationPlugin() {
     initMapPrivileges();
@@ -85,19 +82,19 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
   @FormatMethod
   protected static void check(boolean condition, @FormatString String message, Object... args) {
     if (!condition) {
-      throw new AuthorizationHookException(message, args);
+      throw new AuthorizationPluginException(message, args);
     }
   }
 
   /**
-   * Find the managed policy for the securable object.
+   * Find the managed policy for the metadata object.
    *
    * @param metadataObject The metadata object to find the managed policy.
    * @return The managed policy for the metadata object.
    */
   @VisibleForTesting
   public RangerPolicy findManagedPolicy(MetadataObject metadataObject)
-      throws AuthorizationHookException {
+      throws AuthorizationPluginException {
     List<String> metaObjNamespaces =
         Lists.newArrayList(SecurableObjects.DOT_SPLITTER.splitToList(metadataObject.fullName()));
     metaObjNamespaces.remove(0); // skip `catalog`
@@ -145,7 +142,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
 
       // Only return the policies that are delegate Gravitino management
       if (policies.size() > 1) {
-        throw new AuthorizationHookException(
+        throw new AuthorizationPluginException(
             "Each metadata object only have one Gravitino management enable policies.");
       }
 
@@ -160,7 +157,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
 
       return policy;
     } catch (RangerServiceException e) {
-      throw new AuthorizationHookException(e);
+      throw new AuthorizationPluginException(e);
     }
   }
 
@@ -168,12 +165,12 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
    * For easy manage, each privilege will create a RangerPolicyItemAccess in the policy.
    *
    * @param policyItem The policy item to check
-   * @throws AuthorizationHookException If the policy item contains more than one access type
+   * @throws AuthorizationPluginException If the policy item contains more than one access type
    */
   void checkPolicyItemAccess(RangerPolicy.RangerPolicyItem policyItem)
-      throws AuthorizationHookException {
+      throws AuthorizationPluginException {
     if (policyItem.getAccesses().size() != 1) {
-      throw new AuthorizationHookException(
+      throw new AuthorizationPluginException(
           "The access type only have one in the delegate Gravitino management policy");
     }
     Map<String, Boolean> mapAccesses = new HashMap<>();
@@ -182,7 +179,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
         .forEach(
             access -> {
               if (mapAccesses.containsKey(access.getType()) && mapAccesses.get(access.getType())) {
-                throw new AuthorizationHookException(
+                throw new AuthorizationPluginException(
                     "Contain duplicate privilege in the delegate Gravitino management policy ");
               }
               mapAccesses.put(access.getType(), true);

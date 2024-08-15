@@ -21,8 +21,8 @@ package org.apache.gravitino.exceptions;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
-/** An exception thrown when an authorization hook operation failed. */
-public class AuthorizationHookException extends IllegalArgumentException {
+/** An exception thrown when an authorization plugin operation failed. */
+public class AuthorizationPluginException extends IllegalArgumentException {
 
   /**
    * Constructs a new exception with the specified detail message.
@@ -31,7 +31,7 @@ public class AuthorizationHookException extends IllegalArgumentException {
    * @param args the arguments to the message.
    */
   @FormatMethod
-  public AuthorizationHookException(@FormatString String message, Object... args) {
+  public AuthorizationPluginException(@FormatString String message, Object... args) {
     super(String.format(message, args));
   }
 
@@ -40,7 +40,7 @@ public class AuthorizationHookException extends IllegalArgumentException {
    *
    * @param cause the cause.
    */
-  public AuthorizationHookException(Throwable cause) {
+  public AuthorizationPluginException(Throwable cause) {
     super(cause);
   }
 }

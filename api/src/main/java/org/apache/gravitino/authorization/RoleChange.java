@@ -38,23 +38,25 @@ public interface RoleChange {
   /**
    * Create a RoleChange to remove a securable object from a role.
    *
+   * @param roleName The role name.
    * @param securableObject The securable object.
    * @return return a RoleChange for the add securable object.
    */
-  static RoleChange removeSecurableObject(SecurableObject securableObject) {
-    return new RemoveSecurableObject(securableObject);
+  static RoleChange removeSecurableObject(String roleName, SecurableObject securableObject) {
+    return new RemoveSecurableObject(roleName, securableObject);
   }
 
   /**
    * Update a securable object RoleChange.
    *
+   * @param roleName The role name.
    * @param securableObject The securable object.
    * @param newSecurableObject The new securable object.
    * @return return a RoleChange for the update securable object.
    */
   static RoleChange updateSecurableObject(
-      SecurableObject securableObject, SecurableObject newSecurableObject) {
-    return new UpdateSecurableObject(securableObject, newSecurableObject);
+      String roleName, SecurableObject securableObject, SecurableObject newSecurableObject) {
+    return new UpdateSecurableObject(roleName, securableObject, newSecurableObject);
   }
 
   /** A AddSecurableObject to add securable object to role. */
@@ -71,7 +73,7 @@ public interface RoleChange {
      * Returns the role name to be added.
      *
      * @return return a role name.
-     * */
+     */
     public String getRoleName() {
       return this.roleName;
     }
@@ -125,10 +127,21 @@ public interface RoleChange {
 
   /** A RemoveSecurableObject to remove securable object from role. */
   final class RemoveSecurableObject implements RoleChange {
+    private final String roleName;
     private final SecurableObject securableObject;
 
-    private RemoveSecurableObject(SecurableObject securableObject) {
+    private RemoveSecurableObject(String roleName, SecurableObject securableObject) {
+      this.roleName = roleName;
       this.securableObject = securableObject;
+    }
+
+    /**
+     * Returns the role name.
+     *
+     * @return return a role name.
+     */
+    public String getRoleName() {
+      return roleName;
     }
 
     /**
@@ -152,7 +165,7 @@ public interface RoleChange {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
       RemoveSecurableObject that = (RemoveSecurableObject) o;
-      return securableObject.equals(that.securableObject);
+      return roleName.equals(that.roleName) && securableObject.equals(that.securableObject);
     }
 
     /**
@@ -163,7 +176,7 @@ public interface RoleChange {
      */
     @Override
     public int hashCode() {
-      return securableObject.hashCode();
+      return Objects.hash(roleName, securableObject);
     }
 
     /**
@@ -174,7 +187,7 @@ public interface RoleChange {
      */
     @Override
     public String toString() {
-      return "REMOVESECURABLEOBJECT " + securableObject;
+      return "REMOVESECURABLEOBJECT " + roleName + " " + securableObject;
     }
   }
 
@@ -185,11 +198,12 @@ public interface RoleChange {
    * The securable object's privilege must be different as new securable object's privilege. <br>
    */
   final class UpdateSecurableObject implements RoleChange {
+    private final String roleName;
     private final SecurableObject securableObject;
     private final SecurableObject newSecurableObject;
 
     private UpdateSecurableObject(
-        SecurableObject securableObject, SecurableObject newSecurableObject) {
+        String roleName, SecurableObject securableObject, SecurableObject newSecurableObject) {
       if (!securableObject.fullName().equals(newSecurableObject.fullName())) {
         throw new IllegalArgumentException(
             "The securable object's metadata entity must be same as new securable object's metadata entity.");
@@ -198,9 +212,18 @@ public interface RoleChange {
         throw new IllegalArgumentException(
             "The securable object's privilege must be different as new securable object's privilege.");
       }
-
+      this.roleName = roleName;
       this.securableObject = securableObject;
       this.newSecurableObject = newSecurableObject;
+    }
+
+    /**
+     * Returns the role name.
+     *
+     * @return return a role name.
+     */
+    public String getRoleName() {
+      return roleName;
     }
 
     /**
@@ -233,7 +256,8 @@ public interface RoleChange {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
       UpdateSecurableObject that = (UpdateSecurableObject) o;
-      return securableObject.equals(that.securableObject)
+      return roleName.equals(that.roleName)
+          && securableObject.equals(that.securableObject)
           && newSecurableObject.equals(that.newSecurableObject);
     }
 
@@ -245,9 +269,7 @@ public interface RoleChange {
      */
     @Override
     public int hashCode() {
-      int result = Objects.hash(securableObject);
-      result = 31 * result + Objects.hashCode(newSecurableObject);
-      return result;
+      return Objects.hash(roleName, securableObject, newSecurableObject);
     }
 
     /**
@@ -258,7 +280,7 @@ public interface RoleChange {
      */
     @Override
     public String toString() {
-      return "UPDATESECURABLEOBJECT " + securableObject;
+      return "UPDATESECURABLEOBJECT " + roleName + " " + securableObject + " " + newSecurableObject;
     }
   }
 }

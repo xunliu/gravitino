@@ -95,11 +95,11 @@ public class RangerHiveIT extends RangerITEnv {
   /** Currently we only test Ranger Hive, So wo Allow anyone to visit HDFS */
   static void allowAnyoneAccessHDFS() {
     String policyName = currentFunName();
-    RangerPolicy policy;
+    RangerPolicy policy = null;
     try {
       policy = rangerClient.getPolicy(RangerDefines.SERVICE_TYPE_HDFS, policyName);
     } catch (RangerServiceException e) {
-      throw new RuntimeException(e);
+      // If the policy doesn't exist, we will create it
     }
     if (policy != null) {
       return;
@@ -128,11 +128,11 @@ public class RangerHiveIT extends RangerITEnv {
    */
   static void allowAnyoneAccessInformationSchema() {
     String policyName = currentFunName();
-    RangerPolicy policy;
+    RangerPolicy policy = null;
     try {
       policy = rangerClient.getPolicy(RangerDefines.SERVICE_TYPE_HIVE, policyName);
     } catch (RangerServiceException e) {
-      throw new RuntimeException(e);
+      // If the policy doesn't exist, we will create it
     }
     if (policy != null) {
       return;
