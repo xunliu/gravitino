@@ -27,11 +27,12 @@ public interface RoleChange {
   /**
    * Create a RoleChange to add a securable object into a role.
    *
+   * @param roleName The role name.
    * @param securableObject The securable object.
    * @return return a RoleChange for the add securable object.
    */
-  static RoleChange addSecurableObject(SecurableObject securableObject) {
-    return new AddSecurableObject(securableObject);
+  static RoleChange addSecurableObject(String roleName, SecurableObject securableObject) {
+    return new AddSecurableObject(roleName, securableObject);
   }
 
   /**
@@ -58,10 +59,21 @@ public interface RoleChange {
 
   /** A AddSecurableObject to add securable object to role. */
   final class AddSecurableObject implements RoleChange {
+    private final String roleName;
     private final SecurableObject securableObject;
 
-    private AddSecurableObject(SecurableObject securableObject) {
+    private AddSecurableObject(String roleName, SecurableObject securableObject) {
+      this.roleName = roleName;
       this.securableObject = securableObject;
+    }
+
+    /**
+     * Returns the role name to be added.
+     *
+     * @return return a role name.
+     * */
+    public String getRoleName() {
+      return this.roleName;
     }
 
     /**
@@ -85,7 +97,7 @@ public interface RoleChange {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
       AddSecurableObject that = (AddSecurableObject) o;
-      return securableObject.equals(that.securableObject);
+      return roleName.equals(that.roleName) && securableObject.equals(that.securableObject);
     }
 
     /**
@@ -96,7 +108,7 @@ public interface RoleChange {
      */
     @Override
     public int hashCode() {
-      return securableObject.hashCode();
+      return Objects.hash(roleName, securableObject);
     }
 
     /**
@@ -107,7 +119,7 @@ public interface RoleChange {
      */
     @Override
     public String toString() {
-      return "ADDSECURABLEOBJECT " + securableObject;
+      return "ADDSECURABLEOBJECT " + roleName + " " + securableObject;
     }
   }
 

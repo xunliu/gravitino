@@ -125,7 +125,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
     return onRoleUpdated(
         role,
         role.securableObjects().stream()
-            .map(securableObject -> RoleChange.addSecurableObject(securableObject))
+            .map(securableObject -> RoleChange.addSecurableObject(role.name(), securableObject))
             .toArray(RoleChange[]::new));
   }
 
@@ -643,7 +643,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
       }
     }
 
-    addPolicyItemAccess(policy, change.getSecurableObject());
+    addPolicyItem(policy, change.getRoleName(), change.getSecurableObject());
     try {
       if (policy.getId() == null) {
         rangerClient.createPolicy(policy);
@@ -744,8 +744,8 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
     RangerPolicy policy = findManagedPolicy(change.getSecurableObject());
 
     if (policy != null) {
-      removePolicyItemAccess(policy, change.getSecurableObject());
-      addPolicyItemAccess(policy, change.getNewSecurableObject());
+      removePolicyItem(policy, roleName, change.getSecurableObject());
+      addPolicyItem(policy, roleName, change.getNewSecurableObject());
       try {
         if (policy.getId() == null) {
           rangerClient.createPolicy(policy);
@@ -770,7 +770,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
    * We didn't clean the policy items, because one Ranger policy maybe contain multiple Gravitino
    * securable objects. <br>
    */
-  private void addPolicyItemAccess(RangerPolicy policy, SecurableObject securableObject) {
+  private void addPolicyItem(RangerPolicy policy, String roleName, SecurableObject securableObject) {
     // First check the privilege if support in the Ranger Hive
     checkSecurableObject(securableObject);
 
@@ -782,7 +782,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
               translatePrivilege(gravitinoPrivilege.name())
                   .forEach(
                       rangerPrivilege -> {
-                        boolean alreadyExist =
+                        boolean matchPrivilege =
                             policy.getPolicyItems().stream()
                                 .anyMatch(
                                     policyItem ->
@@ -790,7 +790,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
                                             .anyMatch(
                                                 access ->
                                                     access.getType().equals(rangerPrivilege)));
-                        if (alreadyExist) {
+                        if (matchPrivilege) {
                           return;
                         }
 
@@ -800,7 +800,7 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
                             new RangerPolicy.RangerPolicyItemAccess();
                         access.setType(rangerPrivilege);
                         policyItem.getAccesses().add(access);
-                        policyItem.setUsers(Lists.newArrayList(RangerDefines.OWNER_USER));
+                        policyItem.getRoles().add(roleName);
                         if (Privilege.Condition.ALLOW == gravitinoPrivilege.condition()) {
                           policy.getPolicyItems().add(policyItem);
                         } else {
@@ -815,24 +815,36 @@ public class RangerHiveAuthorizationPlugin extends RangerAuthorizationPlugin {
    * We didn't clean the policy items, because one Ranger policy maybe contain multiple Gravitino
    * privilege objects. <br>
    */
-  private void removePolicyItemAccess(RangerPolicy policy, SecurableObject securableObject) {
+  private void removePolicyItem(RangerPolicy policy, String roleName, SecurableObject securableObject) {
     // First check the privilege if support in the Ranger Hive
     checkSecurableObject(securableObject);
 
-    // Delete the policy items by the securable object's privileges
+    // Delete the policy role base the securable object's privileges
+    policy.getPolicyItems().stream().forEach(policyItem -> {
+      policyItem
+          .getAccesses()
+          .forEach(
+              access -> {
+                boolean match = securableObject.privileges().stream()
+                    .filter(Objects::nonNull)
+                    .flatMap(privilege -> translatePrivilege(privilege.name()).stream())
+                    .filter(Objects::nonNull)
+                    .anyMatch(
+                        privilege -> {
+                          return access.getType().equals(privilege);
+                        });
+                if (match) {
+                  policyItem.getRoles().removeIf(roleName::equals);
+                }
+              });
+    });
+
+    // Delete the policy items if the roles is empty
     policy
         .getPolicyItems()
         .removeIf(
             policyItem -> {
-              return securableObject.privileges().stream()
-                  .filter(Objects::nonNull)
-                  .flatMap(privilege -> translatePrivilege(privilege.name()).stream())
-                  .filter(Objects::nonNull)
-                  .anyMatch(
-                      privilege -> {
-                        return policyItem.getAccesses().stream()
-                            .anyMatch(access -> access.getType().equals(privilege));
-                      });
+              return policyItem.getRoles().isEmpty();
             });
   }
 

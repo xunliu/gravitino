@@ -276,7 +276,7 @@ public class RangerAuthorizationHiveIT extends RangerHiveIT {
     // 1. Add a securable object to the role
     Assertions.assertTrue(
         rangerHiveAuthPlugin.onRoleUpdated(
-            mockCatalogRole, RoleChange.addSecurableObject(securableObject1)));
+            mockCatalogRole, RoleChange.addSecurableObject(mockCatalogRole.name(), securableObject1)));
 
     // construct a verify role to check if the role and Ranger policy is created correctly
     RoleEntity verifyRole1 =
@@ -292,7 +292,7 @@ public class RangerAuthorizationHiveIT extends RangerHiveIT {
     // operation, so return true
     Assertions.assertTrue(
         rangerHiveAuthPlugin.onRoleUpdated(
-            mockCatalogRole, RoleChange.addSecurableObject(securableObject1)));
+            mockCatalogRole, RoleChange.addSecurableObject(mockCatalogRole.name(), securableObject1)));
     verifyRoleInRanger(verifyRole1, null, null, null, null);
 
     // 3. Add a same entity but have different privilege to the role, then return false
@@ -303,7 +303,7 @@ public class RangerAuthorizationHiveIT extends RangerHiveIT {
             Lists.newArrayList(Privileges.SelectTable.allow(), Privileges.ModifyTable.allow()));
     Assertions.assertTrue(
         rangerHiveAuthPlugin.onRoleUpdated(
-            mockCatalogRole, RoleChange.addSecurableObject(securableObject3)));
+            mockCatalogRole, RoleChange.addSecurableObject(mockCatalogRole.name(), securableObject3)));
   }
 
   @Test

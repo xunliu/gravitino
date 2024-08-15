@@ -42,22 +42,23 @@ public class AuthorizationPropertiesMeta {
       ImmutableMap.<String, PropertyEntry<?>>builder()
           .put(
               RANGER_ADMIN_URL,
-              PropertyEntry.stringRequiredPropertyEntry(
-                  RANGER_ADMIN_URL, "The Ranger admin web URIs", true, false))
+              PropertyEntry.stringOptionalPropertyEntry(
+                  RANGER_ADMIN_URL, "The Ranger admin web URIs", true, null, false))
           .put(
               RANGER_AUTH_TYPE,
-              PropertyEntry.stringRequiredPropertyEntry(
+              PropertyEntry.stringOptionalPropertyEntry(
                   RANGER_AUTH_TYPE,
                   "The Ranger admin web auth type (kerberos/simple)",
                   true,
+                  null,
                   false))
           .put(
               RANGER_USERNAME,
-              PropertyEntry.stringRequiredPropertyEntry(
-                  RANGER_USERNAME, "The Ranger admin web login username", true, false))
+              PropertyEntry.stringOptionalPropertyEntry(
+                  RANGER_USERNAME, "The Ranger admin web login username", true, null, false))
           .put(
               RANGER_PASSWORD,
-              PropertyEntry.stringRequiredPropertyEntry(
-                  RANGER_PASSWORD, "The Ranger admin web login password", true, false))
+              PropertyEntry.stringOptionalPropertyEntry(
+                  RANGER_PASSWORD, "The Ranger admin web login password", true, null, false))
           .build();
 }
