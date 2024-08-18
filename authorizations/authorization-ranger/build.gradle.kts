@@ -25,7 +25,9 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":api"))
+  implementation(project(":api")) {
+    exclude(group = "*")
+  }
   implementation(project(":core"))
   implementation(libs.bundles.log4j)
   implementation(libs.commons.collections4)

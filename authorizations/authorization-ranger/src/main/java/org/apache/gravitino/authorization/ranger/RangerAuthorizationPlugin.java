@@ -372,7 +372,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
                         RangerPolicy policy = findManagedPolicy(securableObject);
                         if (policy == null) {
                           LOG.warn(
-                              "The policy is not exist for the securable object({})",
+                              "The policy does not exist for the securable object({})",
                               securableObject);
                           execResult.set(Boolean.FALSE);
                           return;
@@ -422,8 +422,6 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
    */
   @Override
   public Boolean onRevokedRolesFromUser(List<Role> roles, User user) throws RuntimeException {
-    //    AtomicReference<Boolean> result = new AtomicReference<>(Boolean.TRUE);
-
     roles.stream()
         .forEach(
             role -> {
