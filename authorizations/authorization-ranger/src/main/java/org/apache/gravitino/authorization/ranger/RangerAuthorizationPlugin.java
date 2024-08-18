@@ -43,6 +43,8 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
   protected String rangerServiceName;
   /** Mapping Gravitino privilege name to the underlying authorization system privileges. */
   protected Map<Privilege.Name, Set<String>> mapPrivileges = null;
+  // The owner privileges, the owner can do anything on the metadata object
+  protected Set<String> ownerPrivileges = null;
 
   public static final String MANAGED_BY_GRAVITINO = "MANAGED_BY_GRAVITINO";
 
@@ -69,6 +71,11 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
     return mapPrivileges.get(name);
   }
 
+  @VisibleForTesting
+  public Set<String> getOwnerPrivileges() {
+    return ownerPrivileges;
+  }
+
   /**
    * Whether this privilege is underlying permission system supported
    *
@@ -80,7 +87,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
   }
 
   @FormatMethod
-  protected static void check(boolean condition, @FormatString String message, Object... args) {
+  protected void check(boolean condition, @FormatString String message, Object... args) {
     if (!condition) {
       throw new AuthorizationPluginException(message, args);
     }
