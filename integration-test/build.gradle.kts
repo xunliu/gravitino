@@ -37,6 +37,7 @@ dependencies {
   testImplementation(project(":integration-test-common", "testArtifacts"))
   testImplementation(project(":server"))
   testImplementation(project(":server-common"))
+  testImplementation(project(":catalogs:catalog-common"))
   testImplementation(project(":authorizations:authorization-ranger"))
 
   testImplementation(libs.awaitility)

@@ -50,12 +50,14 @@ import org.apache.gravitino.connector.AuthorizationPropertiesMeta;
 import org.apache.gravitino.integration.test.container.ContainerSuite;
 import org.apache.gravitino.integration.test.container.HiveContainer;
 import org.apache.gravitino.integration.test.container.RangerContainer;
+import org.apache.gravitino.integration.test.util.AbstractIT;
 import org.apache.gravitino.integration.test.util.GravitinoITUtils;
 import org.apache.gravitino.meta.AuditInfo;
 import org.apache.gravitino.meta.GroupEntity;
 import org.apache.gravitino.meta.RoleEntity;
 import org.apache.gravitino.meta.UserEntity;
 import org.apache.gravitino.utils.RandomNameUtils;
+import org.apache.ranger.RangerClient;
 import org.apache.ranger.RangerServiceException;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerRole;
@@ -67,7 +69,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Tag("gravitino-docker-test")
-public class RangerHiveIT extends RangerITEnv {
+public class RangerHiveIT {
   private static final Logger LOG = LoggerFactory.getLogger(RangerHiveIT.class);
 
   private static final ContainerSuite containerSuite = ContainerSuite.getInstance();
@@ -117,13 +119,6 @@ public class RangerHiveIT extends RangerITEnv {
                 RangerContainer.rangerPassword,
                 AuthorizationPropertiesMeta.RANGER_SERVICE_NAME,
                 RangerITEnv.RANGER_HIVE_REPO_NAME));
-
-    createRangerHdfsRepository(
-        containerSuite.getHiveRangerContainer().getContainerIpAddress(), true);
-    createRangerHiveRepository(
-        containerSuite.getHiveRangerContainer().getContainerIpAddress(), true);
-    allowAnyoneAccessHDFS();
-    allowAnyoneAccessInformationSchema();
 
     // Create hive connection
     String url =
@@ -296,9 +291,9 @@ public class RangerHiveIT extends RangerITEnv {
     policyItem.setAccesses(
         Arrays.asList(
             new RangerPolicy.RangerPolicyItemAccess(RangerDefines.ACCESS_TYPE_HIVE_SELECT)));
-    updateOrCreateRangerPolicy(
+    RangerITEnv.updateOrCreateRangerPolicy(
         RangerDefines.SERVICE_TYPE_HIVE,
-        RANGER_HIVE_REPO_NAME,
+        RangerITEnv.RANGER_HIVE_REPO_NAME,
         roleName,
         policyResourceMap,
         Collections.singletonList(policyItem));
@@ -1024,8 +1019,8 @@ public class RangerHiveIT extends RangerITEnv {
     RangerRole rangerRole = null;
     try {
       rangerRole =
-          rangerClient.getRole(
-              role.name(), RangerAuthorizationPlugin.RANGER_ADMIN_NAME, RANGER_HIVE_REPO_NAME);
+          RangerITEnv.rangerClient.getRole(
+              role.name(), RangerAuthorizationPlugin.RANGER_ADMIN_NAME, RangerITEnv.RANGER_HIVE_REPO_NAME);
       LOG.info("rangerRole: " + rangerRole.toString());
     } catch (RangerServiceException e) {
       throw new RuntimeException(e);
@@ -1074,7 +1069,7 @@ public class RangerHiveIT extends RangerITEnv {
               RangerPolicy policy;
               try {
                 policy =
-                    rangerClient.getPolicy(
+                    RangerITEnv.rangerClient.getPolicy(
                         RangerITEnv.RANGER_HIVE_REPO_NAME, securableObject.fullName());
                 LOG.info("policy: " + policy.toString());
               } catch (RangerServiceException e) {
@@ -1121,7 +1116,7 @@ public class RangerHiveIT extends RangerITEnv {
     String policyName = metadataObject.fullName();
     RangerPolicy policy;
     try {
-      policy = rangerClient.getPolicy(RangerITEnv.RANGER_HIVE_REPO_NAME, policyName);
+      policy = RangerITEnv.rangerClient.getPolicy(RangerITEnv.RANGER_HIVE_REPO_NAME, policyName);
       LOG.info("policy: " + policy.toString());
     } catch (RangerServiceException e) {
       LOG.error("Failed to get policy: " + policyName);
@@ -1216,69 +1211,6 @@ public class RangerHiveIT extends RangerITEnv {
     verifyRoleInRanger(role, includeUsers, excludeUsers, includeGroups, null);
   }
 
-  /** Currently we only test Ranger Hive, So wo Allow anyone to visit HDFS */
-  static void allowAnyoneAccessHDFS() {
-    String policyName = currentFunName();
-    try {
-      if (null != rangerClient.getPolicy(RangerDefines.SERVICE_TYPE_HDFS, policyName)) {
-        return;
-      }
-    } catch (RangerServiceException e) {
-      // If the policy doesn't exist, we will create it
-    }
-
-    Map<String, RangerPolicy.RangerPolicyResource> policyResourceMap =
-        ImmutableMap.of(RangerDefines.RESOURCE_PATH, new RangerPolicy.RangerPolicyResource("/*"));
-    RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
-    policyItem.setUsers(Arrays.asList(RangerDefines.CURRENT_USER));
-    policyItem.setAccesses(
-        Arrays.asList(
-            new RangerPolicy.RangerPolicyItemAccess(RangerDefines.ACCESS_TYPE_HDFS_READ),
-            new RangerPolicy.RangerPolicyItemAccess(RangerDefines.ACCESS_TYPE_HDFS_WRITE),
-            new RangerPolicy.RangerPolicyItemAccess(RangerDefines.ACCESS_TYPE_HDFS_EXECUTE)));
-    updateOrCreateRangerPolicy(
-        RangerDefines.SERVICE_TYPE_HDFS,
-        RANGER_HDFS_REPO_NAME,
-        policyName,
-        policyResourceMap,
-        Collections.singletonList(policyItem));
-  }
-
-  /**
-   * Hive must have this policy Allow anyone can access information schema to show `database`,
-   * `tables` and `columns`
-   */
-  static void allowAnyoneAccessInformationSchema() {
-    String policyName = currentFunName();
-    try {
-      if (null != rangerClient.getPolicy(RangerDefines.SERVICE_TYPE_HIVE, policyName)) {
-        return;
-      }
-    } catch (RangerServiceException e) {
-      // If the policy doesn't exist, we will create it
-    }
-
-    Map<String, RangerPolicy.RangerPolicyResource> policyResourceMap =
-        ImmutableMap.of(
-            RangerDefines.RESOURCE_DATABASE,
-            new RangerPolicy.RangerPolicyResource("information_schema"),
-            RangerDefines.RESOURCE_TABLE,
-            new RangerPolicy.RangerPolicyResource("*"),
-            RangerDefines.RESOURCE_COLUMN,
-            new RangerPolicy.RangerPolicyResource("*"));
-    RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
-    policyItem.setGroups(Arrays.asList(RangerDefines.PUBLIC_GROUP));
-    policyItem.setAccesses(
-        Arrays.asList(
-            new RangerPolicy.RangerPolicyItemAccess(RangerDefines.ACCESS_TYPE_HIVE_SELECT)));
-    updateOrCreateRangerPolicy(
-        RangerDefines.SERVICE_TYPE_HIVE,
-        RANGER_HIVE_REPO_NAME,
-        policyName,
-        policyResourceMap,
-        Collections.singletonList(policyItem));
-  }
-
   @Test
   public void testCreateDatabase() throws Exception {
     String dbName = currentFunName().toLowerCase(); // Hive database name is case-insensitive
@@ -1292,9 +1224,9 @@ public class RangerHiveIT extends RangerITEnv {
     policyItem.setUsers(Arrays.asList(adminUser));
     policyItem.setAccesses(
         Arrays.asList(new RangerPolicy.RangerPolicyItemAccess(RangerDefines.ACCESS_TYPE_HIVE_ALL)));
-    updateOrCreateRangerPolicy(
+    RangerITEnv.updateOrCreateRangerPolicy(
         RangerDefines.SERVICE_TYPE_HIVE,
-        RANGER_HIVE_REPO_NAME,
+        RangerITEnv.RANGER_HIVE_REPO_NAME,
         "testAllowShowDatabase",
         policyResourceMap,
         Collections.singletonList(policyItem));
@@ -1322,9 +1254,9 @@ public class RangerHiveIT extends RangerITEnv {
     policyItem.setUsers(Arrays.asList(adminUser, anonymousUser));
     policyItem.setAccesses(
         Arrays.asList(new RangerPolicy.RangerPolicyItemAccess(RangerDefines.ACCESS_TYPE_HIVE_ALL)));
-    updateOrCreateRangerPolicy(
+    RangerITEnv.updateOrCreateRangerPolicy(
         RangerDefines.SERVICE_TYPE_HIVE,
-        RANGER_HIVE_REPO_NAME,
+        RangerITEnv.RANGER_HIVE_REPO_NAME,
         "testAllowShowDatabase",
         policyResourceMap,
         Collections.singletonList(policyItem));
@@ -1334,5 +1266,12 @@ public class RangerHiveIT extends RangerITEnv {
       anonymousDbs.add(anonymousRS.getString(1));
     }
     Assertions.assertTrue(anonymousDbs.contains(dbName));
+  }
+
+  /**
+   * Didn't call this function in the Lambda function body, It will return a random function name
+   */
+  public static String currentFunName() {
+    return Thread.currentThread().getStackTrace()[2].getMethodName();
   }
 }

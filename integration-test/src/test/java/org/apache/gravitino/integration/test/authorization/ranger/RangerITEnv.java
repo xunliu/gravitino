@@ -22,6 +22,9 @@ import static org.apache.gravitino.authorization.ranger.RangerAuthorizationPlugi
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,26 +57,15 @@ public class RangerITEnv {
 
   private static final ContainerSuite containerSuite = ContainerSuite.getInstance();
 
-  @BeforeAll
   public static void setup() {
     containerSuite.startRangerContainer();
     rangerClient = containerSuite.getRangerContainer().rangerClient;
-  }
 
-  @AfterAll
-  public static void cleanup() {
-    try {
-      if (rangerClient != null) {
-        if (rangerClient.getService(RANGER_TRINO_REPO_NAME) != null) {
-          rangerClient.deleteService(RANGER_TRINO_REPO_NAME);
-        }
-        if (rangerClient.getService(RANGER_HIVE_REPO_NAME) != null) {
-          rangerClient.deleteService(RANGER_HIVE_REPO_NAME);
-        }
-      }
-    } catch (RangerServiceException e) {
-      // ignore
-    }
+    // No IP address set, no impact on testing
+    RangerITEnv.createRangerHdfsRepository("", true);
+    RangerITEnv.createRangerHiveRepository("", true);
+    RangerITEnv.allowAnyoneAccessHDFS();
+    RangerITEnv.allowAnyoneAccessInformationSchema();
   }
 
   public void createRangerTrinoRepository(String trinoIp) {
@@ -314,6 +306,68 @@ public class RangerITEnv {
     } catch (RangerServiceException e) {
       throw new RuntimeException(e);
     }
+  }
+  /** Currently we only test Ranger Hive, So wo Allow anyone to visit HDFS */
+  static void allowAnyoneAccessHDFS() {
+    String policyName = currentFunName();
+    try {
+      if (null != rangerClient.getPolicy(RangerDefines.SERVICE_TYPE_HDFS, policyName)) {
+        return;
+      }
+    } catch (RangerServiceException e) {
+      // If the policy doesn't exist, we will create it
+    }
+
+    Map<String, RangerPolicy.RangerPolicyResource> policyResourceMap =
+        ImmutableMap.of(RangerDefines.RESOURCE_PATH, new RangerPolicy.RangerPolicyResource("/*"));
+    RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+    policyItem.setUsers(Arrays.asList(RangerDefines.CURRENT_USER));
+    policyItem.setAccesses(
+        Arrays.asList(
+            new RangerPolicy.RangerPolicyItemAccess(RangerDefines.ACCESS_TYPE_HDFS_READ),
+            new RangerPolicy.RangerPolicyItemAccess(RangerDefines.ACCESS_TYPE_HDFS_WRITE),
+            new RangerPolicy.RangerPolicyItemAccess(RangerDefines.ACCESS_TYPE_HDFS_EXECUTE)));
+    updateOrCreateRangerPolicy(
+        RangerDefines.SERVICE_TYPE_HDFS,
+        RANGER_HDFS_REPO_NAME,
+        policyName,
+        policyResourceMap,
+        Collections.singletonList(policyItem));
+  }
+
+  /**
+   * Hive must have this policy Allow anyone can access information schema to show `database`,
+   * `tables` and `columns`
+   */
+  static void allowAnyoneAccessInformationSchema() {
+    String policyName = currentFunName();
+    try {
+      if (null != rangerClient.getPolicy(RangerDefines.SERVICE_TYPE_HIVE, policyName)) {
+        return;
+      }
+    } catch (RangerServiceException e) {
+      // If the policy doesn't exist, we will create it
+    }
+
+    Map<String, RangerPolicy.RangerPolicyResource> policyResourceMap =
+        ImmutableMap.of(
+            RangerDefines.RESOURCE_DATABASE,
+            new RangerPolicy.RangerPolicyResource("information_schema"),
+            RangerDefines.RESOURCE_TABLE,
+            new RangerPolicy.RangerPolicyResource("*"),
+            RangerDefines.RESOURCE_COLUMN,
+            new RangerPolicy.RangerPolicyResource("*"));
+    RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+    policyItem.setGroups(Arrays.asList(RangerDefines.PUBLIC_GROUP));
+    policyItem.setAccesses(
+        Arrays.asList(
+            new RangerPolicy.RangerPolicyItemAccess(RangerDefines.ACCESS_TYPE_HIVE_SELECT)));
+    updateOrCreateRangerPolicy(
+        RangerDefines.SERVICE_TYPE_HIVE,
+        RANGER_HIVE_REPO_NAME,
+        policyName,
+        policyResourceMap,
+        Collections.singletonList(policyItem));
   }
 
   /**
