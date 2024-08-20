@@ -21,19 +21,19 @@ package org.apache.gravitino.authorization.ranger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.gravitino.MetadataObject;
 import org.apache.gravitino.authorization.Group;
 import org.apache.gravitino.authorization.Owner;
@@ -140,7 +140,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
   }
 
   /**
-   * Whether this privilege is underlying permission system supported
+   * Whether this privilege is supported by the underlying permission system.
    *
    * @param name The privilege name to check
    * @return true if the privilege is supported, otherwise false
@@ -162,14 +162,14 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
   }
 
   /**
-   * Because Ranger does not have Role concept, Each metadata object will have a unique Ranger
-   * policy. we can use one or more Ranger policy to simulate the role. <br>
+   * As Ranger does not have the Role concept, each metadata object will have a unique Ranger
+   * policy. We can use one or more Ranger policy to simulate the role. <br>
    * 1. Create a policy for each metadata object. <br>
    * 2. Save role name in the Policy properties. <br>
    * 3. Set `MANAGED_BY_GRAVITINO` label in the policy. <br>
-   * 4. For easy manage, each privilege will create a RangerPolicyItemAccess in the policy. <br>
-   * 5. The policy will only have one user, the user is the {OWNER} of the policy. <br>
-   * 6. The policy will not have group. <br>
+   * 4. For easy management, each privilege will create a RangerPolicyItemAccess in the policy. <br>
+   * 5. The policy will only have one user, and the user is the {OWNER} of the policy. <br>
+   * 6. The policy will not have a group. <br>
    */
   @Override
   public Boolean onRoleCreated(Role role) throws RuntimeException {
@@ -207,6 +207,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
       rangerClient.deleteRole(role.name(), RANGER_ADMIN_NAME, rangerServiceName);
     } catch (RangerServiceException e) {
       // Ignore exception to support idempotent operation
+      LOG.warn("Delete role: {} failed!", role, e);
     }
     return Boolean.TRUE;
   }
@@ -288,13 +289,11 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
       List<RangerPolicy.RangerPolicyItem> matchPolicyItmes =
           policy.getPolicyItems().stream()
               .filter(
-                  policyItem -> {
-                    return policyItem.getAccesses().stream()
-                        .allMatch(
-                            policyItemAccess -> {
-                              return ownerPrivileges.contains(policyItemAccess.getType());
-                            });
-                  })
+                  policyItem ->
+                      policyItem.getAccesses().stream()
+                          .allMatch(
+                              policyItemAccess ->
+                                  ownerPrivileges.contains(policyItemAccess.getType())))
               .collect(Collectors.toList());
       // Add or remove the owner in the policy item
       matchPolicyItmes.forEach(
@@ -322,19 +321,16 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
       RangerPolicy finalPolicy = policy;
       ownerPrivileges.stream()
           .filter(
-              ownerPrivilege -> {
-                return matchPolicyItmes.stream()
-                    .noneMatch(
-                        policyItem -> {
-                          return policyItem.getAccesses().stream()
-                              .anyMatch(
-                                  policyItemAccess -> {
-                                    return ownerPrivilege.equals(policyItemAccess.getType());
-                                  });
-                        });
-              })
+              ownerPrivilege ->
+                  matchPolicyItmes.stream()
+                      .noneMatch(
+                          policyItem ->
+                              policyItem.getAccesses().stream()
+                                  .anyMatch(
+                                      policyItemAccess ->
+                                          ownerPrivilege.equals(policyItemAccess.getType()))))
           .forEach(
-              // Add lose owner's privilege to the policy
+              // Add last owner's privilege to the policy
               ownerPrivilege -> {
                 RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
                 policyItem
@@ -426,7 +422,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
                 rangerClient.grantRole(rangerServiceName, grantRevokeRoleRequest);
               } catch (RangerServiceException e) {
                 // ignore exception, support idempotent operation
-                LOG.warn("Grant role to user failed!", e);
+                LOG.warn("Grant role: {} to user: {} failed!", role, user, e);
               }
             });
 
@@ -450,6 +446,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
                 rangerClient.revokeRole(rangerServiceName, grantRevokeRoleRequest);
               } catch (RangerServiceException e) {
                 // Ignore exception to support idempotent operation
+                LOG.warn("Revoke role: {} from user: {} failed!", role, user, e);
               }
             });
 
@@ -481,6 +478,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
                 rangerClient.grantRole(rangerServiceName, grantRevokeRoleRequest);
               } catch (RangerServiceException e) {
                 // Ignore exception to support idempotent operation
+                LOG.warn("Grant role: {} to group: {} failed!", role, group, e);
               }
             });
     return Boolean.TRUE;
@@ -499,6 +497,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
                 rangerClient.revokeRole(rangerServiceName, grantRevokeRoleRequest);
               } catch (RangerServiceException e) {
                 // Ignore exception to support idempotent operation
+                LOG.warn("Revoke role: {} from group: {} failed!", role, group, e);
               }
             });
 
@@ -509,7 +508,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
   public Boolean onUserAdded(User user) throws RuntimeException {
     VXUserList list = rangerClient.searchUser(ImmutableMap.of("name", user.name()));
     if (list.getListSize() > 0) {
-      LOG.warn("The user({}) is already exist in the Ranger!", user.name());
+      LOG.warn("The user({}) already exists in the Ranger!", user.name());
       return Boolean.FALSE;
     }
 
@@ -521,7 +520,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
   public Boolean onUserRemoved(User user) throws RuntimeException {
     VXUserList list = rangerClient.searchUser(ImmutableMap.of("name", user.name()));
     if (list.getListSize() == 0) {
-      LOG.warn("The user({}) is not exist in the Ranger!", user);
+      LOG.warn("The user({}) does not exist in the Ranger!", user);
       return Boolean.FALSE;
     }
     rangerClient.deleteUser(list.getList().get(0).getId());
@@ -532,7 +531,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
   public Boolean onUserAcquired(User user) throws RuntimeException {
     VXUserList list = rangerClient.searchUser(ImmutableMap.of("name", user.name()));
     if (list.getListSize() == 0) {
-      LOG.warn("The user({}) is not exist in the Ranger!", user);
+      LOG.warn("The user({}) does not exist in the Ranger!", user);
       return Boolean.FALSE;
     }
     return Boolean.TRUE;
@@ -547,7 +546,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
   public Boolean onGroupRemoved(Group group) throws RuntimeException {
     VXGroupList list = rangerClient.searchGroup(ImmutableMap.of("name", group.name()));
     if (list.getListSize() == 0) {
-      LOG.warn("The group({}) is not exists in the Ranger!", group);
+      LOG.warn("The group({}) does not exist in the Ranger!", group);
       return Boolean.FALSE;
     }
     return rangerClient.deleteGroup(list.getList().get(0).getId());
@@ -557,7 +556,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
   public Boolean onGroupAcquired(Group group) {
     VXGroupList vxGroupList = rangerClient.searchGroup(ImmutableMap.of("name", group.name()));
     if (vxGroupList.getListSize() == 0) {
-      LOG.warn("The group({}) is not exists in the Ranger!", group);
+      LOG.warn("The group({}) does not exist in the Ranger!", group);
       return Boolean.FALSE;
     }
     return Boolean.TRUE;
@@ -574,24 +573,16 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
 
   private GrantRevokeRoleRequest createGrantRevokeRoleRequest(
       String roleName, String userName, String groupName) {
-    Set<String> users;
-    if (userName == null || userName.isEmpty()) {
-      users = new HashSet<>();
-    } else {
-      users = new HashSet<>(Arrays.asList(userName));
-    }
-    Set<String> groups;
-    if (groupName == null || groupName.isEmpty()) {
-      groups = new HashSet<>();
-    } else {
-      groups = new HashSet<>(Arrays.asList(groupName));
-    }
+    Set<String> users =
+        StringUtils.isNotBlank(userName) ? Sets.newHashSet() : Sets.newHashSet(userName);
+    Set<String> groups =
+        StringUtils.isNotBlank(groupName) ? Sets.newHashSet() : Sets.newHashSet(groupName);
 
     GrantRevokeRoleRequest roleRequest = new GrantRevokeRoleRequest();
     roleRequest.setUsers(users);
     roleRequest.setGroups(groups);
     roleRequest.setGrantor(RANGER_ADMIN_NAME);
-    roleRequest.setTargetRoles(new HashSet<>(Arrays.asList(roleName)));
+    roleRequest.setTargetRoles(Sets.newHashSet(roleName));
     return roleRequest;
   }
 
@@ -602,7 +593,9 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
       rangerRole = rangerClient.getRole(roleName, RANGER_ADMIN_NAME, rangerServiceName);
     } catch (RangerServiceException e) {
       // ignore exception, If the role does not exist, then create it.
+      LOG.info("The role({}) does not exist in the Ranger!", roleName);
     }
+
     try {
       if (rangerRole == null) {
         rangerRole = new RangerRole(roleName, MANAGED_BY_GRAVITINO, null, null, null);
@@ -625,7 +618,7 @@ public abstract class RangerAuthorizationPlugin implements AuthorizationPlugin {
       throws AuthorizationPluginException {
     List<String> nsMetadataObj =
         Lists.newArrayList(SecurableObjects.DOT_SPLITTER.splitToList(metadataObject.fullName()));
-    nsMetadataObj.remove(0); // skip `catalog`
+    nsMetadataObj.remove(0); // skip `catalog
     Map<String, String> policyFilter = new HashMap<>();
     Map<String, String> preciseFilterKeysFilter = new HashMap<>();
     policyFilter.put(RangerDefines.SEARCH_FILTER_SERVICE_NAME, this.rangerServiceName);

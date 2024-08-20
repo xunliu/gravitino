@@ -197,7 +197,8 @@ public interface RoleChange {
    * A UpdateSecurableObject is to update securable object's privilege from role. <br>
    * The securable object's metadata entity must be the same as new securable object's metadata
    * entity. <br>
-   * The securable object's privilege must be different as new securable object's privilege. <br>
+   * The securable object's privilege must be different from as new securable object's privilege.
+   * <br>
    */
   final class UpdateSecurableObject implements RoleChange {
     private final String roleName;
@@ -212,7 +213,7 @@ public interface RoleChange {
       }
       if (securableObject.privileges().equals(newSecurableObject.privileges())) {
         throw new IllegalArgumentException(
-            "The securable object's privilege must be different as new securable object's privilege.");
+            "The securable object's privilege must be different from new securable object's privilege.");
       }
       this.roleName = roleName;
       this.securableObject = securableObject;
