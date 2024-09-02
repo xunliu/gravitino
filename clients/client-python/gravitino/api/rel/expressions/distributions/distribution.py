@@ -23,6 +23,7 @@ from typing import List
 from gravitino.api.rel.expressions.distributions.strategy import Strategy
 from gravitino.api.rel.expressions.expression import Expression
 
+
 class Distribution(Expression, ABC):
     """
     An interface that defines how data is distributed across partitions.

@@ -22,6 +22,7 @@ from typing import List, Tuple
 
 from gravitino.api.rel.expressions.expression import Expression
 
+
 class NamedReference(Expression, ABC):
     """
     Represents a field or column reference in the public logical expression API.
@@ -32,6 +33,15 @@ class NamedReference(Expression, ABC):
         """
         Returns a FieldReference for the given field name(s). The input can be multiple strings
         for nested fields.
+        For example, if we have a struct column named "student" with a
+        data type of StructType{"name": StringType, "age": IntegerType}, we can reference the field
+        "name" by calling field("student", "name").
+
+        Args:
+            field_names: The field name(s)
+
+        Returns:
+            The FieldReference for the given field name(s)
         """
         return FieldReference(field_names)
 
@@ -40,6 +50,9 @@ class NamedReference(Expression, ABC):
         """
         Returns the referenced field name as a tuple of string parts.
         Each string in the tuple represents a part of the field name.
+
+        Returns:
+            The referenced field name as an array of String parts.
         """
         pass
 
@@ -55,7 +68,9 @@ class NamedReference(Expression, ABC):
         """
         return [self]
 
+
 class FieldReference(NamedReference):
+    """A NamedReference that references a field or column."""
     def __init__(self, field_name: Tuple[str, ...]):
         self._field_name = field_name
 

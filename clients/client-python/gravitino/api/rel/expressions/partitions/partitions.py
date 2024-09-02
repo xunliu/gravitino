@@ -17,11 +17,31 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from typing import List
+
 from gravitino.api.rel.expressions.partitions.partition import Partition
 
-class Partitions(Partition):
+
+class Partitions:
     """
-    Static definitions related to partitions.
-    TODO: Implement this class.
+    The helper class for partition expressions.
     """
-    EMPTY_PARTITIONS = []
+
+    EMPTY_PARTITIONS: List[Partition] = []
+
+    @staticmethod
+    def range(name: str, upper: Literal, lower: Literal, properties: Dict[str, str]) -> RangePartition:
+        return RangePartition(name, upper, lower, properties)
+
+    @staticmethod
+    def list(name: str, lists: List[List[Literal]], properties: Dict[str, str]) -> ListPartition:
+        return ListPartition(name, lists, properties)
+
+    @staticmethod
+    def identity(name: Optional[str], field_names: List[List[str]], values: List[Literal],
+                 properties: Optional[Dict[str, str]] = None) -> IdentityPartition:
+        return IdentityPartition(name, field_names, values, properties or {})
+
+    @staticmethod
+    def identity_auto(field_names: List[List[str]], values: List[Literal]) -> IdentityPartition:
+        return Partitions.identity(None, field_names, values, {})

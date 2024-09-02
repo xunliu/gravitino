@@ -20,6 +20,7 @@ under the License.
 from abc import ABC, abstractmethod
 from enum import Enum
 
+
 class Name(Enum):
     BOOLEAN = "BOOLEAN"
     BYTE = "BYTE"
@@ -48,6 +49,7 @@ class Name(Enum):
     UNPARSED = "UNPARSED"
     EXTERNAL = "EXTERNAL"
 
+
 class Type(ABC):
     @abstractmethod
     def name(self):
@@ -57,27 +59,34 @@ class Type(ABC):
     def simple_string(self):
         pass
 
+
 class PrimitiveType(Type, ABC):
     pass
+
 
 class NumericType(PrimitiveType, ABC):
     pass
 
+
 class DateTimeType(PrimitiveType, ABC):
     pass
+
 
 class IntervalType(PrimitiveType, ABC):
     pass
 
+
 class ComplexType(Type, ABC):
     pass
 
-class IntegralType(NumericType):
+
+class IntegralType(NumericType, ABC):
     def __init__(self, signed: bool):
         self._signed = signed
 
     def signed(self) -> bool:
         return self._signed
+
 
 class FractionType(NumericType, ABC):
     pass

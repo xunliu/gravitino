@@ -16,35 +16,34 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Generic, TypeVar
+
+from gravitino.api.rel.expressions.partitions.partition import Partition
 
 
-class Partition(ABC):
-    """
-    A partition represents a result of partitioning a table. The partition can be either an
-    IdentityPartition, ListPartition, or RangePartition, depending on the Table.partitioning() method.
+# T = TypeVar('T')
+#
+#
+# class Literal(Generic[T]):
+#     pass
+#
+#
+# class Partition(ABC):
+#     @abstractmethod
+#     def name(self) -> str:
+#         pass
+#
+#     @abstractmethod
+#     def properties(self) -> dict:
+#         pass
 
-    This interface serves as a contract for all types of partitions, ensuring they provide a common set of methods.
-    """
 
+class RangePartition(Partition):
     @abstractmethod
-    def name(self) -> str:
-        """
-        Return the name of the partition.
-
-        Returns:
-            str: The name of the partition.
-        """
+    def upper(self) -> Literal:
         pass
 
     @abstractmethod
-    def properties(self) -> Dict[str, str]:
-        """
-        Return the properties of the partition, such as statistics, location, etc.
-
-        Returns:
-            Dict[str, str]: A dictionary containing properties of the partition.
-        """
+    def lower(self) -> Literal:
         pass
