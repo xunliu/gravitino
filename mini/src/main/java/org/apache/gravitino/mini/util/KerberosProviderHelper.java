@@ -17,16 +17,21 @@
  * under the License.
  */
 
-package org.apache.gravitino.integration.test;
+package org.apache.gravitino.mini.util;
 
-import java.util.Map;
+import org.apache.gravitino.client.KerberosTokenProvider;
 
-public class MiniGravitinoContext {
-  Map<String, String> customConfig;
-  final boolean ignoreIcebergRestService;
+public class KerberosProviderHelper {
 
-  public MiniGravitinoContext(Map<String, String> customConfig, boolean ignoreIcebergRestService) {
-    this.customConfig = customConfig;
-    this.ignoreIcebergRestService = ignoreIcebergRestService;
+  private KerberosProviderHelper() {}
+
+  private static KerberosTokenProvider provider;
+
+  public static void setProvider(KerberosTokenProvider newProvider) {
+    provider = newProvider;
+  }
+
+  public static KerberosTokenProvider getProvider() {
+    return provider;
   }
 }

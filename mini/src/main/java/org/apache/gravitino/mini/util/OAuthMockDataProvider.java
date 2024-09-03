@@ -16,23 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.gravitino.connector.authorization.mysql;
+package org.apache.gravitino.mini.util;
 
-import java.util.Map;
-import org.apache.gravitino.connector.authorization.AuthorizationPlugin;
-import org.apache.gravitino.connector.authorization.BaseAuthorization;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import org.apache.gravitino.client.OAuth2TokenProvider;
 
-public class TestMySQLAuthorization extends BaseAuthorization<TestMySQLAuthorization> {
+public class OAuthMockDataProvider extends OAuth2TokenProvider {
 
-  public TestMySQLAuthorization() {}
-
-  @Override
-  public String shortName() {
-    return "mysqlTest";
+  private static class InstanceHolder {
+    private static final OAuthMockDataProvider INSTANCE = new OAuthMockDataProvider();
   }
 
   @Override
-  protected AuthorizationPlugin newPlugin(String catalogProvider, Map<String, String> config) {
-    return new TestMySQLAuthorizationPlugin();
+  protected String getAccessToken() {
+    return new String(token, StandardCharsets.UTF_8);
+  }
+
+  public static OAuthMockDataProvider getInstance() {
+    return InstanceHolder.INSTANCE;
+  }
+
+  private byte[] token;
+
+  /** Close the resource of OAuthTokenProvider */
+  @Override
+  public void close() throws IOException {
+    // no op
+  }
+
+  public void setTokenData(byte[] tokenData) {
+    this.token = tokenData;
   }
 }

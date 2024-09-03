@@ -46,23 +46,8 @@ dependencies {
   compileOnly(project(":clients:client-java-runtime", configuration = "shadow"))
   compileOnly("org.apache.iceberg:iceberg-spark-runtime-${sparkMajorVersion}_$scalaVersion:$icebergVersion")
 
-  testImplementation(project(":api")) {
-    exclude("org.apache.logging.log4j")
-  }
   testImplementation(project(":catalogs:hive-metastore-common")) {
     exclude("*")
-  }
-  testImplementation(project(":clients:client-java")) {
-    exclude("org.apache.logging.log4j")
-    exclude("org.slf4j")
-  }
-  testImplementation(project(":core")) {
-    exclude("org.apache.logging.log4j")
-    exclude("org.slf4j")
-  }
-  testImplementation(project(":common")) {
-    exclude("org.apache.logging.log4j")
-    exclude("org.slf4j")
   }
   testImplementation(project(":integration-test-common", "testArtifacts")) {
     exclude("org.apache.logging.log4j")
@@ -78,8 +63,6 @@ dependencies {
   }
   testImplementation(project(":spark-connector:spark-common", "testArtifacts")) {
     exclude("com.fasterxml.jackson")
-    exclude("org.apache.logging.log4j")
-    exclude("org.slf4j")
   }
 
   testImplementation(libs.hive2.common) {
@@ -115,10 +98,7 @@ dependencies {
     exclude("org.eclipse.jetty.orbit", "javax.servlet")
     exclude("org.slf4j")
   }
-  testImplementation(libs.junit.jupiter.api)
-  testImplementation(libs.junit.jupiter.params)
   testImplementation(libs.mysql.driver)
-  testImplementation(libs.testcontainers)
 
   // org.apache.iceberg.rest.RESTSerializers#registerAll(ObjectMapper) has different method signature for iceberg-core and iceberg-spark-runtime package, we must make sure iceberg-core is in front to start up MiniGravitino server.
   testImplementation("org.apache.iceberg:iceberg-core:$icebergVersion")
@@ -136,8 +116,6 @@ dependencies {
     exclude("com.fasterxml.jackson.core")
   }
   testImplementation("org.scala-lang.modules:scala-collection-compat_$scalaVersion:$scalaCollectionCompatVersion")
-
-  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 tasks.test {

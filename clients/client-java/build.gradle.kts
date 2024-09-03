@@ -42,26 +42,18 @@ dependencies {
   testCompileOnly(libs.lombok)
   testAnnotationProcessor(libs.lombok)
 
-  testImplementation(project(":core"))
   testImplementation(project(":integration-test-common", "testArtifacts"))
-  testImplementation(project(":server"))
-  testImplementation(project(":server-common"))
 
   testImplementation(libs.bundles.jersey)
   testImplementation(libs.bundles.jwt)
   testImplementation(libs.commons.lang3)
   testImplementation(libs.hadoop3.client)
-  testImplementation(libs.junit.jupiter.api)
-  testImplementation(libs.junit.jupiter.params)
   testImplementation(libs.minikdc)
   testImplementation(libs.mockito.core)
   testImplementation(libs.mockserver.netty)
   testImplementation(libs.mockserver.client.java)
   testImplementation(libs.mysql.driver)
   testImplementation(libs.postgresql.driver)
-  testImplementation(libs.testcontainers)
-
-  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 tasks.build {

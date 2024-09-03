@@ -16,23 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.gravitino.connector.authorization.mysql;
+
+package org.apache.gravitino.mini;
 
 import java.util.Map;
-import org.apache.gravitino.connector.authorization.AuthorizationPlugin;
-import org.apache.gravitino.connector.authorization.BaseAuthorization;
 
-public class TestMySQLAuthorization extends BaseAuthorization<TestMySQLAuthorization> {
+public class MiniGravitinoContext {
+  Map<String, String> customConfig;
+  final boolean ignoreIcebergRestService;
 
-  public TestMySQLAuthorization() {}
-
-  @Override
-  public String shortName() {
-    return "mysqlTest";
-  }
-
-  @Override
-  protected AuthorizationPlugin newPlugin(String catalogProvider, Map<String, String> config) {
-    return new TestMySQLAuthorizationPlugin();
+  public MiniGravitinoContext(Map<String, String> customConfig, boolean ignoreIcebergRestService) {
+    this.customConfig = customConfig;
+    this.ignoreIcebergRestService = ignoreIcebergRestService;
   }
 }

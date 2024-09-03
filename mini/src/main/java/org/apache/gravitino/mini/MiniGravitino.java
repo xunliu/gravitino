@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.gravitino.integration.test;
+package org.apache.gravitino.mini;
 
 import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
 import static org.apache.gravitino.Configs.ENTITY_KV_ROCKSDB_BACKEND_PATH;
@@ -44,10 +44,9 @@ import org.apache.gravitino.auth.AuthenticatorType;
 import org.apache.gravitino.auxiliary.AuxiliaryServiceManager;
 import org.apache.gravitino.client.HTTPClient;
 import org.apache.gravitino.client.RESTClient;
-import org.apache.gravitino.integration.test.util.HttpUtils;
-import org.apache.gravitino.integration.test.util.ITUtils;
-import org.apache.gravitino.integration.test.util.KerberosProviderHelper;
-import org.apache.gravitino.integration.test.util.OAuthMockDataProvider;
+import org.apache.gravitino.mini.util.MiniUtils;
+import org.apache.gravitino.mini.util.KerberosProviderHelper;
+import org.apache.gravitino.mini.util.OAuthMockDataProvider;
 import org.apache.gravitino.rest.RESTUtils;
 import org.apache.gravitino.server.GravitinoServer;
 import org.apache.gravitino.server.ServerConfig;
@@ -94,22 +93,22 @@ public class MiniGravitino {
 
     // Generate random Gravitino Server port and backend storage path, avoiding conflicts
     customizeConfigFile(
-        ITUtils.joinPath(gravitinoRootDir, "conf", "gravitino.conf.template"),
-        ITUtils.joinPath(mockConfDir.getAbsolutePath(), GravitinoServer.CONF_FILE));
+        MiniUtils.joinPath(gravitinoRootDir, "conf", "gravitino.conf.template"),
+        MiniUtils.joinPath(mockConfDir.getAbsolutePath(), GravitinoServer.CONF_FILE));
 
     Files.copy(
-        Paths.get(ITUtils.joinPath(gravitinoRootDir, "conf", "gravitino-env.sh.template")),
-        Paths.get(ITUtils.joinPath(mockConfDir.getAbsolutePath(), "gravitino-env.sh")));
+        Paths.get(MiniUtils.joinPath(gravitinoRootDir, "conf", "gravitino-env.sh.template")),
+        Paths.get(MiniUtils.joinPath(mockConfDir.getAbsolutePath(), "gravitino-env.sh")));
 
     properties =
         serverConfig.loadPropertiesFromFile(
-            new File(ITUtils.joinPath(mockConfDir.getAbsolutePath(), "gravitino.conf")));
+            new File(MiniUtils.joinPath(mockConfDir.getAbsolutePath(), "gravitino.conf")));
 
     // Remove Iceberg rest service.
     if (context.ignoreIcebergRestService) {
       removeIcebergRestConfiguration(properties);
-      ITUtils.overwriteConfigFile(
-          ITUtils.joinPath(mockConfDir.getAbsolutePath(), "gravitino.conf"), properties);
+      MiniUtils.overwriteConfigFile(
+          MiniUtils.joinPath(mockConfDir.getAbsolutePath(), "gravitino.conf"), properties);
     }
 
     serverConfig.loadFromProperties(properties);
@@ -149,7 +148,7 @@ public class MiniGravitino {
               try {
                 GravitinoServer.main(
                     new String[] {
-                      ITUtils.joinPath(mockConfDir.getAbsolutePath(), "gravitino.conf")
+                      MiniUtils.joinPath(mockConfDir.getAbsolutePath(), "gravitino.conf")
                     });
               } catch (Exception e) {
                 LOG.error("Exception in startup MiniGravitino Server ", e);
@@ -161,7 +160,7 @@ public class MiniGravitino {
 
     String url = URI + "/metrics";
     while (System.currentTimeMillis() - beginTime < 1000 * 60 * 3) {
-      started = HttpUtils.isHttpServerUp(url);
+      started = MiniUtils.isHttpServerUp(url);
       if (started || future.isDone()) {
         break;
       }
@@ -192,7 +191,7 @@ public class MiniGravitino {
     String url = String.format("http://%s:%d/metrics", host, port);
     while (System.currentTimeMillis() - beginTime < 1000 * 60 * 3) {
       sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
-      started = HttpUtils.isHttpServerUp(url);
+      started = MiniUtils.isHttpServerUp(url);
       if (!started) {
         break;
       }
@@ -247,6 +246,6 @@ public class MiniGravitino {
     configMap.putAll(getIcebergRestServiceConfigs());
     configMap.putAll(context.customConfig);
 
-    ITUtils.rewriteConfigFile(configTempFileName, configFileName, configMap);
+    MiniUtils.rewriteConfigFile(configTempFileName, configFileName, configMap);
   }
 }

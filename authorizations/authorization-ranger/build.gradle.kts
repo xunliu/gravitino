@@ -24,6 +24,10 @@ plugins {
   id("idea")
 }
 
+val scalaVersion: String = project.properties["scalaVersion"] as? String ?: extra["defaultScalaVersion"].toString()
+val sparkVersion: String = libs.versions.spark35.get()
+val kyuubiVersion: String = libs.versions.kyuubi4spark35.get()
+
 dependencies {
   implementation(project(":api")) {
     exclude(group = "*")
@@ -57,6 +61,7 @@ dependencies {
     exclude("net.java.dev.jna")
     exclude("javax.ws.rs")
     exclude("org.eclipse.jetty")
+    exclude("com.amazonaws", "aws-java-sdk-bundle")
   }
   implementation(libs.rome)
 
@@ -64,29 +69,26 @@ dependencies {
   testImplementation(project(":clients:client-java"))
   testImplementation(project(":server"))
   testImplementation(project(":catalogs:catalog-common"))
+  testImplementation(project(":mini"))
   testImplementation(project(":integration-test-common", "testArtifacts"))
-  testImplementation(libs.junit.jupiter.api)
   testImplementation(libs.mockito.core)
-  testImplementation(libs.testcontainers)
-  testRuntimeOnly(libs.junit.jupiter.engine)
-  testImplementation(libs.ranger.intg) {
-    exclude("org.apache.hive", "hive-storage-api")
-    exclude("org.apache.lucene")
-    exclude("org.apache.solr")
-    exclude("org.apache.kafka")
-    exclude("org.eclipse.jetty")
-    exclude("org.elasticsearch")
-    exclude("org.elasticsearch.client")
-    exclude("org.elasticsearch.plugin")
-    exclude("javax.ws.rs")
-    exclude("org.apache.ranger", "ranger-plugin-classloader")
-  }
-  testImplementation(libs.hive2.jdbc) {
-    exclude("org.slf4j")
-    exclude("org.eclipse.jetty.aggregate")
-  }
   testImplementation(libs.mysql.driver)
   testImplementation(libs.postgresql.driver)
+  testImplementation("org.apache.spark:spark-hive_$scalaVersion:$sparkVersion")
+  testImplementation("org.apache.spark:spark-sql_$scalaVersion:$sparkVersion") {
+    exclude("org.apache.avro")
+    exclude("org.apache.hadoop")
+    exclude("org.apache.zookeeper")
+    exclude("io.dropwizard.metrics")
+    exclude("org.rocksdb")
+  }
+  testImplementation("org.apache.kyuubi:kyuubi-spark-authz_$scalaVersion:$kyuubiVersion") {
+    exclude("com.sun.jersey")
+  }
+//  testImplementation(libs.bundles.jersey)
+  testImplementation(libs.junit.jupiter.api)
+  testImplementation(libs.junit.jupiter.engine)
+//  testImplementation(libs.junit.jupiter.params)
 }
 
 tasks {
@@ -115,6 +117,10 @@ tasks {
 }
 
 tasks.test {
+  useJUnitPlatform()
+}
+
+tasks.test {
   dependsOn(":catalogs:catalog-hive:jar", ":catalogs:catalog-hive:runtimeJars")
 
   val skipITs = project.hasProperty("skipITs")
@@ -123,5 +129,8 @@ tasks.test {
     exclude("**/integration/test/**")
   } else {
     dependsOn(tasks.jar)
+  }
+  doFirst {
+    environment("HADOOP_USER_NAME", "gravitino")
   }
 }

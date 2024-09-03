@@ -81,14 +81,9 @@ dependencies {
   testImplementation(libs.jersey.test.framework.provider.jetty) {
     exclude(group = "org.junit.jupiter")
   }
-  testImplementation(libs.junit.jupiter.api)
-  testImplementation(libs.junit.jupiter.params)
   testImplementation(libs.mockito.core)
   testImplementation(libs.sqlite.jdbc)
   testImplementation(libs.slf4j.api)
-  testImplementation(libs.testcontainers)
-
-  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 tasks {

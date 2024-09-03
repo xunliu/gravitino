@@ -102,6 +102,7 @@ datanucleus-core = "4.1.17"
 datanucleus-api-jdo = "4.2.4"
 datanucleus-rdbms = "4.1.19"
 datanucleus-jdo = "3.2.0-m3"
+apiguardian-api = "1.1.2"
 
 [libraries]
 protobuf-java = { group = "com.google.protobuf", name = "protobuf-java", version.ref = "protoc" }
@@ -217,7 +218,7 @@ datanucleus-core = { group = "org.datanucleus", name = "datanucleus-core", versi
 datanucleus-api-jdo = { group = "org.datanucleus", name = "datanucleus-api-jdo", version.ref = "datanucleus-api-jdo" }
 datanucleus-rdbms = { group = "org.datanucleus", name = "datanucleus-rdbms", version.ref = "datanucleus-rdbms" }
 datanucleus-jdo = { group = "org.datanucleus", name = "javax.jdo", version.ref = "datanucleus-jdo" }
-
+apiguardian-api = { group = "org.apiguardian", name = "apiguardian-api", version.ref = "apiguardian-api" }
 ranger-intg = { group = "org.apache.ranger", name = "ranger-intg", version.ref = "ranger" }
 javax-jaxb-api = { group = "javax.xml.bind", name = "jaxb-api", version.ref = "javax-jaxb-api" }
 javax-ws-rs-api = { group = "javax.ws.rs", name = "javax.ws.rs-api", version.ref = "javax-ws-rs-api" }

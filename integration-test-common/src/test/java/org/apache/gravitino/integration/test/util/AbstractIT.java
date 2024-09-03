@@ -48,11 +48,11 @@ import org.apache.gravitino.Configs;
 import org.apache.gravitino.auth.AuthenticatorType;
 import org.apache.gravitino.client.GravitinoAdminClient;
 import org.apache.gravitino.config.ConfigConstants;
-import org.apache.gravitino.integration.test.MiniGravitino;
-import org.apache.gravitino.integration.test.MiniGravitinoContext;
 import org.apache.gravitino.integration.test.container.ContainerSuite;
 import org.apache.gravitino.integration.test.container.MySQLContainer;
 import org.apache.gravitino.integration.test.container.PostgreSQLContainer;
+import org.apache.gravitino.mini.MiniGravitino;
+import org.apache.gravitino.mini.MiniGravitinoContext;
 import org.apache.gravitino.server.GravitinoServer;
 import org.apache.gravitino.server.ServerConfig;
 import org.apache.gravitino.server.web.JettyServerConfig;
@@ -340,7 +340,12 @@ public class AbstractIT {
     if (authenticators.contains(AuthenticatorType.OAUTH.name().toLowerCase())) {
       client = GravitinoAdminClient.builder(serverUri).withOAuth(mockDataProvider).build();
     } else if (authenticators.contains(AuthenticatorType.SIMPLE.name().toLowerCase())) {
-      client = GravitinoAdminClient.builder(serverUri).withSimpleAuth().build();
+      String userName = customConfigs.get("SimpleAuthUserName");
+      if (userName != null) {
+        client = GravitinoAdminClient.builder(serverUri).withSimpleAuth(userName).build();
+      } else {
+        client = GravitinoAdminClient.builder(serverUri).withSimpleAuth().build();
+      }
     } else if (authenticators.contains(AuthenticatorType.KERBEROS.name().toLowerCase())) {
       serverUri = "http://localhost:" + jettyServerConfig.getHttpPort();
       client = null;

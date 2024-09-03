@@ -56,24 +56,6 @@ dependencies {
   testCompileOnly(libs.lombok)
 
   // use log from spark, spark3.3 use low version of log4j, to avoid java.lang.NoSuchMethodError: org.apache.logging.slf4j.Log4jLoggerFactory: method <init>()V not found
-  testImplementation(project(":api")) {
-    exclude("org.apache.logging.log4j")
-  }
-  testImplementation(project(":clients:client-java")) {
-    exclude("org.apache.logging.log4j")
-  }
-  testImplementation(project(":core")) {
-    exclude("org.apache.logging.log4j")
-  }
-  testImplementation(project(":common")) {
-    exclude("org.apache.logging.log4j")
-  }
-  testImplementation(project(":server")) {
-    exclude("org.apache.logging.log4j")
-  }
-  testImplementation(project(":server-common")) {
-    exclude("org.apache.logging.log4j")
-  }
   testImplementation(project(":integration-test-common", "testArtifacts"))
 
   testImplementation(libs.hive2.common) {

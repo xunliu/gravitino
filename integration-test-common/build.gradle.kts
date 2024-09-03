@@ -29,10 +29,18 @@ dependencies {
   testImplementation(project(":api"))
   testImplementation(project(":clients:client-java"))
   testImplementation(project(":common"))
-  testImplementation(project(":core"))
-  testImplementation(project(":server"))
-  testImplementation(project(":server-common"))
-  testImplementation(project(":authorizations:authorization-ranger"))
+  testImplementation(project(":core")) {
+    exclude(group = "org.rocksdb", module = "rocksdbjni")
+  }
+  testImplementation(project(":mini")) {
+    exclude(group = "org.rocksdb", module = "rocksdbjni")
+  }
+  testImplementation(project(":server")) {
+    exclude(group = "org.rocksdb", module = "rocksdbjni")
+  }
+  testImplementation(project(":server-common")) {
+    exclude(group = "org.rocksdb", module = "rocksdbjni")
+  }
   testImplementation(libs.bundles.jetty)
   testImplementation(libs.bundles.jersey)
   testImplementation(libs.bundles.jwt)
@@ -54,10 +62,13 @@ dependencies {
     exclude("org.elasticsearch")
     exclude("org.elasticsearch.client")
     exclude("org.elasticsearch.plugin")
+    exclude("com.amazonaws", "aws-java-sdk-bundle")
   }
-
-  testImplementation(platform("org.junit:junit-bom:5.9.1"))
-  testImplementation("org.junit.jupiter:junit-jupiter")
+//  testImplementation(libs.apiguardian.api)
+  testImplementation(libs.bundles.jersey)
+  testImplementation(libs.junit.jupiter.api)
+  testImplementation(libs.junit.jupiter.engine)
+  testImplementation(libs.junit.jupiter.params)
 }
 
 tasks.test {
