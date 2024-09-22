@@ -67,10 +67,7 @@ dependencies {
 
   implementation(libs.slf4j.api)
 
-  testImplementation(project(":clients:client-java"))
   testImplementation(project(":integration-test-common", "testArtifacts"))
-  testImplementation(project(":server"))
-  testImplementation(project(":server-common"))
 
   testImplementation(libs.minikdc)
   testImplementation(libs.hadoop3.minicluster)
@@ -80,12 +77,7 @@ dependencies {
   testImplementation(libs.mockito.inline)
   testImplementation(libs.mysql.driver)
   testImplementation(libs.postgresql.driver)
-  testImplementation(libs.junit.jupiter.api)
-  testImplementation(libs.junit.jupiter.params)
-  testImplementation(libs.testcontainers)
   testImplementation(libs.testcontainers.mysql)
-
-  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 tasks {

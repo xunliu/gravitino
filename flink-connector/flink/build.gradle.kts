@@ -82,16 +82,10 @@ dependencies {
   testAnnotationProcessor(libs.lombok)
 
   testCompileOnly(libs.lombok)
-  testImplementation(project(":clients:client-java"))
   testImplementation(project(":integration-test-common", "testArtifacts"))
-  testImplementation(project(":server"))
-  testImplementation(project(":server-common"))
-  testImplementation(libs.junit.jupiter.api)
-  testImplementation(libs.junit.jupiter.params)
   testImplementation(libs.mockito.core)
   testImplementation(libs.mysql.driver)
   testImplementation(libs.sqlite.jdbc)
-  testImplementation(libs.testcontainers)
   testImplementation(libs.testcontainers.junit.jupiter)
   testImplementation(libs.testcontainers.mysql)
 

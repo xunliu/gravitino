@@ -58,10 +58,7 @@ dependencies {
   annotationProcessor(libs.lombok)
   compileOnly(libs.lombok)
 
-  testImplementation(project(":clients:client-java"))
   testImplementation(project(":integration-test-common", "testArtifacts"))
-  testImplementation(project(":server"))
-  testImplementation(project(":server-common"))
   testImplementation("org.apache.spark:spark-hive_$scalaVersion:$sparkVersion") {
     exclude("org.apache.hadoop")
   }
@@ -76,14 +73,11 @@ dependencies {
     exclude("org.apache.hadoop")
   }
   testImplementation(libs.slf4j.api)
-  testImplementation(libs.junit.jupiter.api)
   testImplementation(libs.mysql.driver)
   testImplementation(libs.postgresql.driver)
   testImplementation(libs.bundles.log4j)
   testImplementation(libs.junit.jupiter.params)
   testImplementation(libs.testcontainers)
-
-  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 tasks {

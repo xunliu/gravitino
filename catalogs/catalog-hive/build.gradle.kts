@@ -91,11 +91,7 @@ dependencies {
   annotationProcessor(libs.lombok)
 
   testImplementation(project(":catalogs:hive-metastore-common", "testArtifacts"))
-  testImplementation(project(":common"))
-  testImplementation(project(":clients:client-java"))
   testImplementation(project(":integration-test-common", "testArtifacts"))
-  testImplementation(project(":server"))
-  testImplementation(project(":server-common"))
 
   testImplementation(libs.bundles.jetty)
   testImplementation(libs.bundles.jersey)
@@ -108,7 +104,6 @@ dependencies {
     exclude("org.eclipse.jetty.aggregate", "jetty-all")
     exclude("org.eclipse.jetty.orbit", "javax.servlet")
   }
-  testImplementation(libs.junit.jupiter.api)
   testImplementation(libs.mockito.core)
   testImplementation(libs.mysql.driver)
   testImplementation(libs.postgresql.driver)
@@ -125,12 +120,9 @@ dependencies {
     exclude("org.rocksdb")
   }
   testImplementation(libs.slf4j.api)
-  testImplementation(libs.testcontainers)
   testImplementation(libs.testcontainers.mysql)
   testImplementation(libs.testcontainers.localstack)
   testImplementation(libs.hadoop2.s3)
-
-  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 tasks {

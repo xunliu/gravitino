@@ -56,10 +56,7 @@ dependencies {
   compileOnly(libs.lombok)
 
   testImplementation(project(":catalogs:catalog-jdbc-common", "testArtifacts"))
-  testImplementation(project(":clients:client-java"))
   testImplementation(project(":integration-test-common", "testArtifacts"))
-  testImplementation(project(":server"))
-  testImplementation(project(":server-common"))
 
   testImplementation("org.scala-lang.modules:scala-collection-compat_$scalaVersion:$scalaCollectionCompatVersion")
   testImplementation("org.apache.iceberg:iceberg-spark-runtime-${sparkMajorVersion}_$scalaVersion:$icebergVersion")
@@ -74,18 +71,13 @@ dependencies {
     exclude("org.rocksdb")
   }
 
-  testImplementation(libs.junit.jupiter.api)
-  testImplementation(libs.junit.jupiter.params)
   testImplementation(libs.mockito.core)
   // For test TestMultipleJDBCLoad, it was depended on testcontainers.mysql and testcontainers.postgresql
   testImplementation(libs.mysql.driver)
   testImplementation(libs.postgresql.driver)
   testImplementation(libs.slf4j.api)
-  testImplementation(libs.testcontainers)
   testImplementation(libs.testcontainers.mysql)
   testImplementation(libs.testcontainers.postgresql)
-
-  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 tasks {

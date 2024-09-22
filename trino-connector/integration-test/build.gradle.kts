@@ -28,13 +28,7 @@ repositories {
 }
 
 dependencies {
-  testImplementation(project(":api"))
-  testImplementation(project(":clients:client-java"))
-  testImplementation(project(":common"))
-  testImplementation(project(":core"))
   testImplementation(project(":integration-test-common", "testArtifacts"))
-  testImplementation(project(":server"))
-  testImplementation(project(":server-common"))
 
   testImplementation(libs.awaitility)
   testImplementation(libs.bundles.jersey)
@@ -55,19 +49,15 @@ dependencies {
   testImplementation(libs.httpclient5)
   testImplementation(libs.jline.terminal)
   testImplementation(libs.jodd.core)
-  testImplementation(libs.junit.jupiter.api)
   testImplementation(libs.mockito.core)
   testImplementation(libs.mysql.driver)
   testImplementation(libs.okhttp3.loginterceptor)
   testImplementation(libs.opencsv)
   testImplementation(libs.postgresql.driver)
-  testImplementation(libs.testcontainers)
   testImplementation(libs.trino.cli)
   testImplementation(libs.trino.client) {
     exclude("jakarta.annotation")
   }
-
-  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 tasks.test {

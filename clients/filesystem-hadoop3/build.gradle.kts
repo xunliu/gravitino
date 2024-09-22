@@ -28,18 +28,11 @@ dependencies {
   compileOnly(libs.hadoop3.common)
   implementation(libs.caffeine)
 
-  testImplementation(project(":api"))
-  testImplementation(project(":core"))
-  testImplementation(project(":common"))
-  testImplementation(project(":server"))
-  testImplementation(project(":server-common"))
-  testImplementation(project(":clients:client-java"))
   testImplementation(project(":integration-test-common", "testArtifacts"))
   testImplementation(libs.awaitility)
   testImplementation(libs.bundles.jetty)
   testImplementation(libs.bundles.jersey)
   testImplementation(libs.bundles.jwt)
-  testImplementation(libs.testcontainers)
   testImplementation(libs.guava)
   testImplementation(libs.hadoop3.client)
   testImplementation(libs.hadoop3.common) {
@@ -55,8 +48,6 @@ dependencies {
   testImplementation(libs.javax.jaxb.api) {
     exclude("*")
   }
-  testImplementation(libs.junit.jupiter.api)
-  testImplementation(libs.junit.jupiter.params)
   testImplementation(libs.minikdc)
   testImplementation(libs.mockito.core)
   testImplementation(libs.mockserver.netty) {
@@ -64,7 +55,6 @@ dependencies {
   }
   testImplementation(libs.mysql.driver)
   testImplementation(libs.postgresql.driver)
-  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 tasks.build {

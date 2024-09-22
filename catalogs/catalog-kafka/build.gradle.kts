@@ -35,10 +35,7 @@ dependencies {
     exclude("*")
   }
 
-  testImplementation(project(":clients:client-java"))
   testImplementation(project(":integration-test-common", "testArtifacts"))
-  testImplementation(project(":server"))
-  testImplementation(project(":server-common"))
 
   implementation(libs.guava)
   implementation(libs.kafka.clients)
@@ -46,16 +43,12 @@ dependencies {
 
   testImplementation(libs.commons.io)
   testImplementation(libs.curator.test)
-  testImplementation(libs.junit.jupiter.api)
   testImplementation(libs.kafka)
   testImplementation(libs.mockito.core)
   testImplementation(libs.mockito.inline)
   testImplementation(libs.mysql.driver)
   testImplementation(libs.postgresql.driver)
-  testImplementation(libs.testcontainers)
   testImplementation(libs.testcontainers.mysql)
-
-  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 tasks {
