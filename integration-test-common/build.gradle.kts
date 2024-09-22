@@ -40,7 +40,6 @@ dependencies {
   testImplementation(project(":server-common")) {
     exclude(group = "org.rocksdb", module = "rocksdbjni")
   }
-  testImplementation(project(":authorizations:authorization-ranger"))
   testImplementation(libs.bundles.jetty)
   testImplementation(libs.bundles.jersey)
   testImplementation(libs.bundles.jwt)
@@ -64,6 +63,7 @@ dependencies {
     exclude("org.elasticsearch.plugin")
     exclude("com.amazonaws", "aws-java-sdk-bundle")
   }
+  testImplementation(libs.apiguardian.api)
   testImplementation(libs.junit.jupiter.params)
   testImplementation(libs.junit.jupiter.api)
   testImplementation(libs.junit.jupiter.engine)
