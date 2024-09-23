@@ -31,8 +31,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -40,7 +38,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.gravitino.Catalog;
 import org.apache.gravitino.Configs;
 import org.apache.gravitino.MetadataObject;
@@ -172,11 +170,13 @@ public class RangerHiveE2EIT extends AbstractIT {
             "test",
             "ranger-spark-security.xml");
 
-      String templateContext = FileUtils.readFileToString(new File(templatePath), StandardCharsets.UTF_8);
-      templateContext = templateContext.replace("__REPLACE__RANGER_ADMIN_URL", RANGER_ADMIN_URL)
-          .replace("__REPLACE__RANGER_HIVE_REPO_NAME", RangerITEnv.RANGER_HIVE_REPO_NAME);
-      FileUtils.writeStringToFile(new File(xmlPath), templateContext, StandardCharsets.UTF_8);
-    }
+    String templateContext =
+        FileUtils.readFileToString(new File(templatePath), StandardCharsets.UTF_8);
+    templateContext =
+        templateContext
+            .replace("__REPLACE__RANGER_ADMIN_URL", RANGER_ADMIN_URL)
+            .replace("__REPLACE__RANGER_HIVE_REPO_NAME", RangerITEnv.RANGER_HIVE_REPO_NAME);
+    FileUtils.writeStringToFile(new File(xmlPath), templateContext, StandardCharsets.UTF_8);
   }
 
   @AfterAll
