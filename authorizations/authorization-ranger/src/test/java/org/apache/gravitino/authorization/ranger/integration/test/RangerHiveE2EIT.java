@@ -172,24 +172,10 @@ public class RangerHiveE2EIT extends AbstractIT {
             "test",
             "ranger-spark-security.xml");
 
-    FileInputStream inputStream = new FileInputStream(templatePath);
-    String templateContext = null;
-    try {
-      templateContext = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-
-      templateContext = templateContext.replace("__REPLACE__RANGER_ADMIN_URL", RANGER_ADMIN_URL);
-      templateContext =
-          templateContext.replace(
-              "__REPLACE__RANGER_HIVE_REPO_NAME", RangerITEnv.RANGER_HIVE_REPO_NAME);
-    } finally {
-      inputStream.close();
-    }
-
-    FileOutputStream outputStream = new FileOutputStream(xmlPath);
-    try {
-      IOUtils.write(templateContext, outputStream, StandardCharsets.UTF_8);
-    } finally {
-      outputStream.close();
+      String templateContext = FileUtils.readFileToString(new File(templatePath), StandardCharsets.UTF_8);
+      templateContext = templateContext.replace("__REPLACE__RANGER_ADMIN_URL", RANGER_ADMIN_URL)
+          .replace("__REPLACE__RANGER_HIVE_REPO_NAME", RangerITEnv.RANGER_HIVE_REPO_NAME);
+      FileUtils.writeStringToFile(new File(xmlPath), templateContext, StandardCharsets.UTF_8);
     }
   }
 
