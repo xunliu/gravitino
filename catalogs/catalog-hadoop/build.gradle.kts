@@ -68,10 +68,9 @@ dependencies {
   implementation(libs.slf4j.api)
 
   testImplementation(project(":integration-test-common", "testArtifacts"))
-
+  testImplementation(libs.bundles.metrics)
   testImplementation(libs.minikdc)
   testImplementation(libs.hadoop3.minicluster)
-
   testImplementation(libs.bundles.log4j)
   testImplementation(libs.mockito.core)
   testImplementation(libs.mockito.inline)

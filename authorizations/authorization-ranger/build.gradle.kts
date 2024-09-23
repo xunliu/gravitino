@@ -68,7 +68,6 @@ dependencies {
   testImplementation(project(":catalogs:catalog-common"))
   testImplementation(project(":integration-test-common", "testArtifacts"))
   testImplementation(libs.mockito.core)
-  testImplementation(libs.h2db)
   testImplementation(libs.mysql.driver)
   testImplementation(libs.postgresql.driver)
   testImplementation("org.apache.spark:spark-hive_$scalaVersion:$sparkVersion")

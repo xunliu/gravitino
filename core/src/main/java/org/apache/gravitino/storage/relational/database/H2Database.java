@@ -54,6 +54,12 @@ public class H2Database implements JDBCDatabase {
 
     String connectionUrl = constructH2URI(originalJDBCUrl, storagePath);
 
+    try {
+      Class.forName("org.h2.Driver");
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException("Failed to load H2 driver.", e);
+    }
+
     try (Connection connection = DriverManager.getConnection(connectionUrl, username, password);
         Statement statement = connection.createStatement()) {
       String sqlContent =

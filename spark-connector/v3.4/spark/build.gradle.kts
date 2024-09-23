@@ -52,6 +52,14 @@ dependencies {
     exclude("org.apache.logging.log4j")
     exclude("org.slf4j")
   }
+  testImplementation(project(":server")) {
+    exclude("org.apache.logging.log4j")
+    exclude("org.slf4j")
+  }
+  testImplementation(project(":server-common")) {
+    exclude("org.apache.logging.log4j")
+    exclude("org.slf4j")
+  }
   testImplementation(project(":spark-connector:spark-common", "testArtifacts")) {
     exclude("com.fasterxml.jackson")
   }

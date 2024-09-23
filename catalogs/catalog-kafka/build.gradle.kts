@@ -34,13 +34,12 @@ dependencies {
   implementation(project(":common")) {
     exclude("*")
   }
-
-  testImplementation(project(":integration-test-common", "testArtifacts"))
-
   implementation(libs.guava)
   implementation(libs.kafka.clients)
   implementation(libs.slf4j.api)
 
+  testImplementation(project(":integration-test-common", "testArtifacts"))
+  testImplementation(project(":core"))
   testImplementation(libs.commons.io)
   testImplementation(libs.curator.test)
   testImplementation(libs.kafka)
