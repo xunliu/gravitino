@@ -64,9 +64,9 @@ dependencies {
     exclude("com.amazonaws", "aws-java-sdk-bundle")
   }
   testImplementation(libs.apiguardian.api)
-  testImplementation(libs.junit.jupiter.params)
   testImplementation(libs.junit.jupiter.api)
   testImplementation(libs.junit.jupiter.engine)
+  testImplementation(libs.junit.jupiter.params)
   testImplementation(libs.bundles.jersey)
 }
 
