@@ -80,6 +80,7 @@ val testShadowJar by tasks.registering(ShadowJar::class) {
   // avoid conflict with Spark test
   exclude("org/apache/logging/slf4j/**")
   relocate("org.eclipse.jetty", "org.apache.gravitino.it.shaded.org.eclipse.jetty")
+  mergeServiceFiles()
   from(sourceSets["test"].output)
 }
 
