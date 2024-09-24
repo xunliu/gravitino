@@ -64,10 +64,10 @@ dependencies {
     exclude("com.amazonaws", "aws-java-sdk-bundle")
   }
   testImplementation(libs.apiguardian.api)
+  testImplementation(libs.bundles.jersey)
   testImplementation(libs.junit.jupiter.api)
   testImplementation(libs.junit.jupiter.engine)
   testImplementation(libs.junit.jupiter.params)
-  testImplementation(libs.bundles.jersey)
 }
 
 val testShadowJar by tasks.registering(ShadowJar::class) {
@@ -79,7 +79,6 @@ val testShadowJar by tasks.registering(ShadowJar::class) {
   archiveClassifier.set("tests-shadow")
   // avoid conflict with Spark test
   exclude("org/apache/logging/slf4j/**")
-//  exclude("com/fasterxml/jackson/**")
   relocate("org.eclipse.jetty", "org.apache.gravitino.it.shaded.org.eclipse.jetty")
   from(sourceSets["test"].output)
 }

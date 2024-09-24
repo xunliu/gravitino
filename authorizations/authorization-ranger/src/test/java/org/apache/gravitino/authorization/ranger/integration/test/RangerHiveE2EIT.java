@@ -128,7 +128,7 @@ public class RangerHiveE2EIT extends AbstractIT {
     sparkSession =
         SparkSession.builder()
             .master("local[1]")
-            .appName("Hive Catalog integration test")
+            .appName("Ranger Hive E2E integration test")
             .config("hive.metastore.uris", HIVE_METASTORE_URIS)
             .config(
                 "spark.sql.warehouse.dir",
