@@ -37,6 +37,8 @@ public class RangerAuthorization extends BaseAuthorization<RangerAuthorization> 
       case "lakehouse-iceberg":
       case "lakehouse-paimon":
         return RangerAuthorizationHadoopSQLPlugin.getInstance(catalogProvider, config);
+      case "hadoop":
+        return RangerAuthorizationHDFSPlugin.getInstance(catalogProvider, config);
       default:
         throw new IllegalArgumentException("Unknown catalog provider: " + catalogProvider);
     }
