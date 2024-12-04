@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -56,11 +57,34 @@ public class RangerAuthorizationHDFSPlugin extends RangerAuthorizationPlugin {
 
   @Override
   public Map<Privilege.Name, Set<AuthorizationPrivilege>> privilegesMappingRule() {
-    return ImmutableMap.of(
+    Map<Privilege.Name, Set<AuthorizationPrivilege>> hive = ImmutableMap.of(
+            Privilege.Name.CREATE_CATALOG,
+            ImmutableSet.of(RangerPrivileges.RangerHadoopSQLPrivilege.CREATE),
+            Privilege.Name.USE_CATALOG,
+            ImmutableSet.of(RangerPrivileges.RangerHadoopSQLPrivilege.SELECT),
+            Privilege.Name.CREATE_SCHEMA,
+            ImmutableSet.of(RangerPrivileges.RangerHadoopSQLPrivilege.CREATE),
+            Privilege.Name.USE_SCHEMA,
+            ImmutableSet.of(RangerPrivileges.RangerHadoopSQLPrivilege.SELECT),
+            Privilege.Name.CREATE_TABLE,
+            ImmutableSet.of(RangerPrivileges.RangerHadoopSQLPrivilege.CREATE),
+            Privilege.Name.MODIFY_TABLE,
+            ImmutableSet.of(
+                    RangerPrivileges.RangerHadoopSQLPrivilege.UPDATE,
+                    RangerPrivileges.RangerHadoopSQLPrivilege.ALTER,
+                    RangerPrivileges.RangerHadoopSQLPrivilege.WRITE),
+            Privilege.Name.SELECT_TABLE,
+            ImmutableSet.of(RangerPrivileges.RangerHadoopSQLPrivilege.READ, RangerPrivileges.RangerHadoopSQLPrivilege.SELECT));
+
+    Map<Privilege.Name, Set<AuthorizationPrivilege>> hdfs = ImmutableMap.of(
         Privilege.Name.READ_FILESET,
         ImmutableSet.of(RangerPrivileges.RangerHdfsPrivilege.READ),
         Privilege.Name.WRITE_FILESET,
         ImmutableSet.of(RangerPrivileges.RangerHdfsPrivilege.WRITE));
+    Map<Privilege.Name, Set<AuthorizationPrivilege>> all = new HashMap<>();
+    all.putAll(hive);
+    all.putAll(hdfs);
+    return all;
   }
 
   @Override

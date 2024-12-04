@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.apache.gravitino.authorization.Privilege;
 import org.apache.gravitino.authorization.Role;
+import org.apache.gravitino.authorization.ranger.RangerAuthorizationHDFSPlugin;
 import org.apache.gravitino.authorization.ranger.RangerAuthorizationHadoopSQLPlugin;
 import org.apache.gravitino.authorization.ranger.RangerAuthorizationPlugin;
 import org.apache.gravitino.authorization.ranger.RangerHelper;
@@ -51,14 +52,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // Ranger IT environment
-public class RangerITEnv {
+public abstract class RangerITEnv {
   private static final Logger LOG = LoggerFactory.getLogger(RangerITEnv.class);
   protected static final String RANGER_TRINO_REPO_NAME = "trinoDev";
   private static final String RANGER_TRINO_TYPE = "trino";
   public static final String RANGER_HIVE_REPO_NAME = "hiveDev";
-  private static final String RANGER_HIVE_TYPE = "hive";
+  protected static final String RANGER_HIVE_TYPE = "hive";
   protected static final String RANGER_HDFS_REPO_NAME = "hdfsDev";
-  private static final String RANGER_HDFS_TYPE = "hdfs";
+  protected static final String RANGER_HDFS_TYPE = "hdfs";
   protected static RangerClient rangerClient;
   public static final String HADOOP_USER_NAME = "gravitino";
   private static volatile boolean initRangerService = false;
@@ -80,30 +81,14 @@ public class RangerITEnv {
   public static final String SEARCH_FILTER_COLUMN = SearchFilter.RESOURCE_PREFIX + RESOURCE_COLUMN;
   // Search filter prefix file path constants
   public static final String SEARCH_FILTER_PATH = SearchFilter.RESOURCE_PREFIX + RESOURCE_PATH;
-  public static RangerAuthorizationPlugin rangerAuthHivePlugin;
+  public static volatile RangerAuthorizationPlugin rangerAuthHivePlugin;
   protected static RangerHelper rangerHelper;
 
-  public static void init() {
+  public static void init(String rangerType) {
     containerSuite.startRangerContainer();
     rangerClient = containerSuite.getRangerContainer().rangerClient;
 
-    rangerAuthHivePlugin =
-        RangerAuthorizationHadoopSQLPlugin.getInstance(
-            "hive",
-            ImmutableMap.of(
-                AuthorizationPropertiesMeta.RANGER_ADMIN_URL,
-                String.format(
-                    "http://%s:%d",
-                    containerSuite.getRangerContainer().getContainerIpAddress(),
-                    RangerContainer.RANGER_SERVER_PORT),
-                AuthorizationPropertiesMeta.RANGER_AUTH_TYPE,
-                RangerContainer.authType,
-                AuthorizationPropertiesMeta.RANGER_USERNAME,
-                RangerContainer.rangerUserName,
-                AuthorizationPropertiesMeta.RANGER_PASSWORD,
-                RangerContainer.rangerPassword,
-                AuthorizationPropertiesMeta.RANGER_SERVICE_NAME,
-                RangerITEnv.RANGER_HIVE_REPO_NAME));
+    rangerAuthHivePlugin = getRangerAuthorizationPluginInstance(rangerType);
     rangerHelper =
         new RangerHelper(
             rangerClient,
@@ -121,6 +106,39 @@ public class RangerITEnv {
         initRangerService = true;
       }
     }
+  }
+
+  public static RangerAuthorizationPlugin getRangerAuthorizationPluginInstance(String rangerType) {
+    if (rangerAuthHivePlugin == null) {
+      synchronized (ContainerSuite.class) {
+        if (rangerAuthHivePlugin == null) {
+          Map<String, String> config = ImmutableMap.of(
+                  AuthorizationPropertiesMeta.RANGER_ADMIN_URL,
+                  String.format(
+                          "http://%s:%d",
+                          containerSuite.getRangerContainer().getContainerIpAddress(),
+                          RangerContainer.RANGER_SERVER_PORT),
+                  AuthorizationPropertiesMeta.RANGER_AUTH_TYPE,
+                  RangerContainer.authType,
+                  AuthorizationPropertiesMeta.RANGER_USERNAME,
+                  RangerContainer.rangerUserName,
+                  AuthorizationPropertiesMeta.RANGER_PASSWORD,
+                  RangerContainer.rangerPassword,
+                  AuthorizationPropertiesMeta.RANGER_SERVICE_NAME,
+                  RangerITEnv.RANGER_HIVE_REPO_NAME);
+
+          if (rangerType.equals(RANGER_HIVE_TYPE)) {
+            rangerAuthHivePlugin= RangerAuthorizationHadoopSQLPlugin.getInstance(
+                    "hive", config);
+
+          } else if (rangerType.equals(RANGER_HDFS_TYPE)) {
+            rangerAuthHivePlugin= RangerAuthorizationHDFSPlugin.getInstance(
+                    "hdfs", config);
+          }
+        }
+      }
+    }
+    return rangerAuthHivePlugin;
   }
 
   public static void cleanup() {
