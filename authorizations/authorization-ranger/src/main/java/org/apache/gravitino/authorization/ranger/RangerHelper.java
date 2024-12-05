@@ -247,16 +247,16 @@ public class RangerHelper {
     return policy;
   }
 
-  public boolean isGravitinoManagedPolicyItemAccess(RangerPolicy.RangerPolicyItem policyItem) {
+  public static boolean isGravitinoManagedPolicyItemAccess(RangerPolicy.RangerPolicyItem policyItem) {
     return policyItem.getRoles().stream().anyMatch(role -> role.startsWith(GRAVITINO_ROLE_PREFIX));
   }
 
-  public boolean hasGravitinoManagedPolicyItem(RangerPolicy policy) {
+  public static boolean hasGravitinoManagedPolicyItem(RangerPolicy policy) {
     List<RangerPolicy.RangerPolicyItem> policyItems = policy.getPolicyItems();
     policyItems.addAll(policy.getDenyPolicyItems());
     policyItems.addAll(policy.getRowFilterPolicyItems());
     policyItems.addAll(policy.getDataMaskPolicyItems());
-    return policyItems.stream().anyMatch(this::isGravitinoManagedPolicyItemAccess);
+    return policyItems.stream().anyMatch(RangerHelper::isGravitinoManagedPolicyItemAccess);
   }
 
   public void removeAllGravitinoManagedPolicyItem(RangerPolicy policy) {
@@ -383,7 +383,7 @@ public class RangerHelper {
                                     });
                           });
                 })
-            .filter(this::isGravitinoManagedPolicyItemAccess)
+            .filter(RangerHelper::isGravitinoManagedPolicyItemAccess)
             .collect(Collectors.toList());
     // Add or remove the owner in the policy item
     matchPolicyItems.forEach(
@@ -452,7 +452,7 @@ public class RangerHelper {
           new RangerPolicy.RangerPolicyResource(
               nsMetadataObject.get(i),
               false,
-              metadataObject.type().equals(RangerMetadataObject.Type.PATH));
+              metadataObject.type().equals(RangerHDFSMetadataObject.Type.PATH));
       policy.getResources().put(policyResourceDefines.get(i), policyResource);
     }
     return policy;

@@ -32,7 +32,7 @@ import org.apache.gravitino.catalog.jdbc.converter.JdbcTypeConverter;
 import org.apache.gravitino.catalog.jdbc.operation.JdbcDatabaseOperations;
 import org.apache.gravitino.catalog.jdbc.operation.JdbcTableOperations;
 import org.apache.gravitino.connector.CatalogOperations;
-import org.apache.gravitino.connector.PropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertiesMetadata;
 import org.apache.gravitino.connector.capability.Capability;
 
 /** Implementation of an Apache Doris catalog in Apache Gravitino. */

@@ -33,10 +33,11 @@ import org.apache.gravitino.authorization.Owner;
 import org.apache.gravitino.authorization.Role;
 import org.apache.gravitino.authorization.RoleChange;
 import org.apache.gravitino.authorization.User;
-import org.apache.gravitino.connector.AuthorizationPropertiesMeta;
+import org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta;
 import org.apache.gravitino.connector.authorization.AuthorizationPlugin;
 import org.apache.gravitino.connector.authorization.AuthorizationPluginProvider;
 import org.apache.gravitino.connector.authorization.BaseAuthorization;
+import org.apache.gravitino.connector.properties.WildcardPropertiesMeta;
 import org.apache.gravitino.exceptions.AuthorizationPluginException;
 import org.apache.gravitino.utils.MapUtils;
 
@@ -55,9 +56,19 @@ public abstract class ChainAuthorizationBase implements AuthorizationPlugin {
     Map<String, String> chainConfig =
         MapUtils.getFilteredMap(
             config, key -> key.toString().startsWith(AuthorizationPropertiesMeta.getChainPrefix()));
-    Arrays.stream(chainPlugins.split(AuthorizationPropertiesMeta.getChainPluginsSplitter()))
+    Arrays.stream(chainPlugins.split(WildcardPropertiesMeta.WILDCARD_CONFIG_VALUES_SPLITTER))
         .forEach(
             pluginName -> {
+              // Get catalog provider for each plugin
+              String catalogProviderKey =
+                      AuthorizationPropertiesMeta.generateChainPluginsKey(
+                              pluginName, AuthorizationPropertiesMeta.getChainCatalogProviderKey());
+              Preconditions.checkArgument(
+                      config.containsKey(catalogProviderKey), "Missing catalog provider for plugin: " + pluginName);
+              String catalogProvider = config.get(catalogProviderKey);
+              Preconditions.checkArgument(
+                      !catalogProvider.isEmpty(), "Catalog provider for plugin: " + pluginName + " is empty");
+              // Get authorization provider for each plugin
               String providerKey =
                   AuthorizationPropertiesMeta.generateChainPluginsKey(
                       pluginName, AuthorizationPropertiesMeta.getChainProviderKey());
@@ -87,7 +98,7 @@ public abstract class ChainAuthorizationBase implements AuthorizationPlugin {
               AuthorizationPlugin authorizationPlugin =
                   BaseAuthorization.createAuthorization(
                           this.getClass().getClassLoader(), authProvider)
-                      .plugin(catalogProviderName, pluginConfig);
+                      .plugin(catalogProvider, pluginConfig);
               plugins.add(authorizationPlugin);
             });
   }

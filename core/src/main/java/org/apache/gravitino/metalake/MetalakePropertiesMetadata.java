@@ -24,8 +24,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
-import org.apache.gravitino.connector.PropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.PropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 
 public class MetalakePropertiesMetadata implements PropertiesMetadata {
 

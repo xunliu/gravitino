@@ -18,9 +18,9 @@
  */
 package org.apache.gravitino.catalog.mysql;
 
-import static org.apache.gravitino.connector.PropertyEntry.enumImmutablePropertyEntry;
-import static org.apache.gravitino.connector.PropertyEntry.integerOptionalPropertyEntry;
-import static org.apache.gravitino.connector.PropertyEntry.stringReservedPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.enumImmutablePropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.integerOptionalPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.stringReservedPropertyEntry;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,7 +28,7 @@ import java.util.Map;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.TreeBidiMap;
 import org.apache.gravitino.catalog.jdbc.JdbcTablePropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 
 public class MysqlTablePropertiesMetadata extends JdbcTablePropertiesMetadata {
   public static final String GRAVITINO_ENGINE_KEY = MysqlConstants.GRAVITINO_ENGINE_KEY;

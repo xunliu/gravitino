@@ -21,9 +21,9 @@ package org.apache.gravitino.catalog.hive;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
-import org.apache.gravitino.connector.AuthorizationPropertiesMeta;
-import org.apache.gravitino.connector.BaseCatalogPropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta;
+import org.apache.gravitino.connector.properties.BaseCatalogPropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 import org.apache.gravitino.hive.ClientPropertiesMetadata;
 
 public class HiveCatalogPropertiesMeta extends BaseCatalogPropertiesMetadata {

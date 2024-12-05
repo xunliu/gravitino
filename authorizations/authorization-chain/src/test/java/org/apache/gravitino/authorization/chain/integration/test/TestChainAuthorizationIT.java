@@ -20,11 +20,11 @@ package org.apache.gravitino.authorization.chain.integration.test;
 
 import static org.apache.gravitino.Catalog.AUTHORIZATION_PROVIDER;
 import static org.apache.gravitino.catalog.hive.HiveConstants.IMPERSONATION_ENABLE;
-import static org.apache.gravitino.connector.AuthorizationPropertiesMeta.getRangerAdminUrlKey;
-import static org.apache.gravitino.connector.AuthorizationPropertiesMeta.getRangerAuthTypeKey;
-import static org.apache.gravitino.connector.AuthorizationPropertiesMeta.getRangerPasswordKey;
-import static org.apache.gravitino.connector.AuthorizationPropertiesMeta.getRangerServiceNameKey;
-import static org.apache.gravitino.connector.AuthorizationPropertiesMeta.getRangerUsernameKey;
+import static org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta.getRangerAdminUrlKey;
+import static org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta.getRangerAuthTypeKey;
+import static org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta.getRangerPasswordKey;
+import static org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta.getRangerServiceNameKey;
+import static org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta.getRangerUsernameKey;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +33,7 @@ import org.apache.gravitino.CatalogProvider;
 import org.apache.gravitino.authorization.ranger.integration.test.RangerHiveE2EIT;
 import org.apache.gravitino.authorization.ranger.integration.test.RangerITEnv;
 import org.apache.gravitino.catalog.hive.HiveConstants;
-import org.apache.gravitino.connector.AuthorizationPropertiesMeta;
+import org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta;
 import org.apache.gravitino.connector.authorization.AuthorizationPluginProvider;
 import org.apache.gravitino.integration.test.container.RangerContainer;
 import org.junit.jupiter.api.BeforeAll;

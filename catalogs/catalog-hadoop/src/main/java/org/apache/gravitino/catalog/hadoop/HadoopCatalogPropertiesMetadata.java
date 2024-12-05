@@ -25,8 +25,8 @@ import java.util.Map;
 import org.apache.gravitino.catalog.hadoop.authentication.AuthenticationConfig;
 import org.apache.gravitino.catalog.hadoop.fs.FileSystemProvider;
 import org.apache.gravitino.catalog.hadoop.fs.LocalFileSystemProvider;
-import org.apache.gravitino.connector.BaseCatalogPropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.BaseCatalogPropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 
 public class HadoopCatalogPropertiesMetadata extends BaseCatalogPropertiesMetadata {
 

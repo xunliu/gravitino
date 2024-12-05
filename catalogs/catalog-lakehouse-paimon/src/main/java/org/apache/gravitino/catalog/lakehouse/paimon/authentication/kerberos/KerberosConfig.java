@@ -25,7 +25,7 @@ import org.apache.gravitino.catalog.lakehouse.paimon.authentication.Authenticati
 import org.apache.gravitino.config.ConfigBuilder;
 import org.apache.gravitino.config.ConfigConstants;
 import org.apache.gravitino.config.ConfigEntry;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 
 public class KerberosConfig extends AuthenticationConfig {
   public static final String KEY_TAB_URI_KEY = "authentication.kerberos.keytab-uri";

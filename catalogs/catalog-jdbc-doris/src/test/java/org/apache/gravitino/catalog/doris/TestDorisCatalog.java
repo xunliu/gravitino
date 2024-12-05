@@ -22,7 +22,7 @@ package org.apache.gravitino.catalog.doris;
 import static org.apache.gravitino.catalog.doris.DorisTablePropertiesMetadata.REPLICATION_FACTOR;
 
 import java.util.Map;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

@@ -22,8 +22,8 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.apache.gravitino.catalog.hive.HiveConstants;
-import org.apache.gravitino.connector.PropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.PropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 
 public class ClientPropertiesMetadata implements PropertiesMetadata {
   private static final int DEFAULT_CLIENT_POOL_SIZE = 1;

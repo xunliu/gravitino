@@ -24,6 +24,7 @@ import org.apache.gravitino.Catalog;
 import org.apache.gravitino.NameIdentifier;
 import org.apache.gravitino.SupportsSchemas;
 import org.apache.gravitino.annotation.Evolving;
+import org.apache.gravitino.connector.properties.HasPropertyMetadata;
 import org.apache.gravitino.rel.TableCatalog;
 
 /**

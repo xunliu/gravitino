@@ -18,7 +18,7 @@
  */
 package org.apache.gravitino.server.web.rest;
 
-import static org.apache.gravitino.connector.BaseCatalogPropertiesMetadata.BASIC_CATALOG_PROPERTIES_METADATA;
+import static org.apache.gravitino.connector.properties.BaseCatalogPropertiesMetadata.BASIC_CATALOG_PROPERTIES_METADATA;
 
 import java.io.IOException;
 import java.util.Map;
@@ -26,8 +26,8 @@ import org.apache.gravitino.NameIdentifier;
 import org.apache.gravitino.connector.BaseCatalog;
 import org.apache.gravitino.connector.CatalogInfo;
 import org.apache.gravitino.connector.CatalogOperations;
-import org.apache.gravitino.connector.HasPropertyMetadata;
-import org.apache.gravitino.connector.PropertiesMetadata;
+import org.apache.gravitino.connector.properties.HasPropertyMetadata;
+import org.apache.gravitino.connector.properties.PropertiesMetadata;
 
 public class TestCatalog extends BaseCatalog<TestCatalog> {
 

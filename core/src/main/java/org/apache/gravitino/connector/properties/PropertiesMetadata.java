@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.gravitino.connector;
+package org.apache.gravitino.connector.properties;
 
 import java.util.Map;
 import org.apache.gravitino.annotation.Evolving;

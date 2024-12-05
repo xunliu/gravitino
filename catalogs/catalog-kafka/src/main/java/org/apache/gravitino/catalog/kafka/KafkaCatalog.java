@@ -22,7 +22,7 @@ package org.apache.gravitino.catalog.kafka;
 import java.util.Map;
 import org.apache.gravitino.connector.BaseCatalog;
 import org.apache.gravitino.connector.CatalogOperations;
-import org.apache.gravitino.connector.PropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertiesMetadata;
 import org.apache.gravitino.connector.capability.Capability;
 
 /**

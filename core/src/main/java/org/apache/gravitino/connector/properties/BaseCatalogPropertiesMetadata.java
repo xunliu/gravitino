@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.gravitino.connector;
+package org.apache.gravitino.connector.properties;
 
 import static org.apache.gravitino.Catalog.CLOUD_NAME;
 import static org.apache.gravitino.Catalog.CLOUD_REGION_CODE;
@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.Map;
 import org.apache.gravitino.Catalog;
 import org.apache.gravitino.annotation.Evolving;
+import org.apache.gravitino.connector.BaseCatalog;
 
 @Evolving
 public abstract class BaseCatalogPropertiesMetadata extends BasePropertiesMetadata {

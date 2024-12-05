@@ -24,7 +24,7 @@ import org.apache.gravitino.MetadataObject;
 import org.apache.gravitino.connector.authorization.AuthorizationMetadataObject;
 
 /** The helper class for {@link AuthorizationMetadataObject}. */
-public class RangerMetadataObject implements AuthorizationMetadataObject {
+public class RangerHiveMetadataObject implements AuthorizationMetadataObject {
   /**
    * The type of object in the Ranger system. Every type will map one kind of the entity of the
    * Gravitino type system.
@@ -35,9 +35,7 @@ public class RangerMetadataObject implements AuthorizationMetadataObject {
     /** A table is mapped the table of relational data sources like Apache Hive, MySQL, etc. */
     TABLE(MetadataObject.Type.TABLE),
     /** A column is a sub-collection of the table that represents a group of same type data. */
-    COLUMN(MetadataObject.Type.COLUMN),
-
-    PATH(MetadataObject.Type.FILESET);
+    COLUMN(MetadataObject.Type.COLUMN);
 
     private final MetadataObject.Type metadataType;
 
@@ -74,7 +72,7 @@ public class RangerMetadataObject implements AuthorizationMetadataObject {
    * @param name The name of the metadata object
    * @param type The type of the metadata object
    */
-  public RangerMetadataObject(String parent, String name, AuthorizationMetadataObject.Type type) {
+  public RangerHiveMetadataObject(String parent, String name, AuthorizationMetadataObject.Type type) {
     this.parent = parent;
     this.name = name;
     this.type = type;
@@ -112,15 +110,15 @@ public class RangerMetadataObject implements AuthorizationMetadataObject {
         type != null, "Cannot create a Ranger metadata object with no type");
 
     Preconditions.checkArgument(
-        names.size() != 1 || type == RangerMetadataObject.Type.SCHEMA,
+        names.size() != 1 || type == RangerHiveMetadataObject.Type.SCHEMA,
         "If the length of names is 1, it must be the SCHEMA type");
 
     Preconditions.checkArgument(
-        names.size() != 2 || type == RangerMetadataObject.Type.TABLE,
+        names.size() != 2 || type == RangerHiveMetadataObject.Type.TABLE,
         "If the length of names is 2, it must be the TABLE type");
 
     Preconditions.checkArgument(
-        names.size() != 3 || type == RangerMetadataObject.Type.COLUMN,
+        names.size() != 3 || type == RangerHiveMetadataObject.Type.COLUMN,
         "If the length of names is 3, it must be COLUMN");
 
     for (String name : names) {
@@ -134,11 +132,11 @@ public class RangerMetadataObject implements AuthorizationMetadataObject {
       return true;
     }
 
-    if (!(o instanceof RangerMetadataObject)) {
+    if (!(o instanceof RangerHiveMetadataObject)) {
       return false;
     }
 
-    RangerMetadataObject that = (RangerMetadataObject) o;
+    RangerHiveMetadataObject that = (RangerHiveMetadataObject) o;
     return java.util.Objects.equals(name, that.name)
         && java.util.Objects.equals(parent, that.parent)
         && type == that.type;

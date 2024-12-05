@@ -20,8 +20,8 @@ package org.apache.gravitino.catalog.jdbc;
 
 import java.util.Collections;
 import java.util.Map;
-import org.apache.gravitino.connector.BasePropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.BasePropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 
 public class JdbcSchemaPropertiesMetadata extends BasePropertiesMetadata {
 

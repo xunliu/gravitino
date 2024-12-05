@@ -27,7 +27,7 @@ import org.apache.gravitino.connector.authorization.AuthorizationPrivilege;
 import org.apache.gravitino.connector.authorization.AuthorizationSecurableObject;
 
 /** The helper class for {@link RangerSecurableObject}. */
-public class RangerSecurableObject extends RangerMetadataObject
+public class RangerSecurableObject extends RangerHiveMetadataObject
     implements AuthorizationSecurableObject {
   private final List<AuthorizationPrivilege> privileges;
 

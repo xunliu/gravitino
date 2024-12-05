@@ -38,7 +38,9 @@ dependencies {
   implementation(project(":core")) {
     exclude(group = "*")
   }
-
+  implementation(project(":catalogs:catalog-common")) {
+    exclude(group = "*")
+  }
   implementation(libs.bundles.log4j)
   implementation(libs.commons.lang3)
   implementation(libs.guava)
@@ -70,7 +72,7 @@ dependencies {
   testImplementation(project(":common"))
   testImplementation(project(":clients:client-java"))
   testImplementation(project(":server"))
-  testImplementation(project(":catalogs:catalog-common"))
+
   testImplementation(project(":integration-test-common", "testArtifacts"))
   testImplementation(libs.junit.jupiter.api)
   testImplementation(libs.mockito.core)
@@ -133,7 +135,7 @@ tasks.test {
   doFirst {
     environment("HADOOP_USER_NAME", "gravitino")
   }
-  dependsOn(":catalogs:catalog-hive:jar", ":catalogs:catalog-hive:runtimeJars", ":catalogs:catalog-lakehouse-iceberg:jar", ":catalogs:catalog-lakehouse-iceberg:runtimeJars", ":catalogs:catalog-lakehouse-paimon:jar", ":catalogs:catalog-lakehouse-paimon:runtimeJars")
+  dependsOn(":catalogs:catalog-hive:jar", ":catalogs:catalog-hive:runtimeJars", ":catalogs:catalog-lakehouse-iceberg:jar", ":catalogs:catalog-lakehouse-iceberg:runtimeJars", ":catalogs:catalog-lakehouse-paimon:jar", ":catalogs:catalog-lakehouse-paimon:runtimeJars", ":authorizations:authorization-chain:jar", ":authorizations:authorization-chain:runtimeJars")
 
   val skipITs = project.hasProperty("skipITs")
   if (skipITs) {

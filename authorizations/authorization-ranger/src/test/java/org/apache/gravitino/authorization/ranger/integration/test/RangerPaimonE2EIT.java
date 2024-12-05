@@ -20,10 +20,10 @@ package org.apache.gravitino.authorization.ranger.integration.test;
 
 import static org.apache.gravitino.Catalog.AUTHORIZATION_PROVIDER;
 import static org.apache.gravitino.authorization.ranger.integration.test.RangerITEnv.currentFunName;
-import static org.apache.gravitino.connector.AuthorizationPropertiesMeta.RANGER_AUTH_TYPE;
-import static org.apache.gravitino.connector.AuthorizationPropertiesMeta.RANGER_PASSWORD;
-import static org.apache.gravitino.connector.AuthorizationPropertiesMeta.RANGER_SERVICE_NAME;
-import static org.apache.gravitino.connector.AuthorizationPropertiesMeta.RANGER_USERNAME;
+import static org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta.RANGER_AUTH_TYPE;
+import static org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta.RANGER_PASSWORD;
+import static org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta.RANGER_SERVICE_NAME;
+import static org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta.RANGER_USERNAME;
 import static org.apache.gravitino.integration.test.container.RangerContainer.RANGER_SERVER_PORT;
 
 import com.google.common.collect.ImmutableMap;
@@ -38,7 +38,7 @@ import org.apache.gravitino.auth.AuthenticatorType;
 import org.apache.gravitino.authorization.Privileges;
 import org.apache.gravitino.authorization.SecurableObject;
 import org.apache.gravitino.authorization.SecurableObjects;
-import org.apache.gravitino.connector.AuthorizationPropertiesMeta;
+import org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta;
 import org.apache.gravitino.integration.test.container.HiveContainer;
 import org.apache.gravitino.integration.test.container.RangerContainer;
 import org.apache.gravitino.integration.test.util.GravitinoITUtils;
@@ -70,7 +70,7 @@ public class RangerPaimonE2EIT extends RangerBaseE2EIT {
     registerCustomConfigs(configs);
     super.startIntegrationTest();
 
-    RangerITEnv.init(RangerITEnv.RANGER_HIVE_TYPE);
+    RangerITEnv.init();
     RangerITEnv.startHiveRangerContainer();
 
     RANGER_ADMIN_URL =

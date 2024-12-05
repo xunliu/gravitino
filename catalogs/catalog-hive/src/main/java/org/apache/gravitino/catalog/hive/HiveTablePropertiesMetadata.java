@@ -18,17 +18,17 @@
  */
 package org.apache.gravitino.catalog.hive;
 
-import static org.apache.gravitino.connector.PropertyEntry.booleanReservedPropertyEntry;
-import static org.apache.gravitino.connector.PropertyEntry.enumImmutablePropertyEntry;
-import static org.apache.gravitino.connector.PropertyEntry.stringImmutablePropertyEntry;
-import static org.apache.gravitino.connector.PropertyEntry.stringReservedPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.booleanReservedPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.enumImmutablePropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.stringImmutablePropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.stringReservedPropertyEntry;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
-import org.apache.gravitino.connector.BasePropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.BasePropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 
 public class HiveTablePropertiesMetadata extends BasePropertiesMetadata {
   public static final String COMMENT = HiveConstants.COMMENT;

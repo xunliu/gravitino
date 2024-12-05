@@ -48,7 +48,7 @@ import org.apache.gravitino.authorization.ranger.reference.VXGroup;
 import org.apache.gravitino.authorization.ranger.reference.VXGroupList;
 import org.apache.gravitino.authorization.ranger.reference.VXUser;
 import org.apache.gravitino.authorization.ranger.reference.VXUserList;
-import org.apache.gravitino.connector.AuthorizationPropertiesMeta;
+import org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta;
 import org.apache.gravitino.connector.authorization.AuthorizationMetadataObject;
 import org.apache.gravitino.connector.authorization.AuthorizationPlugin;
 import org.apache.gravitino.connector.authorization.AuthorizationPluginProvider;
@@ -83,7 +83,7 @@ public abstract class RangerAuthorizationPlugin
 
   protected final String rangerServiceName;
   protected final RangerClientExtension rangerClient;
-  private final RangerHelper rangerHelper;
+  protected final RangerHelper rangerHelper;
   @VisibleForTesting public final String rangerAdminName;
   private final String catalogProviderName;
 
@@ -127,6 +127,15 @@ public abstract class RangerAuthorizationPlugin
    * @return The policy resource defines rule.
    */
   public abstract List<String> policyResourceDefinesRule();
+
+  /**
+   * IF remove the SCHEMA, need to remove these the relevant policies, `{schema}`, `{schema}.*`,
+   * `{schema}.*.*` <br>
+   * IF remove the TABLE, need to remove these the relevant policies, `{schema}.*`, `{schema}.*.*`
+   * <br>
+   * IF remove the COLUMN, Only need to remove `{schema}.*.*` <br>
+   */
+  protected abstract void doRemoveMetadataObject(AuthorizationMetadataObject authMetadataObject);
 
   /**
    * Create a new role in the Ranger. <br>
@@ -793,91 +802,6 @@ public abstract class RangerAuthorizationPlugin
   }
 
   /**
-   * IF remove the SCHEMA, need to remove these the relevant policies, `{schema}`, `{schema}.*`,
-   * `{schema}.*.*` <br>
-   * IF remove the TABLE, need to remove these the relevant policies, `{schema}.*`, `{schema}.*.*`
-   * <br>
-   * IF remove the COLUMN, Only need to remove `{schema}.*.*` <br>
-   */
-  private void doRemoveMetadataObject(AuthorizationMetadataObject authMetadataObject) {
-    switch (authMetadataObject.metadataObjectType()) {
-      case SCHEMA:
-        doRemoveSchemaMetadataObject(authMetadataObject);
-        break;
-      case TABLE:
-        doRemoveTableMetadataObject(authMetadataObject);
-        break;
-      case COLUMN:
-        removePolicyByMetadataObject(authMetadataObject.names());
-        break;
-      default:
-        throw new IllegalArgumentException(
-            "Unsupported metadata object type: " + authMetadataObject.type());
-    }
-  }
-
-  /**
-   * Remove the SCHEMA, Need to remove these the relevant policies, `{schema}`, `{schema}.*`,
-   * `{schema}.*.*` permissions.
-   */
-  private void doRemoveSchemaMetadataObject(AuthorizationMetadataObject authMetadataObject) {
-    Preconditions.checkArgument(
-        authMetadataObject.type() == RangerMetadataObject.Type.SCHEMA,
-        "The metadata object type must be SCHEMA");
-    Preconditions.checkArgument(
-        authMetadataObject.names().size() == 1, "The metadata object names must be 1");
-    if (RangerHelper.RESOURCE_ALL.equals(authMetadataObject.name())) {
-      // Delete metalake or catalog policies in this Ranger service
-      try {
-        List<RangerPolicy> policies = rangerClient.getPoliciesInService(rangerServiceName);
-        policies.stream()
-            .filter(rangerHelper::hasGravitinoManagedPolicyItem)
-            .forEach(rangerHelper::removeAllGravitinoManagedPolicyItem);
-      } catch (RangerServiceException e) {
-        throw new RuntimeException(e);
-      }
-    } else {
-      List<List<String>> loop =
-          ImmutableList.of(
-              ImmutableList.of(authMetadataObject.name())
-              /** SCHEMA permission */
-              ,
-              ImmutableList.of(authMetadataObject.name(), RangerHelper.RESOURCE_ALL)
-              /** TABLE permission */
-              ,
-              ImmutableList.of(
-                  authMetadataObject.name(), RangerHelper.RESOURCE_ALL, RangerHelper.RESOURCE_ALL)
-              /** COLUMN permission */
-              );
-      for (List<String> resNames : loop) {
-        removePolicyByMetadataObject(resNames);
-      }
-    }
-  }
-
-  /**
-   * Remove the TABLE, Need to remove these the relevant policies, `*.{table}`, `*.{table}.{column}`
-   * permissions.
-   */
-  private void doRemoveTableMetadataObject(
-      AuthorizationMetadataObject AuthorizationMetadataObject) {
-    List<List<String>> loop =
-        ImmutableList.of(
-            AuthorizationMetadataObject.names()
-            /** TABLE permission */
-            ,
-            Stream.concat(
-                    AuthorizationMetadataObject.names().stream(),
-                    Stream.of(RangerHelper.RESOURCE_ALL))
-                .collect(Collectors.toList())
-            /** COLUMN permission */
-            );
-    for (List<String> resNames : loop) {
-      removePolicyByMetadataObject(resNames);
-    }
-  }
-
-  /**
    * IF rename the SCHEMA, Need to rename these the relevant policies, `{schema}`, `{schema}.*`,
    * `{schema}.*.*` <br>
    * IF rename the TABLE, Need to rename these the relevant policies, `{schema}.*`, `{schema}.*.*`
@@ -1091,7 +1015,7 @@ public abstract class RangerAuthorizationPlugin
       AuthorizationMetadataObject.Type type,
       Set<AuthorizationPrivilege> privileges) {
     AuthorizationMetadataObject authMetadataObject =
-        new RangerMetadataObject(
+        new RangerHiveMetadataObject(
             AuthorizationMetadataObject.getParentFullName(names),
             AuthorizationMetadataObject.getLastName(names),
             type);

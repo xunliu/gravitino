@@ -18,14 +18,14 @@
  */
 package org.apache.gravitino.catalog.lakehouse.hudi;
 
-import static org.apache.gravitino.connector.PropertyEntry.enumImmutablePropertyEntry;
-import static org.apache.gravitino.connector.PropertyEntry.stringRequiredPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.enumImmutablePropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.stringRequiredPropertyEntry;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import org.apache.gravitino.catalog.lakehouse.hudi.backend.BackendType;
-import org.apache.gravitino.connector.BaseCatalogPropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.BaseCatalogPropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 import org.apache.gravitino.hive.ClientPropertiesMetadata;
 
 public class HudiCatalogPropertiesMetadata extends BaseCatalogPropertiesMetadata {

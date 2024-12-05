@@ -29,7 +29,7 @@ import org.apache.gravitino.Namespace;
 import org.apache.gravitino.Schema;
 import org.apache.gravitino.SchemaChange;
 import org.apache.gravitino.catalog.PropertiesMetadataHelpers;
-import org.apache.gravitino.connector.PropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertiesMetadata;
 import org.apache.gravitino.connector.SupportsSchemas;
 import org.apache.gravitino.exceptions.SchemaAlreadyExistsException;
 import org.apache.gravitino.meta.AuditInfo;

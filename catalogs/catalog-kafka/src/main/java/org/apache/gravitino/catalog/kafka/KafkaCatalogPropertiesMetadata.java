@@ -20,8 +20,8 @@ package org.apache.gravitino.catalog.kafka;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
-import org.apache.gravitino.connector.BaseCatalogPropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.BaseCatalogPropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 
 public class KafkaCatalogPropertiesMetadata extends BaseCatalogPropertiesMetadata {
 

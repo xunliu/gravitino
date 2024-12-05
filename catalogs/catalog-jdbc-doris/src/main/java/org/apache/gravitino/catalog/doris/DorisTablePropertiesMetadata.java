@@ -23,7 +23,7 @@ import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 import org.apache.gravitino.catalog.jdbc.JdbcTablePropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 
 public class DorisTablePropertiesMetadata extends JdbcTablePropertiesMetadata {
 

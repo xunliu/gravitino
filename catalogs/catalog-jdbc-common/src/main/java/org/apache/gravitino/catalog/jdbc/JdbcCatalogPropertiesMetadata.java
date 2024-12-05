@@ -18,9 +18,9 @@
  */
 package org.apache.gravitino.catalog.jdbc;
 
-import static org.apache.gravitino.connector.PropertyEntry.integerPropertyEntry;
-import static org.apache.gravitino.connector.PropertyEntry.stringOptionalPropertyEntry;
-import static org.apache.gravitino.connector.PropertyEntry.stringPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.integerPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.stringOptionalPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.stringPropertyEntry;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -28,8 +28,8 @@ import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 import org.apache.gravitino.catalog.jdbc.config.JdbcConfig;
-import org.apache.gravitino.connector.BaseCatalogPropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.BaseCatalogPropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 
 public class JdbcCatalogPropertiesMetadata extends BaseCatalogPropertiesMetadata {
   private static final Map<String, PropertyEntry<?>> PROPERTIES_METADATA;

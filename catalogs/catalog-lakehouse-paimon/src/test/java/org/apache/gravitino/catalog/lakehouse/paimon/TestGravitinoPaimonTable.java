@@ -42,7 +42,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.gravitino.NameIdentifier;
 import org.apache.gravitino.Namespace;
 import org.apache.gravitino.catalog.PropertiesMetadataHelpers;
-import org.apache.gravitino.connector.PropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertiesMetadata;
 import org.apache.gravitino.exceptions.NoSuchSchemaException;
 import org.apache.gravitino.exceptions.TableAlreadyExistsException;
 import org.apache.gravitino.meta.AuditInfo;

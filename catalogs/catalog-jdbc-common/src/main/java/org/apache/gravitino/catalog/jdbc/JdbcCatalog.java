@@ -27,8 +27,8 @@ import org.apache.gravitino.catalog.jdbc.operation.JdbcDatabaseOperations;
 import org.apache.gravitino.catalog.jdbc.operation.JdbcTableOperations;
 import org.apache.gravitino.connector.BaseCatalog;
 import org.apache.gravitino.connector.CatalogOperations;
-import org.apache.gravitino.connector.PropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.PropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 import org.apache.gravitino.connector.capability.Capability;
 
 /** Implementation of an Jdbc catalog in Gravitino. */

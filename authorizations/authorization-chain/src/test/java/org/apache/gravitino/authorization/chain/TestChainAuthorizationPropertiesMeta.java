@@ -27,8 +27,8 @@ import java.util.Map;
 import org.apache.gravitino.authorization.ranger.integration.test.RangerITEnv;
 import org.apache.gravitino.catalog.PropertiesMetadataHelpers;
 import org.apache.gravitino.catalog.hive.HiveConstants;
-import org.apache.gravitino.connector.AuthorizationPropertiesMeta;
-import org.apache.gravitino.connector.PropertiesMetadata;
+import org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta;
+import org.apache.gravitino.connector.properties.PropertiesMetadata;
 import org.apache.gravitino.connector.authorization.AuthorizationPluginProvider;
 import org.apache.gravitino.integration.test.container.RangerContainer;
 import org.junit.jupiter.api.Assertions;
@@ -43,6 +43,8 @@ public class TestChainAuthorizationPropertiesMeta {
     properties.put("gravitino.bypass.hive.metastore.client.capability.check", "true");
     properties.put(IMPERSONATION_ENABLE, "true");
     properties.put(AUTHORIZATION_PROVIDER, AuthorizationPluginProvider.Type.Chain.getName());
+    properties.put(AuthorizationPropertiesMeta.generateChainPluginsKey(
+            pluginName, AuthorizationPropertiesMeta.getChainCatalogProviderKey()), "hive");
     properties.put(AuthorizationPropertiesMeta.CHAIN_PLUGINS, pluginName);
     properties.put(
         AuthorizationPropertiesMeta.generateChainPluginsKey(
@@ -76,11 +78,39 @@ public class TestChainAuthorizationPropertiesMeta {
   }
 
   @Test
+  void test1() {
+    Map<String, String> properties = Maps.newHashMap();
+    properties.put(HiveConstants.METASTORE_URIS, "HIVE_METASTORE_URIS");
+    properties.put(IMPERSONATION_ENABLE, "true");
+
+    properties.put(AUTHORIZATION_PROVIDER, AuthorizationPluginProvider.Type.Chain.getName());
+    properties.put(AuthorizationPropertiesMeta.CHAIN_PLUGINS, "hive1,hdfs1");
+    properties.put("authorization.chain.hive1.catalog-provider", "hive");
+    properties.put("authorization.chain.hive1.provider", "ranger");
+    properties.put("authorization.chain.hive1.ranger.auth.type", "simple");
+    properties.put("authorization.chain.hive1.ranger.admin.url", "http://localhost:6080");
+    properties.put("authorization.chain.hive1.ranger.username", "admin");
+    properties.put("authorization.chain.hive1.ranger.password", "admin");
+    properties.put("authorization.chain.hive1.ranger.service.name", "hiveDev");
+    properties.put("authorization.chain.hdfs1.catalog-provider", "hadoop");
+    properties.put("authorization.chain.hdfs1.provider", "ranger");
+    properties.put("authorization.chain.hdfs1.ranger.auth.type", "simple");
+    properties.put("authorization.chain.hdfs1.ranger.admin.url", "http://localhost:6080");
+    properties.put("authorization.chain.hdfs1.ranger.username", "admin");
+    properties.put("authorization.chain.hdfs1.ranger.password", "admin");
+    properties.put("authorization.chain.hdfs1.ranger.service.name", "hdfsDev");
+    PropertiesMetadata authorizationPropertiesMeta = new AuthorizationPropertiesMeta();
+    PropertiesMetadataHelpers.validatePropertyForCreate(
+            authorizationPropertiesMeta, properties);
+  }
+
+  @Test
   void testWildcardPropertyChainPluginsOne() {
     Map<String, String> properties = Maps.newHashMap();
     properties.put(AuthorizationPropertiesMeta.CHAIN_PLUGINS, "hive1");
     properties.put("authorization.chain.hive1.provider", "ranger");
-    properties.put("authorization.chain.hive1.ranger.auth.types", "simple");
+    properties.put("authorization.chain.hive1.catalog-provider", "hive");
+    properties.put("authorization.chain.hive1.ranger.auth.type", "simple");
     properties.put("authorization.chain.hive1.ranger.admin.url", "http://localhost:6080");
     properties.put("authorization.chain.hive1.ranger.username", "admin");
     properties.put("authorization.chain.hive1.ranger.password", "admin");
@@ -97,13 +127,15 @@ public class TestChainAuthorizationPropertiesMeta {
     Map<String, String> properties = Maps.newHashMap();
     properties.put(AuthorizationPropertiesMeta.CHAIN_PLUGINS, "hive1,hdfs1");
     properties.put("authorization.chain.hive1.provider", "ranger");
-    properties.put("authorization.chain.hive1.ranger.auth.types", "simple");
+    properties.put("authorization.chain.hive1.catalog-provider", "hive");
+    properties.put("authorization.chain.hive1.ranger.auth.type", "simple");
     properties.put("authorization.chain.hive1.ranger.admin.url", "http://localhost:6080");
     properties.put("authorization.chain.hive1.ranger.username", "admin");
     properties.put("authorization.chain.hive1.ranger.password", "admin");
     properties.put("authorization.chain.hive1.ranger.service.name", "hiveDev");
     properties.put("authorization.chain.hdfs1.provider", "ranger");
-    properties.put("authorization.chain.hdfs1.ranger.auth.types", "simple");
+    properties.put("authorization.chain.hdfs1.catalog-provider", "hadoop");
+    properties.put("authorization.chain.hdfs1.ranger.auth.type", "simple");
     properties.put("authorization.chain.hdfs1.ranger.admin.url", "http://localhost:6080");
     properties.put("authorization.chain.hdfs1.ranger.username", "admin");
     properties.put("authorization.chain.hdfs1.ranger.password", "admin");
@@ -120,13 +152,15 @@ public class TestChainAuthorizationPropertiesMeta {
     Map<String, String> properties = Maps.newHashMap();
     properties.put(AuthorizationPropertiesMeta.CHAIN_PLUGINS, "hive1, hdfs1");
     properties.put("authorization.chain.hive1.provider", "ranger");
-    properties.put("authorization.chain.hive1.ranger.auth.types", "simple");
+    properties.put("authorization.chain.hive1.catalog-provider", "hive");
+    properties.put("authorization.chain.hive1.ranger.auth.type", "simple");
     properties.put("authorization.chain.hive1.ranger.admin.url", "http://localhost:6080");
     properties.put("authorization.chain.hive1.ranger.username", "admin");
     properties.put("authorization.chain.hive1.ranger.password", "admin");
     properties.put("authorization.chain.hive1.ranger.service.name", "hiveDev");
     properties.put("authorization.chain.hdfs1.provider", "ranger");
-    properties.put("authorization.chain.hdfs1.ranger.auth.types", "simple");
+    properties.put("authorization.chain.hdfs1.catalog-provider", "hadoop");
+    properties.put("authorization.chain.hdfs1.ranger.auth.type", "simple");
     properties.put("authorization.chain.hdfs1.ranger.admin.url", "http://localhost:6080");
     properties.put("authorization.chain.hdfs1.ranger.username", "admin");
     properties.put("authorization.chain.hdfs1.ranger.password", "admin");
@@ -143,13 +177,15 @@ public class TestChainAuthorizationPropertiesMeta {
     Map<String, String> properties = Maps.newHashMap();
     properties.put(AuthorizationPropertiesMeta.CHAIN_PLUGINS, "hive1");
     properties.put("authorization.chain.hive1.provider", "ranger");
-    properties.put("authorization.chain.hive1.ranger.auth.types", "simple");
+    properties.put("authorization.chain.hive1.catalog-provider", "hive");
+    properties.put("authorization.chain.hive1.ranger.auth.type", "simple");
     properties.put("authorization.chain.hive1.ranger.admin.url", "http://localhost:6080");
     properties.put("authorization.chain.hive1.ranger.username", "admin");
     properties.put("authorization.chain.hive1.ranger.password", "admin");
     properties.put("authorization.chain.hive1.ranger.service.name", "hiveDev");
     properties.put("authorization.chain.hdfs1.provider", "ranger");
-    properties.put("authorization.chain.hdfs1.ranger.auth.types", "simple");
+    properties.put("authorization.chain.hdfs1.catalog-provider", "hadoop");
+    properties.put("authorization.chain.hdfs1.ranger.auth.type", "simple");
     properties.put("authorization.chain.hdfs1.ranger.admin.url", "http://localhost:6080");
     properties.put("authorization.chain.hdfs1.ranger.username", "admin");
     properties.put("authorization.chain.hdfs1.ranger.password", "admin");
@@ -167,13 +203,15 @@ public class TestChainAuthorizationPropertiesMeta {
     Map<String, String> properties = Maps.newHashMap();
     properties.put(AuthorizationPropertiesMeta.CHAIN_PLUGINS, "plug.1, hdfs1");
     properties.put("authorization.chain.hive1.provider", "ranger");
-    properties.put("authorization.chain.plug.1.ranger.auth.types", "simple");
+    properties.put("authorization.chain.hive1.catalog-provider", "hive");
+    properties.put("authorization.chain.plug.1.ranger.auth.type", "simple");
     properties.put("authorization.chain.plug.1.ranger.admin.url", "http://localhost:6080");
     properties.put("authorization.chain.plug.1.ranger.username", "admin");
     properties.put("authorization.chain.plug.1.ranger.password", "admin");
     properties.put("authorization.chain.plug.1.ranger.service.name", "hiveDev");
     properties.put("authorization.chain.hdfs1.provider", "ranger");
-    properties.put("authorization.chain.hdfs1.ranger.auth.types", "simple");
+    properties.put("authorization.chain.hdfs1.catalog-provider", "hadoop");
+    properties.put("authorization.chain.hdfs1.ranger.auth.type", "simple");
     properties.put("authorization.chain.hdfs1.ranger.admin.url", "http://localhost:6080");
     properties.put("authorization.chain.hdfs1.ranger.username", "admin");
     properties.put("authorization.chain.hdfs1.ranger.password", "admin");
@@ -191,13 +229,15 @@ public class TestChainAuthorizationPropertiesMeta {
     Map<String, String> properties = Maps.newHashMap();
     properties.put(AuthorizationPropertiesMeta.CHAIN_PLUGINS, "hive1,hdfs1");
     properties.put("authorization.chain.hive1.provider", "ranger");
-    properties.put("authorization.chain.hive1.ranger.auth.types", "simple");
+    properties.put("authorization.chain.hive1.catalog-provider", "hive");
+    properties.put("authorization.chain.hive1.ranger.auth.type", "simple");
     properties.put("authorization.chain.hive1.ranger.admin.url", "http://localhost:6080");
     properties.put("authorization.chain.hive1.ranger.username", "admin");
     properties.put("authorization.chain.hive1.ranger.password", "admin");
     properties.put("authorization.chain.hive1.ranger.service.name", "hiveDev");
     properties.put("authorization.chain.hdfs1.provider", "ranger");
-    properties.put("authorization.chain.hdfs1.ranger.auth.types", "simple");
+    properties.put("authorization.chain.hdfs1.catalog-provider", "hadoop");
+    properties.put("authorization.chain.hdfs1.ranger.auth.type", "simple");
     properties.put("authorization.chain.hdfs1.ranger.admin.url", "http://localhost:6080");
     properties.put("authorization.chain.hdfs1.ranger.username", "admin");
     properties.put("authorization.chain.hdfs1.ranger.password", "admin");
@@ -215,13 +255,15 @@ public class TestChainAuthorizationPropertiesMeta {
     Map<String, String> properties = Maps.newHashMap();
     properties.put(AuthorizationPropertiesMeta.CHAIN_PLUGINS, "hive1,hive1,hdfs1");
     properties.put("authorization.chain.hive1.provider", "ranger");
-    properties.put("authorization.chain.hive1.ranger.auth.types", "simple");
+    properties.put("authorization.chain.hive1.catalog-provider", "hive");
+    properties.put("authorization.chain.hive1.ranger.auth.type", "simple");
     properties.put("authorization.chain.hive1.ranger.admin.url", "http://localhost:6080");
     properties.put("authorization.chain.hive1.ranger.username", "admin");
     properties.put("authorization.chain.hive1.ranger.password", "admin");
     properties.put("authorization.chain.hive1.ranger.service.name", "hiveDev");
     properties.put("authorization.chain.hdfs1.provider", "ranger");
-    properties.put("authorization.chain.hdfs1.ranger.auth.types", "simple");
+    properties.put("authorization.chain.hdfs1.catalog-provider", "hadoop");
+    properties.put("authorization.chain.hdfs1.ranger.auth.type", "simple");
     properties.put("authorization.chain.hdfs1.ranger.admin.url", "http://localhost:6080");
     properties.put("authorization.chain.hdfs1.ranger.username", "admin");
     properties.put("authorization.chain.hdfs1.ranger.password", "admin");
@@ -239,6 +281,7 @@ public class TestChainAuthorizationPropertiesMeta {
     Map<String, String> properties = Maps.newHashMap();
     properties.put(AuthorizationPropertiesMeta.CHAIN_PLUGINS, "hive1");
     properties.put("authorization.chain.hive1.provider", "ranger");
+    properties.put("authorization.chain.hive1.catalog-provider", "hive");
     properties.put("authorization.chain.hive1.ranger-error.auth.types", "simple");
     PropertiesMetadata authorizationPropertiesMeta = new AuthorizationPropertiesMeta();
     Assertions.assertThrows(

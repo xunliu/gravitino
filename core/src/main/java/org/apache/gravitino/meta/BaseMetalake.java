@@ -30,7 +30,7 @@ import org.apache.gravitino.Entity;
 import org.apache.gravitino.Field;
 import org.apache.gravitino.HasIdentifier;
 import org.apache.gravitino.Metalake;
-import org.apache.gravitino.connector.PropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertiesMetadata;
 import org.apache.gravitino.metalake.MetalakePropertiesMetadata;
 
 /** Base implementation of a Metalake entity. */

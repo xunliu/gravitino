@@ -20,8 +20,8 @@ package org.apache.gravitino.catalog.lakehouse.hudi;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
-import org.apache.gravitino.connector.BasePropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.BasePropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 
 public class HudiSchemaPropertiesMetadata extends BasePropertiesMetadata {
   public static final String LOCATION = "location";

@@ -24,7 +24,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.gravitino.connector.AuthorizationPropertiesMeta;
+import org.apache.gravitino.connector.properties.WildcardPropertiesMeta;
+import org.apache.gravitino.connector.properties.AuthorizationPropertiesMeta;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -39,6 +40,7 @@ public class TestAuthorizationPropertiesMeta {
         getPublicStaticVariableFromClass(AuthorizationPropertiesMeta.class);
     List<String> ignoreChecks =
         Arrays.asList(
+                AuthorizationPropertiesMeta.CHAIN_CATALOG_PROVIDER,
             AuthorizationPropertiesMeta.CHAIN_PROVIDER, AuthorizationPropertiesMeta.CHAIN_PLUGINS);
     mapVariable.values().stream()
         .forEach(
@@ -48,7 +50,7 @@ public class TestAuthorizationPropertiesMeta {
                 String pluginPropValue =
                     value.replace(
                         AuthorizationPropertiesMeta.generateChainPluginsKey(
-                            AuthorizationPropertiesMeta.getChainPlugsWildcard(), ""),
+                                WildcardPropertiesMeta.WILDCARD, ""),
                         AuthorizationPropertiesMeta.generatePluginKey(""));
                 LOG.info("Checking variable: {}, pluginPropValue: {}", value, pluginPropValue);
                 Assertions.assertTrue(

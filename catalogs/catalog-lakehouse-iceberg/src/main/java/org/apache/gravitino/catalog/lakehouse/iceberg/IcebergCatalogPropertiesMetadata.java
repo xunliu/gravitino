@@ -18,9 +18,9 @@
  */
 package org.apache.gravitino.catalog.lakehouse.iceberg;
 
-import static org.apache.gravitino.connector.PropertyEntry.enumImmutablePropertyEntry;
-import static org.apache.gravitino.connector.PropertyEntry.stringOptionalPropertyEntry;
-import static org.apache.gravitino.connector.PropertyEntry.stringRequiredPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.enumImmutablePropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.stringOptionalPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.stringRequiredPropertyEntry;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -28,8 +28,8 @@ import com.google.common.collect.Maps;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.gravitino.connector.BaseCatalogPropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.BaseCatalogPropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 import org.apache.gravitino.iceberg.common.IcebergCatalogBackend;
 import org.apache.gravitino.iceberg.common.authentication.AuthenticationConfig;
 import org.apache.gravitino.iceberg.common.authentication.kerberos.KerberosConfig;

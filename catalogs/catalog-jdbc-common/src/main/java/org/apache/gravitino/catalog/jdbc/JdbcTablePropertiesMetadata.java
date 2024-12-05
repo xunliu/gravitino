@@ -22,7 +22,7 @@ import com.google.common.collect.Maps;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.gravitino.StringIdentifier;
-import org.apache.gravitino.connector.BasePropertiesMetadata;
+import org.apache.gravitino.connector.properties.BasePropertiesMetadata;
 
 public abstract class JdbcTablePropertiesMetadata extends BasePropertiesMetadata {
 

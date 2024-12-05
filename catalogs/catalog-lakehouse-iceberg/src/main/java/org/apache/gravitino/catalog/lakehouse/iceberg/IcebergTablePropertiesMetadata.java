@@ -18,15 +18,15 @@
  */
 package org.apache.gravitino.catalog.lakehouse.iceberg;
 
-import static org.apache.gravitino.connector.PropertyEntry.stringImmutablePropertyEntry;
-import static org.apache.gravitino.connector.PropertyEntry.stringReservedPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.stringImmutablePropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.stringReservedPropertyEntry;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
-import org.apache.gravitino.connector.BasePropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.BasePropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 import org.apache.iceberg.TableProperties;
 
 public class IcebergTablePropertiesMetadata extends BasePropertiesMetadata {

@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import lombok.ToString;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.gravitino.connector.BaseTable;
-import org.apache.gravitino.connector.PropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertiesMetadata;
 import org.apache.gravitino.connector.TableOperations;
 import org.apache.gravitino.hive.CachedClientPool;
 import org.apache.gravitino.hive.converter.HiveDataTypeConverter;

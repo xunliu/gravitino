@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,8 @@ import org.apache.gravitino.connector.authorization.AuthorizationMetadataObject;
 import org.apache.gravitino.connector.authorization.AuthorizationPrivilege;
 import org.apache.gravitino.connector.authorization.AuthorizationSecurableObject;
 import org.apache.gravitino.exceptions.AuthorizationPluginException;
+import org.apache.ranger.RangerServiceException;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,13 +146,13 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
         AuthorizationSecurableObjects.add(
             generateAuthorizationSecurableObject(
                 ImmutableList.of(RangerHelper.RESOURCE_ALL),
-                RangerMetadataObject.Type.SCHEMA,
+                RangerHiveMetadataObject.Type.SCHEMA,
                 ownerMappingRule()));
         // Add `*.*` for the TABLE permission
         AuthorizationSecurableObjects.add(
             generateAuthorizationSecurableObject(
                 ImmutableList.of(RangerHelper.RESOURCE_ALL, RangerHelper.RESOURCE_ALL),
-                RangerMetadataObject.Type.TABLE,
+                RangerHiveMetadataObject.Type.TABLE,
                 ownerMappingRule()));
         // Add `*.*.*` for the COLUMN permission
         AuthorizationSecurableObjects.add(
@@ -158,7 +161,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
                     RangerHelper.RESOURCE_ALL,
                     RangerHelper.RESOURCE_ALL,
                     RangerHelper.RESOURCE_ALL),
-                RangerMetadataObject.Type.COLUMN,
+                RangerHiveMetadataObject.Type.COLUMN,
                 ownerMappingRule()));
         break;
       case SCHEMA:
@@ -166,14 +169,14 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
         AuthorizationSecurableObjects.add(
             generateAuthorizationSecurableObject(
                 ImmutableList.of(gravitinoMetadataObject.name() /*Schema name*/),
-                RangerMetadataObject.Type.SCHEMA,
+                RangerHiveMetadataObject.Type.SCHEMA,
                 ownerMappingRule()));
         // Add `{schema}.*` for the TABLE permission
         AuthorizationSecurableObjects.add(
             generateAuthorizationSecurableObject(
                 ImmutableList.of(
                     gravitinoMetadataObject.name() /*Schema name*/, RangerHelper.RESOURCE_ALL),
-                RangerMetadataObject.Type.TABLE,
+                RangerHiveMetadataObject.Type.TABLE,
                 ownerMappingRule()));
         // Add `{schema}.*.*` for the COLUMN permission
         AuthorizationSecurableObjects.add(
@@ -182,7 +185,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
                     gravitinoMetadataObject.name() /*Schema name*/,
                     RangerHelper.RESOURCE_ALL,
                     RangerHelper.RESOURCE_ALL),
-                RangerMetadataObject.Type.COLUMN,
+                RangerHiveMetadataObject.Type.COLUMN,
                 ownerMappingRule()));
         break;
       case TABLE:
@@ -190,7 +193,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
         AuthorizationSecurableObjects.add(
             generateAuthorizationSecurableObject(
                 translateMetadataObject(gravitinoMetadataObject).names(),
-                RangerMetadataObject.Type.TABLE,
+                RangerHiveMetadataObject.Type.TABLE,
                 ownerMappingRule()));
         // Add `{schema}.{table}.*` for the COLUMN permission
         AuthorizationSecurableObjects.add(
@@ -199,7 +202,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
                         translateMetadataObject(gravitinoMetadataObject).names().stream(),
                         Stream.of(RangerHelper.RESOURCE_ALL))
                     .collect(Collectors.toList()),
-                RangerMetadataObject.Type.COLUMN,
+                RangerHiveMetadataObject.Type.COLUMN,
                 ownerMappingRule()));
         break;
       default:
@@ -245,7 +248,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
                       AuthorizationSecurableObjects.add(
                           generateAuthorizationSecurableObject(
                               ImmutableList.of(RangerHelper.RESOURCE_ALL),
-                              RangerMetadataObject.Type.SCHEMA,
+                              RangerHiveMetadataObject.Type.SCHEMA,
                               rangerPrivileges));
                       break;
                     default:
@@ -262,7 +265,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
                       AuthorizationSecurableObjects.add(
                           generateAuthorizationSecurableObject(
                               ImmutableList.of(RangerHelper.RESOURCE_ALL),
-                              RangerMetadataObject.Type.SCHEMA,
+                              RangerHiveMetadataObject.Type.SCHEMA,
                               rangerPrivileges));
                       break;
                     default:
@@ -279,7 +282,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
                       AuthorizationSecurableObjects.add(
                           generateAuthorizationSecurableObject(
                               ImmutableList.of(RangerHelper.RESOURCE_ALL),
-                              RangerMetadataObject.Type.SCHEMA,
+                              RangerHiveMetadataObject.Type.SCHEMA,
                               rangerPrivileges));
                       break;
                     case SCHEMA:
@@ -287,7 +290,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
                       AuthorizationSecurableObjects.add(
                           generateAuthorizationSecurableObject(
                               ImmutableList.of(securableObject.name() /*Schema name*/),
-                              RangerMetadataObject.Type.SCHEMA,
+                              RangerHiveMetadataObject.Type.SCHEMA,
                               rangerPrivileges));
                       break;
                     default:
@@ -307,7 +310,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
                           generateAuthorizationSecurableObject(
                               ImmutableList.of(
                                   RangerHelper.RESOURCE_ALL, RangerHelper.RESOURCE_ALL),
-                              RangerMetadataObject.Type.TABLE,
+                              RangerHiveMetadataObject.Type.TABLE,
                               rangerPrivileges));
                       // Add `*.*.*` for the COLUMN permission
                       AuthorizationSecurableObjects.add(
@@ -316,7 +319,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
                                   RangerHelper.RESOURCE_ALL,
                                   RangerHelper.RESOURCE_ALL,
                                   RangerHelper.RESOURCE_ALL),
-                              RangerMetadataObject.Type.COLUMN,
+                              RangerHiveMetadataObject.Type.COLUMN,
                               rangerPrivileges));
                       break;
                     case SCHEMA:
@@ -326,7 +329,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
                               ImmutableList.of(
                                   securableObject.name() /*Schema name*/,
                                   RangerHelper.RESOURCE_ALL),
-                              RangerMetadataObject.Type.TABLE,
+                              RangerHiveMetadataObject.Type.TABLE,
                               rangerPrivileges));
                       // Add `{schema}.*.*` for the COLUMN permission
                       AuthorizationSecurableObjects.add(
@@ -335,7 +338,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
                                   securableObject.name() /*Schema name*/,
                                   RangerHelper.RESOURCE_ALL,
                                   RangerHelper.RESOURCE_ALL),
-                              RangerMetadataObject.Type.COLUMN,
+                              RangerHiveMetadataObject.Type.COLUMN,
                               rangerPrivileges));
                       break;
                     case TABLE:
@@ -348,7 +351,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
                         AuthorizationSecurableObjects.add(
                             generateAuthorizationSecurableObject(
                                 translateMetadataObject(securableObject).names(),
-                                RangerMetadataObject.Type.TABLE,
+                                RangerHiveMetadataObject.Type.TABLE,
                                 rangerPrivileges));
                         // Add `{schema}.{table}.*` for the COLUMN permission
                         AuthorizationSecurableObjects.add(
@@ -357,7 +360,7 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
                                         translateMetadataObject(securableObject).names().stream(),
                                         Stream.of(RangerHelper.RESOURCE_ALL))
                                     .collect(Collectors.toList()),
-                                RangerMetadataObject.Type.COLUMN,
+                                RangerHiveMetadataObject.Type.COLUMN,
                                 rangerPrivileges));
                       }
                       break;
@@ -403,18 +406,132 @@ public class RangerAuthorizationHadoopSQLPlugin extends RangerAuthorizationPlugi
         || metadataObject.type() == MetadataObject.Type.CATALOG) {
       nsMetadataObject.clear();
       nsMetadataObject.add(RangerHelper.RESOURCE_ALL);
-      type = RangerMetadataObject.Type.SCHEMA;
+      type = RangerHiveMetadataObject.Type.SCHEMA;
     } else {
       nsMetadataObject.remove(0); // Remove the catalog name
-      type = RangerMetadataObject.Type.fromMetadataType(metadataObject.type());
+      type = RangerHiveMetadataObject.Type.fromMetadataType(metadataObject.type());
     }
 
-    RangerMetadataObject rangerMetadataObject =
-        new RangerMetadataObject(
+    RangerHiveMetadataObject rangerMetadataObject =
+        new RangerHiveMetadataObject(
             AuthorizationMetadataObject.getParentFullName(nsMetadataObject),
             AuthorizationMetadataObject.getLastName(nsMetadataObject),
             type);
     rangerMetadataObject.validateAuthorizationMetadataObject();
     return rangerMetadataObject;
+  }
+
+  /**
+   * IF remove the SCHEMA, need to remove these the relevant policies, `{schema}`, `{schema}.*`,
+   * `{schema}.*.*` <br>
+   * IF remove the TABLE, need to remove these the relevant policies, `{schema}.*`, `{schema}.*.*`
+   * <br>
+   * IF remove the COLUMN, Only need to remove `{schema}.*.*` <br>
+   */
+    @Override
+    protected void doRemoveMetadataObject(AuthorizationMetadataObject authMetadataObject) {
+    switch (authMetadataObject.metadataObjectType()) {
+      case SCHEMA:
+        doRemoveSchemaMetadataObject(authMetadataObject);
+        break;
+      case TABLE:
+        doRemoveTableMetadataObject(authMetadataObject);
+        break;
+      case COLUMN:
+        removePolicyByMetadataObject(authMetadataObject.names());
+        break;
+      default:
+        throw new IllegalArgumentException(
+                "Unsupported metadata object type: " + authMetadataObject.type());
+    }
+  }
+
+  /**
+   * Remove the SCHEMA, Need to remove these the relevant policies, `{schema}`, `{schema}.*`,
+   * `{schema}.*.*` permissions.
+   */
+  private void doRemoveSchemaMetadataObject(AuthorizationMetadataObject authMetadataObject) {
+    Preconditions.checkArgument(
+            authMetadataObject.type() == RangerHiveMetadataObject.Type.SCHEMA,
+            "The metadata object type must be SCHEMA");
+    Preconditions.checkArgument(
+            authMetadataObject.names().size() == 1, "The metadata object names must be 1");
+    if (RangerHelper.RESOURCE_ALL.equals(authMetadataObject.name())) {
+      // Delete metalake or catalog policies in this Ranger service
+      try {
+        List<RangerPolicy> policies = rangerClient.getPoliciesInService(rangerServiceName);
+        policies.stream()
+                .filter(RangerHelper::hasGravitinoManagedPolicyItem)
+                .forEach(rangerHelper::removeAllGravitinoManagedPolicyItem);
+      } catch (RangerServiceException e) {
+        throw new RuntimeException(e);
+      }
+    } else {
+      List<List<String>> loop =
+              ImmutableList.of(
+                      ImmutableList.of(authMetadataObject.name())
+                      /** SCHEMA permission */
+                      ,
+                      ImmutableList.of(authMetadataObject.name(), RangerHelper.RESOURCE_ALL)
+                      /** TABLE permission */
+                      ,
+                      ImmutableList.of(
+                              authMetadataObject.name(), RangerHelper.RESOURCE_ALL, RangerHelper.RESOURCE_ALL)
+                      /** COLUMN permission */
+              );
+      for (List<String> resNames : loop) {
+        removePolicyByMetadataObject(resNames);
+      }
+    }
+  }
+
+  /**
+   * Remove the TABLE, Need to remove these the relevant policies, `*.{table}`, `*.{table}.{column}`
+   * permissions.
+   */
+  private void doRemoveTableMetadataObject(
+          AuthorizationMetadataObject AuthorizationMetadataObject) {
+    List<List<String>> loop =
+            ImmutableList.of(
+                    AuthorizationMetadataObject.names()
+                    /** TABLE permission */
+                    ,
+                    Stream.concat(
+                                    AuthorizationMetadataObject.names().stream(),
+                                    Stream.of(RangerHelper.RESOURCE_ALL))
+                            .collect(Collectors.toList())
+                    /** COLUMN permission */
+            );
+    for (List<String> resNames : loop) {
+      removePolicyByMetadataObject(resNames);
+    }
+  }
+
+  /**
+   * Remove the policy by the metadata object names. <br>
+   *
+   * @param metadataNames The metadata object names.
+   */
+  private void removePolicyByMetadataObject(List<String> metadataNames) {
+    List<RangerPolicy> policies = rangerHelper.wildcardSearchPolies(metadataNames);
+    Map<String, String> preciseFilters = new HashMap<>();
+    for (int i = 0; i < metadataNames.size(); i++) {
+      preciseFilters.put(rangerHelper.policyResourceDefines.get(i), metadataNames.get(i));
+    }
+    policies =
+            policies.stream()
+                    .filter(
+                            policy ->
+                                    policy.getResources().entrySet().stream()
+                                            .allMatch(
+                                                    entry ->
+                                                            preciseFilters.containsKey(entry.getKey())
+                                                                    && entry.getValue().getValues().size() == 1
+                                                                    && entry
+                                                                    .getValue()
+                                                                    .getValues()
+                                                                    .contains(preciseFilters.get(entry.getKey()))))
+                    .collect(Collectors.toList());
+    policies.forEach(rangerHelper::removeAllGravitinoManagedPolicyItem);
   }
 }

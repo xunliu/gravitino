@@ -22,8 +22,8 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import org.apache.gravitino.catalog.hadoop.authentication.AuthenticationConfig;
 import org.apache.gravitino.catalog.hadoop.authentication.kerberos.KerberosConfig;
-import org.apache.gravitino.connector.BasePropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.BasePropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 
 public class HadoopFilesetPropertiesMetadata extends BasePropertiesMetadata {
 

@@ -18,9 +18,9 @@
  */
 package org.apache.gravitino.catalog.lakehouse.paimon;
 
-import static org.apache.gravitino.connector.PropertyEntry.enumPropertyEntry;
-import static org.apache.gravitino.connector.PropertyEntry.stringOptionalPropertyEntry;
-import static org.apache.gravitino.connector.PropertyEntry.stringRequiredPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.enumPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.stringOptionalPropertyEntry;
+import static org.apache.gravitino.connector.properties.PropertyEntry.stringRequiredPropertyEntry;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -34,9 +34,9 @@ import org.apache.gravitino.catalog.lakehouse.paimon.authentication.kerberos.Ker
 import org.apache.gravitino.catalog.lakehouse.paimon.storage.PaimonOSSFileSystemConfig;
 import org.apache.gravitino.catalog.lakehouse.paimon.storage.PaimonS3FileSystemConfig;
 import org.apache.gravitino.catalog.lakehouse.paimon.utils.CatalogUtils;
-import org.apache.gravitino.connector.BaseCatalogPropertiesMetadata;
-import org.apache.gravitino.connector.PropertiesMetadata;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.BaseCatalogPropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 import org.apache.gravitino.storage.OSSProperties;
 import org.apache.gravitino.storage.S3Properties;
 

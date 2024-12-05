@@ -21,7 +21,7 @@ package org.apache.gravitino.catalog.lakehouse.hudi;
 import java.util.Map;
 import org.apache.gravitino.connector.BaseCatalog;
 import org.apache.gravitino.connector.CatalogOperations;
-import org.apache.gravitino.connector.PropertiesMetadata;
+import org.apache.gravitino.connector.properties.PropertiesMetadata;
 
 /** Implementation of an Apache Hudi catalog in Apache Gravitino. */
 public class HudiCatalog extends BaseCatalog<HudiCatalog> {

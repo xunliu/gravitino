@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.gravitino.connector;
+package org.apache.gravitino.connector.properties;
 
 import com.google.common.collect.ImmutableMap;
+
 import java.util.Map;
 
 public class AuthorizationPropertiesMeta extends BasePropertiesMetadata {
@@ -74,18 +75,6 @@ public class AuthorizationPropertiesMeta extends BasePropertiesMetadata {
 
   public static final String RANGER_SERVICE_NAME = generatePluginKey(RANGER_SERVICE_NAME_KEY);
 
-  private static final String CHAIN_PLUGINS_WILDCARD = "*";
-
-  public static final String getChainPlugsWildcard() {
-    return CHAIN_PLUGINS_WILDCARD;
-  }
-
-  private static final String CHAIN_PLUGINS_SPLITTER = ",";
-
-  public static final String getChainPluginsSplitter() {
-    return CHAIN_PLUGINS_SPLITTER;
-  }
-
   private static final String CHAIN_PREFIX = String.format("%s.chain", AUTHORIZATION_PREFIX);
 
   public static final String getChainPrefix() {
@@ -94,6 +83,14 @@ public class AuthorizationPropertiesMeta extends BasePropertiesMetadata {
   /** Chain authorization plugins */
   public static final String CHAIN_PLUGINS = String.format("%s.plugins", CHAIN_PREFIX);
   /** Chain authorization plugin provider */
+  private static final String CHAIN_CATALOG_PROVIDER_KEY = "catalog-provider";
+  public static final String getChainCatalogProviderKey() {
+    return CHAIN_CATALOG_PROVIDER_KEY;
+  }
+  public static final String CHAIN_CATALOG_PROVIDER =
+          generateChainPluginsKey(WildcardPropertiesMeta.WILDCARD, CHAIN_CATALOG_PROVIDER_KEY);
+
+  /** Chain authorization plugin provider */
   private static final String CHAIN_PROVIDER_KEY = "provider";
 
   public static final String getChainProviderKey() {
@@ -101,25 +98,25 @@ public class AuthorizationPropertiesMeta extends BasePropertiesMetadata {
   }
 
   public static final String CHAIN_PROVIDER =
-      generateChainPluginsKey(CHAIN_PLUGINS_WILDCARD, CHAIN_PROVIDER_KEY);
+      generateChainPluginsKey(WildcardPropertiesMeta.WILDCARD, CHAIN_PROVIDER_KEY);
   /** Chain authorization Ranger admin web URIs */
   public static final String CHAIN_RANGER_ADMIN_URL =
-      generateChainPluginsKey(CHAIN_PLUGINS_WILDCARD, RANGER_ADMIN_URL_KEY);
+      generateChainPluginsKey(WildcardPropertiesMeta.WILDCARD, RANGER_ADMIN_URL_KEY);
   /** Chain authorization Ranger authentication type kerberos or simple */
   public static final String CHAIN_RANGER_AUTH_TYPES =
-      generateChainPluginsKey(CHAIN_PLUGINS_WILDCARD, RANGER_AUTH_TYPE_KEY);
+      generateChainPluginsKey(WildcardPropertiesMeta.WILDCARD, RANGER_AUTH_TYPE_KEY);
   /** Chain authorization Ranger username */
   public static final String CHAIN_RANGER_USERNAME =
-      generateChainPluginsKey(CHAIN_PLUGINS_WILDCARD, RANGER_USERNAME_KEY);
+      generateChainPluginsKey(WildcardPropertiesMeta.WILDCARD, RANGER_USERNAME_KEY);
   /**
    * Chain authorization Ranger admin web login user password(auth_type=simple), or path of the
    * keytab file(auth_type=kerberos)
    */
   public static final String CHAIN_RANGER_PASSWORD =
-      generateChainPluginsKey(CHAIN_PLUGINS_WILDCARD, RANGER_PASSWORD_KEY);
+      generateChainPluginsKey(WildcardPropertiesMeta.WILDCARD, RANGER_PASSWORD_KEY);
   /** Chain authorization Ranger service name */
   public static final String CHAIN_RANGER_SERVICE_NAME =
-      generateChainPluginsKey(CHAIN_PLUGINS_WILDCARD, RANGER_SERVICE_NAME_KEY);
+      generateChainPluginsKey(WildcardPropertiesMeta.WILDCARD, RANGER_SERVICE_NAME_KEY);
 
   public static String generateChainPluginsKey(String pluginName, String key) {
     return String.format("%s.%s.%s", CHAIN_PREFIX, pluginName, key);
@@ -139,30 +136,34 @@ public class AuthorizationPropertiesMeta extends BasePropertiesMetadata {
               CHAIN_PLUGINS,
               PropertyEntry.wildcardPropertyEntry(CHAIN_PLUGINS, "The Chain authorization plugins"))
           .put(
+              CHAIN_CATALOG_PROVIDER,
+              PropertyEntry.wildcardPropertyEntry(
+                      CHAIN_PROVIDER, "The Chain sub entity catalog provider"))
+          .put(
               CHAIN_PROVIDER,
               PropertyEntry.wildcardPropertyEntry(
-                  CHAIN_PROVIDER, "The Chain authorization plugin provider"))
+                  CHAIN_PROVIDER, "The Chain sub entity authorization plugin provider"))
           .put(
               CHAIN_RANGER_SERVICE_NAME,
               PropertyEntry.wildcardPropertyEntry(
-                  CHAIN_RANGER_SERVICE_NAME, "The Chain authorization Ranger service name"))
+                  CHAIN_RANGER_SERVICE_NAME, "The Chain sub entity authorization Ranger service name"))
           .put(
               CHAIN_RANGER_ADMIN_URL,
               PropertyEntry.wildcardPropertyEntry(
-                  CHAIN_RANGER_ADMIN_URL, "The Chain authorization Ranger admin web URIs"))
+                  CHAIN_RANGER_ADMIN_URL, "The Chain sub entity authorization Ranger admin web URIs"))
           .put(
               CHAIN_RANGER_AUTH_TYPES,
               PropertyEntry.wildcardPropertyEntry(
                   CHAIN_RANGER_AUTH_TYPES,
-                  "The Chain authorization Ranger admin web auth type (kerberos/simple)"))
+                  "The Chain sub entity authorization Ranger admin web auth type (kerberos/simple)"))
           .put(
               CHAIN_RANGER_USERNAME,
               PropertyEntry.wildcardPropertyEntry(
-                  CHAIN_RANGER_USERNAME, "The Chain authorization Ranger admin web login username"))
+                  CHAIN_RANGER_USERNAME, "The Chain sub entity authorization Ranger admin web login username"))
           .put(
               CHAIN_RANGER_PASSWORD,
               PropertyEntry.wildcardPropertyEntry(
-                  CHAIN_RANGER_PASSWORD, "The Chain authorization Ranger admin web login password"))
+                  CHAIN_RANGER_PASSWORD, "The Chain sub entity authorization Ranger admin web login password"))
           .put(
               RANGER_SERVICE_NAME,
               PropertyEntry.stringOptionalPropertyEntry(

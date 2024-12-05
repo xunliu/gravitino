@@ -48,7 +48,7 @@ import org.apache.gravitino.authorization.SecurableObject;
 import org.apache.gravitino.authorization.SecurableObjects;
 import org.apache.gravitino.authorization.ranger.RangerAuthorizationPlugin;
 import org.apache.gravitino.authorization.ranger.RangerHelper;
-import org.apache.gravitino.authorization.ranger.RangerMetadataObject;
+import org.apache.gravitino.authorization.ranger.RangerHiveMetadataObject;
 import org.apache.gravitino.authorization.ranger.RangerPrivileges;
 import org.apache.gravitino.authorization.ranger.RangerSecurableObject;
 import org.apache.gravitino.authorization.ranger.reference.RangerDefines;
@@ -80,7 +80,7 @@ public class RangerHiveIT {
 
   @BeforeAll
   public static void setup() {
-    RangerITEnv.init(RangerITEnv.RANGER_HIVE_TYPE);
+    RangerITEnv.init();
 
     rangerAuthHivePlugin = RangerITEnv.rangerAuthHivePlugin;
     rangerHelper = RangerITEnv.rangerHelper;
@@ -343,7 +343,7 @@ public class RangerHiveIT {
     AuthorizationSecurableObject rangerSecurableObject =
         rangerAuthHivePlugin.generateAuthorizationSecurableObject(
             ImmutableList.of(String.format("%s3", dbName), "tab1"),
-            RangerMetadataObject.Type.TABLE,
+            RangerHiveMetadataObject.Type.TABLE,
             ImmutableSet.of(
                 new RangerPrivileges.RangerHadoopSQLPrivilegeImpl(
                     RangerPrivileges.RangerHadoopSQLPrivilege.ALL, Privilege.Condition.ALLOW)));
@@ -901,7 +901,7 @@ public class RangerHiveIT {
         .getPoliciesInService(RangerITEnv.RANGER_HIVE_REPO_NAME)
         .forEach(
             policy -> {
-              Assertions.assertFalse(rangerHelper.hasGravitinoManagedPolicyItem(policy));
+              Assertions.assertFalse(RangerHelper.hasGravitinoManagedPolicyItem(policy));
             });
   }
 

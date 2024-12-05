@@ -23,6 +23,7 @@ import org.apache.gravitino.Audit;
 import org.apache.gravitino.Catalog;
 import org.apache.gravitino.Namespace;
 import org.apache.gravitino.annotation.Evolving;
+import org.apache.gravitino.connector.properties.HasPropertyMetadata;
 
 /**
  * CatalogInfo exposes all the information about a catalog to the connector interface. This class is

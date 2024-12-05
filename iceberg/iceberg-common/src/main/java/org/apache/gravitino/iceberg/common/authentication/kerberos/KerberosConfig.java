@@ -25,7 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.gravitino.config.ConfigBuilder;
 import org.apache.gravitino.config.ConfigConstants;
 import org.apache.gravitino.config.ConfigEntry;
-import org.apache.gravitino.connector.PropertyEntry;
+import org.apache.gravitino.connector.properties.PropertyEntry;
 import org.apache.gravitino.iceberg.common.authentication.AuthenticationConfig;
 
 public class KerberosConfig extends AuthenticationConfig {
