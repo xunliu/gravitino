@@ -206,10 +206,6 @@ tasks {
   }
 
   val integrationTest by registering(VenvTask::class) {
-    doFirst {
-      gravitinoServer("start")
-    }
-
     venvExec = "coverage"
     args = listOf("run", "--branch", "-m", "unittest")
     workingDir = projectDir.resolve("./tests/integration")
@@ -234,10 +230,6 @@ tasks {
       "PYTHONPATH" to "${project.rootDir.path}/clients/client-python"
     ))
     environment = envMap
-
-    doLast {
-      gravitinoServer("stop")
-    }
 
     finalizedBy(integrationCoverageReport)
   }
