@@ -71,7 +71,7 @@ class TestGvfsWithABS(TestGvfsWithHDFS):
 
         cls.hadoop_conf_path = f"{cls.gravitino_home}/catalogs/hadoop/conf/hadoop.conf"
         # restart the server
-        cls.restart_server()
+        cls.exec_gravitino("restart")
         # create entity
         cls._init_test_entities()
 
@@ -82,7 +82,7 @@ class TestGvfsWithABS(TestGvfsWithHDFS):
         # to reset it
         cls._reset_conf(cls.config, cls.hadoop_conf_path)
         # restart server
-        cls.restart_server()
+        cls.exec_gravitino("restart")
 
     # clear all config in the conf_path
     @classmethod

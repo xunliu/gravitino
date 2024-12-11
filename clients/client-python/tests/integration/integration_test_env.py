@@ -117,6 +117,7 @@ class IntegrationTestEnv(unittest.TestCase):
             logger.info("stdout: %s", result.stdout)
         if result.stderr:
             logger.info("stderr: %s", result.stderr)
+        check_gravitino_server_status()
 
     @classmethod
     def tearDownClass(cls):
@@ -139,11 +140,6 @@ class IntegrationTestEnv(unittest.TestCase):
 
         if gravitino_server_running:
             logger.error("Can't stop Gravitino server!")
-
-    @classmethod
-    def restart_server(cls):
-        logger.info("Restarting Gravitino server...")
-        cls.exec_gravitino("restart")
 
     @classmethod
     def _get_gravitino_home(cls):

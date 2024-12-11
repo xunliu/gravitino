@@ -105,7 +105,7 @@ class TestGvfsWithHDFS(IntegrationTestEnv):
         # append the hadoop conf to server
         cls._append_conf(cls.config, cls.hadoop_conf_path)
         # restart the server
-        cls.restart_server()
+        cls.exec_gravitino("restart")
         cls.gravitino_admin_client = GravitinoAdminClient(uri="http://localhost:8090")
         # create entity
         cls._init_test_entities()
@@ -117,7 +117,7 @@ class TestGvfsWithHDFS(IntegrationTestEnv):
             # reset server conf
             cls._reset_conf(cls.config, cls.hadoop_conf_path)
             # restart server
-            cls.restart_server()
+            cls.exec_gravitino("restart")
             # clear hadoop env
             BaseHadoopEnvironment.clear_hadoop_env()
         finally:

@@ -74,7 +74,7 @@ class TestOAuth2(IntegrationTestEnv, TestCommonAuth):
         # append the hadoop conf to server
         cls._append_conf(cls.config, cls.oauth2_conf_path)
 
-        IntegrationTestEnv.restart_server()
+        IntegrationTestEnv.exec_gravitino("restart")
         cls.oauth2_token_provider = DefaultOAuth2TokenProvider(
             f"{cls.oauth2_server_uri}", "test:test", "test", "oauth2/token"
         )
@@ -95,7 +95,7 @@ class TestOAuth2(IntegrationTestEnv, TestCommonAuth):
             # reset server conf
             cls._reset_conf(cls.config, cls.oauth2_conf_path)
             # restart server
-            cls.restart_server()
+            cls.exec_gravitino("restart")
         finally:
             # close oauth2 container
             cls.oauth2_container.close()
