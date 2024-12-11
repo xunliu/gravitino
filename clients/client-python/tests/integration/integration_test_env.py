@@ -15,20 +15,19 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import logging
 import os
 import unittest
 import subprocess
 import time
 import sys
 import shutil
-
 import requests
 
 from gravitino.exceptions.base import GravitinoRuntimeException
 from tests.integration.config import Config
+from tests.logging_config import setup_logger
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 def get_gravitino_server_version(**kwargs):
@@ -77,14 +76,15 @@ class IntegrationTestEnv(unittest.TestCase):
                 logger.error("ERROR: Can't find online Gravitino server!")
             return
 
-        cls.start_gravitino()
+        logger.info("Start integration test environment...")
+        cls.exec_gravitino("start")
 
         if not check_gravitino_server_status():
             logger.error("ERROR: Can't start Gravitino server!")
             sys.exit(0)
 
     @classmethod
-    def start_gravitino(cls):
+    def exec_gravitino(cls, *args):
         cls._get_gravitino_home()
         cls.gravitino_startup_script = os.path.join(
             cls.gravitino_home, "bin/gravitino.sh"
@@ -108,7 +108,7 @@ class IntegrationTestEnv(unittest.TestCase):
 
         # Start Gravitino Server
         result = subprocess.run(
-            [cls.gravitino_startup_script, "start"],
+            [cls.gravitino_startup_script, *args],
             capture_output=True,
             text=True,
             check=False,
@@ -124,16 +124,7 @@ class IntegrationTestEnv(unittest.TestCase):
             return
 
         logger.info("Stop integration test environment...")
-        result = subprocess.run(
-            [cls.gravitino_startup_script, "stop"],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if result.stdout:
-            logger.info("stdout: %s", result.stdout)
-        if result.stderr:
-            logger.info("stderr: %s", result.stderr)
+        cls.exec_gravitino("stop")
 
         gravitino_server_running = True
         for i in range(5):
@@ -152,6 +143,7 @@ class IntegrationTestEnv(unittest.TestCase):
     @classmethod
     def restart_server(cls):
         logger.info("Restarting Gravitino server...")
+        cls.exec_gravitino("restart")
 
     @classmethod
     def _get_gravitino_home(cls):

@@ -18,13 +18,11 @@
 # pylint: disable=protected-access
 
 import base64
-import logging
 import os
 import platform
 import unittest
 from random import randint
 from typing import Dict
-
 import pandas
 import pyarrow as pa
 import pyarrow.dataset as dt
@@ -46,8 +44,9 @@ from gravitino.exceptions.base import GravitinoRuntimeException
 from tests.integration.integration_test_env import IntegrationTestEnv
 from tests.integration.containers.hdfs_container import HDFSContainer
 from tests.integration.base_hadoop_env import BaseHadoopEnvironment
+from tests.logging_config import setup_logger
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 DOCKER_TEST = os.environ.get("DOCKER_TEST")
 

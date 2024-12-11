@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import logging
 import os
 from random import randint
 import unittest
@@ -24,6 +23,7 @@ import unittest
 from adlfs import AzureBlobFileSystem
 
 
+from tests.logging_config import setup_logger
 from tests.integration.test_gvfs_with_hdfs import TestGvfsWithHDFS
 from gravitino import (
     gvfs,
@@ -35,8 +35,7 @@ from gravitino.exceptions.base import GravitinoRuntimeException
 from gravitino.filesystem.gvfs_config import GVFSConfig
 from gravitino.filesystem.gvfs import StorageType
 
-
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 def azure_abs_is_prepared():

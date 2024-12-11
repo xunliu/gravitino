@@ -16,7 +16,6 @@
 # under the License.
 
 import os
-import logging
 import unittest
 import sys
 import requests
@@ -33,8 +32,9 @@ from tests.integration.integration_test_env import (
 )
 from tests.integration.containers.oauth2_container import OAuth2Container
 from tests.integration.config import Config
+from tests.logging_config import setup_logger
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 DOCKER_TEST = os.environ.get("DOCKER_TEST")
 
@@ -51,7 +51,6 @@ class TestOAuth2(IntegrationTestEnv, TestCommonAuth):
 
     @classmethod
     def setUpClass(cls):
-
         cls._get_gravitino_home()
 
         cls.oauth2_container = OAuth2Container()
@@ -75,7 +74,7 @@ class TestOAuth2(IntegrationTestEnv, TestCommonAuth):
         # append the hadoop conf to server
         cls._append_conf(cls.config, cls.oauth2_conf_path)
 
-        IntegrationTestEnv.start_gravitino()
+        IntegrationTestEnv.restart_server()
         cls.oauth2_token_provider = DefaultOAuth2TokenProvider(
             f"{cls.oauth2_server_uri}", "test:test", "test", "oauth2/token"
         )

@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import logging
 from random import randint
 from typing import Dict, List
 
@@ -34,8 +33,9 @@ from gravitino.exceptions.base import (
 )
 
 from tests.integration.integration_test_env import IntegrationTestEnv
+from tests.logging_config import setup_logger
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 class TestSchema(IntegrationTestEnv):
