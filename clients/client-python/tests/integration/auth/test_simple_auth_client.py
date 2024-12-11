@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import logging
 import os
 
 from gravitino import (
@@ -26,8 +25,9 @@ from gravitino.auth.simple_auth_provider import SimpleAuthProvider
 
 from tests.integration.auth.test_auth_common import TestCommonAuth
 from tests.integration.integration_test_env import IntegrationTestEnv
+from tests.logging_config import setup_logger
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 class TestSimpleAuthClient(IntegrationTestEnv, TestCommonAuth):

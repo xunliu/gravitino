@@ -18,13 +18,11 @@
 # pylint: disable=protected-access
 
 import base64
-import logging
 import os
 import platform
 import unittest
 from random import randint
 from typing import Dict
-
 import pandas
 import pyarrow as pa
 import pyarrow.dataset as dt
@@ -46,8 +44,9 @@ from gravitino.exceptions.base import GravitinoRuntimeException
 from tests.integration.integration_test_env import IntegrationTestEnv
 from tests.integration.containers.hdfs_container import HDFSContainer
 from tests.integration.base_hadoop_env import BaseHadoopEnvironment
+from tests.logging_config import setup_logger
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 DOCKER_TEST = os.environ.get("DOCKER_TEST")
 
@@ -85,15 +84,12 @@ class TestGvfsWithHDFS(IntegrationTestEnv):
     )
     fileset_ident: NameIdentifier = NameIdentifier.of(schema_name, fileset_name)
 
-    gravitino_admin_client: GravitinoAdminClient = GravitinoAdminClient(
-        uri="http://localhost:8090"
-    )
+    gravitino_admin_client: GravitinoAdminClient = None
     gravitino_client: GravitinoClient = None
     options = {}
 
     @classmethod
     def setUpClass(cls):
-
         cls._get_gravitino_home()
 
         cls.hdfs_container = HDFSContainer()
@@ -109,7 +105,8 @@ class TestGvfsWithHDFS(IntegrationTestEnv):
         # append the hadoop conf to server
         cls._append_conf(cls.config, cls.hadoop_conf_path)
         # restart the server
-        cls.restart_server()
+        cls.exec_gravitino("restart")
+        cls.gravitino_admin_client = GravitinoAdminClient(uri="http://localhost:8090")
         # create entity
         cls._init_test_entities()
 
@@ -120,7 +117,7 @@ class TestGvfsWithHDFS(IntegrationTestEnv):
             # reset server conf
             cls._reset_conf(cls.config, cls.hadoop_conf_path)
             # restart server
-            cls.restart_server()
+            cls.exec_gravitino("restart")
             # clear hadoop env
             BaseHadoopEnvironment.clear_hadoop_env()
         finally:

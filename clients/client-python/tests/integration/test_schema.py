@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import logging
 from random import randint
 from typing import Dict, List
 
@@ -34,8 +33,9 @@ from gravitino.exceptions.base import (
 )
 
 from tests.integration.integration_test_env import IntegrationTestEnv
+from tests.logging_config import setup_logger
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 class TestSchema(IntegrationTestEnv):
@@ -66,12 +66,11 @@ class TestSchema(IntegrationTestEnv):
         metalake_name, catalog_name, schema_new_name
     )
 
-    gravitino_admin_client: GravitinoAdminClient = GravitinoAdminClient(
-        uri="http://localhost:8090"
-    )
+    gravitino_admin_client: GravitinoAdminClient = None
     gravitino_client: GravitinoClient = None
 
     def setUp(self):
+        self.gravitino_admin_client = GravitinoAdminClient(uri="http://localhost:8090")
         self.init_test_env()
 
     def tearDown(self):

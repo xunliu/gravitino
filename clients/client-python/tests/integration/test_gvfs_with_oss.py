@@ -15,14 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import logging
+
 import os
 from random import randint
 import unittest
 
-
 from ossfs import OSSFileSystem
 
+from tests.logging_config import setup_logger
 from tests.integration.test_gvfs_with_hdfs import TestGvfsWithHDFS
 from gravitino import (
     gvfs,
@@ -33,8 +33,7 @@ from gravitino import (
 from gravitino.exceptions.base import GravitinoRuntimeException
 from gravitino.filesystem.gvfs_config import GVFSConfig
 
-
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 def oss_is_configured():
@@ -75,7 +74,7 @@ class TestGvfsWithOSS(TestGvfsWithHDFS):
 
         cls.hadoop_conf_path = f"{cls.gravitino_home}/catalogs/hadoop/conf/hadoop.conf"
         # restart the server
-        cls.restart_server()
+        cls.exec_gravitino("restart")
         # create entity
         cls._init_test_entities()
 
@@ -86,7 +85,7 @@ class TestGvfsWithOSS(TestGvfsWithHDFS):
         # to reset it
         cls._reset_conf(cls.config, cls.hadoop_conf_path)
         # restart server
-        cls.restart_server()
+        cls.exec_gravitino("restart")
 
     # clear all config in the conf_path
     @classmethod
