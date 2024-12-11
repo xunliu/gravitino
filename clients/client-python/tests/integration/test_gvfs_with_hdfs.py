@@ -85,15 +85,12 @@ class TestGvfsWithHDFS(IntegrationTestEnv):
     )
     fileset_ident: NameIdentifier = NameIdentifier.of(schema_name, fileset_name)
 
-    gravitino_admin_client: GravitinoAdminClient = GravitinoAdminClient(
-        uri="http://localhost:8090"
-    )
+    gravitino_admin_client: GravitinoAdminClient = None
     gravitino_client: GravitinoClient = None
     options = {}
 
     @classmethod
     def setUpClass(cls):
-
         cls._get_gravitino_home()
 
         cls.hdfs_container = HDFSContainer()
@@ -110,6 +107,7 @@ class TestGvfsWithHDFS(IntegrationTestEnv):
         cls._append_conf(cls.config, cls.hadoop_conf_path)
         # restart the server
         cls.restart_server()
+        cls.gravitino_admin_client = GravitinoAdminClient(uri="http://localhost:8090")
         # create entity
         cls._init_test_entities()
 
