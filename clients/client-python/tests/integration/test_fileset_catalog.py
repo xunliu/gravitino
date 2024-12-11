@@ -69,12 +69,11 @@ class TestFilesetCatalog(IntegrationTestEnv):
     fileset_ident: NameIdentifier = NameIdentifier.of(schema_name, fileset_name)
     fileset_new_ident: NameIdentifier = NameIdentifier.of(schema_name, fileset_new_name)
 
-    gravitino_admin_client: GravitinoAdminClient = GravitinoAdminClient(
-        uri="http://localhost:8090"
-    )
+    gravitino_admin_client: GravitinoAdminClient = None
     gravitino_client: GravitinoClient = None
 
     def setUp(self):
+        self.gravitino_admin_client = GravitinoAdminClient(uri="http://localhost:8090")
         self.init_test_env()
 
     def tearDown(self):

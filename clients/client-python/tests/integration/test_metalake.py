@@ -45,9 +45,10 @@ class TestMetalake(IntegrationTestEnv):
         metalake_properties_key2: metalake_properties_value2,
     }
 
-    gravitino_admin_client: GravitinoAdminClient = GravitinoAdminClient(
-        uri="http://localhost:8090"
-    )
+    gravitino_admin_client: GravitinoAdminClient = None
+
+    def setUp(self):
+        self.gravitino_admin_client = GravitinoAdminClient(uri="http://localhost:8090")
 
     def tearDown(self):
         self.clean_test_data()

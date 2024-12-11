@@ -64,7 +64,7 @@ class BaseContainer:
             )
 
     def _create_networks(self):
-        pool_config = tp.IPAMPool(subnet="10.20.31.16/28")
+        pool_config = tp.IPAMPool(subnet="10.20.30.0/28")
         ipam_config = tp.IPAMConfig(driver="default", pool_configs=[pool_config])
         networks = self._docker_client.networks.list()
         for network in networks:
