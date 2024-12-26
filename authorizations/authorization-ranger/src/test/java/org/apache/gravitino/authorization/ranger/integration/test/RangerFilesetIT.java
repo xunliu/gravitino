@@ -373,8 +373,7 @@ public class RangerFilesetIT extends BaseIT {
 
     catalog.asFilesetCatalog().dropFileset(NameIdentifier.of(schemaName, fileset.name()));
     policies = rangerClient.getPoliciesInService(RangerITEnv.RANGER_HDFS_REPO_NAME);
-    Assertions.assertEquals(1, policies.size());
-    Assertions.assertEquals(3, policies.get(0).getPolicyItems().size());
+    Assertions.assertEquals(0, policies.size());
   }
 
   @Test
@@ -428,7 +427,7 @@ public class RangerFilesetIT extends BaseIT {
             Lists.newArrayList(Privileges.ReadFileset.allow()));
     metalake.createRole(filesetRole, Collections.emptyMap(), Lists.newArrayList(securableObject));
     metalake.grantRolesToUser(Lists.newArrayList(filesetRole), userName);
-    RangerBaseE2EIT.waitForUpdatingPolicies();
+    SparkBaseIT.waitForUpdatingPolicies();
 
     UserGroupInformation.createProxyUser(userName, UserGroupInformation.getCurrentUser())
         .doAs(
@@ -461,7 +460,7 @@ public class RangerFilesetIT extends BaseIT {
             MetadataObject.Type.FILESET);
     metalake.grantPrivilegesToRole(
         filesetRole, filesetObject, Lists.newArrayList(Privileges.WriteFileset.allow()));
-    RangerBaseE2EIT.waitForUpdatingPolicies();
+    SparkBaseIT.waitForUpdatingPolicies();
     UserGroupInformation.createProxyUser(userName, UserGroupInformation.getCurrentUser())
         .doAs(
             (PrivilegedExceptionAction<Void>)
@@ -489,7 +488,7 @@ public class RangerFilesetIT extends BaseIT {
         filesetRole,
         filesetObject,
         Lists.newArrayList(Privileges.ReadFileset.allow(), Privileges.WriteFileset.allow()));
-    RangerBaseE2EIT.waitForUpdatingPolicies();
+    SparkBaseIT.waitForUpdatingPolicies();
     UserGroupInformation.createProxyUser(userName, UserGroupInformation.getCurrentUser())
         .doAs(
             (PrivilegedExceptionAction<Void>)

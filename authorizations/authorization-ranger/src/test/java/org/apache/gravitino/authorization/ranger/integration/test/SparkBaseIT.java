@@ -52,8 +52,8 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class RangerBaseE2EIT extends BaseIT {
-  private static final Logger LOG = LoggerFactory.getLogger(RangerBaseE2EIT.class);
+public abstract class SparkBaseIT extends BaseIT {
+  private static final Logger LOG = LoggerFactory.getLogger(SparkBaseIT.class);
   public static final String catalogName = GravitinoITUtils.genRandomName("catalog").toLowerCase();
   public static final String schemaName = GravitinoITUtils.genRandomName("schema").toLowerCase();
 
@@ -159,6 +159,28 @@ public abstract class RangerBaseE2EIT extends BaseIT {
     RangerITEnv.cleanup();
   }
 
+  //  @AfterEach
+  //  void clean() {
+  //    MetadataObject schemaObject =
+  //            MetadataObjects.of(catalogName, schemaName, MetadataObject.Type.SCHEMA);
+  //    metalake.setOwner(schemaObject, testUserName(), Owner.Type.USER);
+  //    waitForUpdatingPolicies();
+  //    sparkSession.sql(SQL_DROP_SCHEMA);
+  //
+  //    if (client != null) {
+  //      Arrays.stream(catalog.asSchemas().listSchemas())
+  //              .filter(schema -> !schema.equals("default"))
+  //              .forEach(
+  //                      (schema -> {
+  //                        catalog.asSchemas().dropSchema(schema, false);
+  //                      }));
+  //      Arrays.stream(metalake.listCatalogs())
+  //              .forEach((catalogName -> metalake.dropCatalog(catalogName, true)));
+  //      client.disableMetalake(metalakeName);
+  //      client.dropMetalake(metalakeName);
+  //    }
+  //  }
+
   protected void createMetalake() {
     GravitinoMetalake[] gravitinoMetalakes = client.listMetalakes();
     Assertions.assertEquals(0, gravitinoMetalakes.length);
@@ -169,8 +191,6 @@ public abstract class RangerBaseE2EIT extends BaseIT {
 
     metalake = loadMetalake;
   }
-
-  public abstract void createCatalog();
 
   protected static void waitForUpdatingPolicies() {
     // After Ranger authorization, Must wait a period of time for the Ranger Spark plugin to update
@@ -183,6 +203,10 @@ public abstract class RangerBaseE2EIT extends BaseIT {
       LOG.error("Failed to sleep", e);
     }
   }
+
+  protected abstract void createCatalog();
+
+  protected abstract String testUserName();
 
   protected abstract void checkTableAllPrivilegesExceptForCreating();
 
@@ -198,7 +222,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
 
   protected abstract void checkDeleteSQLWithWritePrivileges();
 
-  protected abstract void useCatalog() throws InterruptedException;
+  protected abstract void useCatalog();
 
   protected abstract void checkWithoutPrivileges();
 
@@ -206,7 +230,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
 
   // ISSUE-5947: can't rename a catalog or a metalake
   @Test
-  void testRenameMetalakeOrCatalog() {
+  protected void testRenameMetalakeOrCatalog() {
     Assertions.assertDoesNotThrow(
         () -> client.alterMetalake(metalakeName, MetalakeChange.rename("new_name")));
     Assertions.assertDoesNotThrow(
@@ -224,17 +248,28 @@ public abstract class RangerBaseE2EIT extends BaseIT {
     useCatalog();
 
     // First, fail to create the schema
-    Assertions.assertThrows(
-        AccessControlException.class, () -> sparkSession.sql(SQL_CREATE_SCHEMA));
+    Assertions.assertThrows(Exception.class, () -> sparkSession.sql(SQL_CREATE_SCHEMA));
+    Exception accessControlException =
+        Assertions.assertThrows(Exception.class, () -> sparkSession.sql(SQL_CREATE_SCHEMA));
+    Assertions.assertTrue(
+        accessControlException
+                .getMessage()
+                .contains(
+                    String.format(
+                        "Permission denied: user [%s] does not have [create] privilege",
+                        testUserName()))
+            || accessControlException
+                .getMessage()
+                .contains(
+                    String.format("Permission denied: user=%s, access=WRITE", testUserName())));
 
     // Second, grant the `CREATE_SCHEMA` role
-    String userName1 = System.getenv(HADOOP_USER_NAME);
     String roleName = currentFunName();
     SecurableObject securableObject =
         SecurableObjects.ofMetalake(
             metalakeName, Lists.newArrayList(Privileges.CreateSchema.allow()));
     metalake.createRole(roleName, Collections.emptyMap(), Lists.newArrayList(securableObject));
-    metalake.grantRolesToUser(Lists.newArrayList(roleName), userName1);
+    metalake.grantRolesToUser(Lists.newArrayList(roleName), testUserName());
     waitForUpdatingPolicies();
 
     // Third, succeed to create the schema
@@ -244,6 +279,8 @@ public abstract class RangerBaseE2EIT extends BaseIT {
     Assertions.assertThrows(AccessControlException.class, () -> sparkSession.sql(SQL_CREATE_TABLE));
 
     // Clean up
+    String[] schema1 = catalog.asSchemas().listSchemas();
+    LOG.warn("Schemas: {}", schema1[0]);
     catalog.asSchemas().dropSchema(schemaName, false);
     metalake.deleteRole(roleName);
   }
@@ -259,7 +296,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
         SecurableObjects.ofMetalake(
             metalakeName,
             Lists.newArrayList(Privileges.UseSchema.allow(), Privileges.CreateSchema.allow()));
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.createRole(
         createSchemaRole, Collections.emptyMap(), Lists.newArrayList(securableObject));
     metalake.grantRolesToUser(Lists.newArrayList(createSchemaRole), userName1);
@@ -312,7 +349,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
                 Privileges.CreateTable.allow(),
                 Privileges.SelectTable.allow(),
                 Privileges.ModifyTable.allow()));
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.createRole(readWriteRole, Collections.emptyMap(), Lists.newArrayList(securableObject));
     metalake.grantRolesToUser(Lists.newArrayList(readWriteRole), userName1);
     waitForUpdatingPolicies();
@@ -365,7 +402,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
                 Privileges.UseSchema.allow(),
                 Privileges.CreateSchema.allow(),
                 Privileges.CreateTable.allow()));
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.createRole(roleName, Collections.emptyMap(), Lists.newArrayList(securableObject));
     metalake.grantRolesToUser(Lists.newArrayList(roleName), userName1);
     waitForUpdatingPolicies();
@@ -430,7 +467,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
                 Privileges.CreateSchema.allow(),
                 Privileges.CreateTable.allow(),
                 Privileges.SelectTable.allow()));
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.createRole(readOnlyRole, Collections.emptyMap(), Lists.newArrayList(securableObject));
     metalake.grantRolesToUser(Lists.newArrayList(readOnlyRole), userName1);
     waitForUpdatingPolicies();
@@ -484,7 +521,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
                 Privileges.CreateSchema.allow(),
                 Privileges.CreateTable.allow(),
                 Privileges.ModifyTable.allow()));
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.createRole(writeOnlyRole, Collections.emptyMap(), Lists.newArrayList(securableObject));
     metalake.grantRolesToUser(Lists.newArrayList(writeOnlyRole), userName1);
     waitForUpdatingPolicies();
@@ -555,7 +592,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
     metalake.createRole(roleName, Collections.emptyMap(), Lists.newArrayList(securableObject));
 
     // Granted this role to the spark execution user `HADOOP_USER_NAME`
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.grantRolesToUser(Lists.newArrayList(roleName), userName1);
 
     waitForUpdatingPolicies();
@@ -591,7 +628,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
     metalake.createRole(roleName, Collections.emptyMap(), Lists.newArrayList(securableObject));
 
     // Granted this role to the spark execution user `HADOOP_USER_NAME`
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.grantRolesToUser(Lists.newArrayList(roleName), userName1);
     waitForUpdatingPolicies();
 
@@ -637,7 +674,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
     metalake.createRole(roleName, Collections.emptyMap(), Lists.newArrayList(securableObject));
 
     // Granted this role to the spark execution user `HADOOP_USER_NAME`
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.grantRolesToUser(Lists.newArrayList(roleName), userName1);
     waitForUpdatingPolicies();
 
@@ -696,7 +733,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
                 Privileges.ModifyTable.allow()));
     metalake.createRole(roleName, Collections.emptyMap(), Lists.newArrayList(securableObject));
     // Granted this role to the spark execution user `HADOOP_USER_NAME`
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.grantRolesToUser(Lists.newArrayList(roleName), userName1);
 
     waitForUpdatingPolicies();
@@ -734,7 +771,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
                 Privileges.ModifyTable.allow()));
     metalake.createRole(roleName, Collections.emptyMap(), Lists.newArrayList(securableObject));
     // Granted this role to the spark execution user `HADOOP_USER_NAME`
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.grantRolesToUser(Lists.newArrayList(roleName), userName1);
 
     waitForUpdatingPolicies();
@@ -780,7 +817,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
                 Privileges.CreateSchema.allow(),
                 Privileges.CreateTable.allow(),
                 Privileges.ModifyTable.allow()));
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.createRole(helperRole, Collections.emptyMap(), Lists.newArrayList(securableObject));
     metalake.grantRolesToUser(Lists.newArrayList(helperRole), userName1);
     waitForUpdatingPolicies();
@@ -880,7 +917,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
   }
 
   @Test
-  void testAllowUseSchemaPrivilege() throws InterruptedException {
+  protected void testAllowUseSchemaPrivilege() throws InterruptedException {
     // Choose a catalog
     useCatalog();
 
@@ -894,7 +931,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
     metalake.createRole(roleName, Collections.emptyMap(), Lists.newArrayList(securableObject));
 
     // Granted this role to the spark execution user `HADOOP_USER_NAME`
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.grantRolesToUser(Lists.newArrayList(roleName), userName1);
     waitForUpdatingPolicies();
 
@@ -967,7 +1004,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
         roleName, Collections.emptyMap(), Lists.newArrayList(allowObject, denyObject));
 
     // Granted this role to the spark execution user `HADOOP_USER_NAME`
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.grantRolesToUser(Lists.newArrayList(roleName), userName1);
     waitForUpdatingPolicies();
 
@@ -993,7 +1030,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
         roleName, Collections.emptyMap(), Lists.newArrayList(allowObject, denyObject));
 
     // Granted this role to the spark execution user `HADOOP_USER_NAME`
-    userName1 = System.getenv(HADOOP_USER_NAME);
+    userName1 = testUserName();
     metalake.grantRolesToUser(Lists.newArrayList(roleName), userName1);
 
     waitForUpdatingPolicies();
@@ -1027,7 +1064,7 @@ public abstract class RangerBaseE2EIT extends BaseIT {
         AccessControlException.class, () -> sparkSession.sql(SQL_CREATE_SCHEMA));
 
     // Granted this role to the spark execution user `HADOOP_USER_NAME`
-    String userName1 = System.getenv(HADOOP_USER_NAME);
+    String userName1 = testUserName();
     metalake.grantRolesToUser(Lists.newArrayList(roleName), userName1);
 
     waitForUpdatingPolicies();

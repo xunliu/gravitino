@@ -46,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Tag("gravitino-docker-test")
-public class RangerHiveE2EIT extends RangerBaseE2EIT {
+public class RangerHiveE2EIT extends SparkBaseIT {
   private static final Logger LOG = LoggerFactory.getLogger(RangerHiveE2EIT.class);
 
   private static final String provider = "hive";
@@ -63,7 +63,7 @@ public class RangerHiveE2EIT extends RangerBaseE2EIT {
     registerCustomConfigs(configs);
     super.startIntegrationTest();
 
-    RangerITEnv.init(RangerBaseE2EIT.metalakeName, true);
+    RangerITEnv.init(SparkBaseIT.metalakeName, true);
     RangerITEnv.startHiveRangerContainer();
 
     HIVE_METASTORE_URIS =
@@ -109,9 +109,19 @@ public class RangerHiveE2EIT extends RangerBaseE2EIT {
     cleanIT();
   }
 
+  //  @Test
+  //  protected void testCreateSchema() throws InterruptedException {
+  //    super.testChangeOwner();
+  //  }
+
   @Override
-  protected void useCatalog() throws InterruptedException {
+  protected void useCatalog() {
     // Do nothing, default catalog is ok for Hive.
+  }
+
+  @Override
+  protected String testUserName() {
+    return System.getenv(HADOOP_USER_NAME);
   }
 
   @Override
