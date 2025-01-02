@@ -41,9 +41,8 @@ fun deleteCacheDir(targetDir: String) {
 }
 
 
-fun waitForServerIsReady(host: String = "http://localhost", port: Int = 8090, timeout: Long = 30000) {
+fun gravitinoServerIsRunning(host: String = "http://localhost", port: Int = 8090, timeout: Long = 30000): Boolean {
   val startTime = System.currentTimeMillis()
-  var exception: java.lang.Exception?
   val urlString = "$host:$port/metrics"
   val successPattern = Regex("\"version\"\\s*:")
 
@@ -59,37 +58,43 @@ fun waitForServerIsReady(host: String = "http://localhost", port: Int = 8090, ti
       if (responseCode == 200) {
         val response = connection.inputStream.bufferedReader().use { it.readText() }
         if (successPattern.containsMatchIn(response)) {
-          return  // If this succeeds, the API is up and running
+          return true // If this succeeds, the API is up and running
         } else {
-          exception = RuntimeException("API returned unexpected response: $response")
+          println("API returned unexpected response: $response")
         }
       } else {
-        exception = RuntimeException("Received non-200 response code: $responseCode")
+        println("Received non-200 response code: $responseCode")
       }
     } catch (e: Exception) {
       // API is not available yet, continue to wait
-      exception = e
+      println("API is not available yet: ${e.message}")
     }
 
     if (System.currentTimeMillis() - startTime > timeout) {
-      throw RuntimeException("Timed out waiting for API to be available", exception)
+      return false
     }
     Thread.sleep(500)  // Wait for 0.5 second before checking again
   }
 }
 
 fun gravitinoServer(operation: String) {
-    val process = ProcessBuilder("${project.rootDir.path}/distribution/package/bin/gravitino.sh", operation).start()
-    val exitCode = process.waitFor()
-    if (exitCode == 0) {
-      val currentContext = process.inputStream.bufferedReader().readText()
-      if (operation == "start") {
-        waitForServerIsReady()
+  val process = ProcessBuilder("${project.rootDir.path}/distribution/package/bin/gravitino.sh", operation).start()
+  val exitCode = process.waitFor()
+  if (exitCode == 0) {
+    val currentContext = process.inputStream.bufferedReader().readText()
+    if (operation == "start") {
+      if (!gravitinoServerIsRunning()) {
+        throw GradleException("Gravitino server is not started successfully!")
       }
-      println("Gravitino server status: $currentContext")
     } else {
-      println("Gravitino server execution failed with exit code $exitCode")
+      if (gravitinoServerIsRunning()) {
+        throw GradleException("Gravitino server is not stopped successfully!")
+      }
     }
+    println("Gravitino server status: $currentContext")
+  } else {
+    println("Gravitino server execution failed with exit code $exitCode")
+  }
 }
 
 fun generatePypiProjectHomePage() {
@@ -201,10 +206,6 @@ tasks {
   }
 
   val integrationTest by registering(VenvTask::class) {
-    doFirst {
-      gravitinoServer("start")
-    }
-
     venvExec = "coverage"
     args = listOf("run", "--branch", "-m", "unittest")
     workingDir = projectDir.resolve("./tests/integration")
@@ -229,10 +230,6 @@ tasks {
       "PYTHONPATH" to "${project.rootDir.path}/clients/client-python"
     ))
     environment = envMap
-
-    doLast {
-      gravitinoServer("stop")
-    }
 
     finalizedBy(integrationCoverageReport)
   }
