@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import logging
 import os
 from random import randint
 from typing import Dict
@@ -28,8 +27,9 @@ from gravitino import (
     Fileset,
 )
 from gravitino.exceptions.base import GravitinoRuntimeException
+from tests.logging_config import setup_logger
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 class TestCommonAuth:

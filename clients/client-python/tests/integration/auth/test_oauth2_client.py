@@ -16,8 +16,6 @@
 # under the License.
 
 import os
-import subprocess
-import logging
 import unittest
 import sys
 import requests
@@ -26,7 +24,6 @@ from jwcrypto import jwk
 from gravitino.auth.auth_constants import AuthConstants
 from gravitino.auth.default_oauth2_token_provider import DefaultOAuth2TokenProvider
 from gravitino import GravitinoAdminClient, GravitinoClient
-from gravitino.exceptions.base import GravitinoRuntimeException
 
 from tests.integration.auth.test_auth_common import TestCommonAuth
 from tests.integration.integration_test_env import (
@@ -35,8 +32,9 @@ from tests.integration.integration_test_env import (
 )
 from tests.integration.containers.oauth2_container import OAuth2Container
 from tests.integration.config import Config
+from tests.logging_config import setup_logger
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 DOCKER_TEST = os.environ.get("DOCKER_TEST")
 
@@ -48,16 +46,17 @@ DOCKER_TEST = os.environ.get("DOCKER_TEST")
 class TestOAuth2(IntegrationTestEnv, TestCommonAuth):
 
     oauth2_container: OAuth2Container = None
+    oauth2_server_uri: str = None
+    oauth2_token_provider: DefaultOAuth2TokenProvider = None
 
     @classmethod
     def setUpClass(cls):
-
         cls._get_gravitino_home()
 
         cls.oauth2_container = OAuth2Container()
-        cls.oauth2_container_ip = cls.oauth2_container.get_ip()
+        oauth2_container_ip: str = cls.oauth2_container.get_ip()
 
-        cls.oauth2_server_uri = f"http://{cls.oauth2_container_ip}:8177"
+        cls.oauth2_server_uri = f"http://{oauth2_container_ip}:8177"
 
         # Get PEM from OAuth Server
         default_sign_key = cls._get_default_sign_key()
@@ -74,8 +73,21 @@ class TestOAuth2(IntegrationTestEnv, TestCommonAuth):
 
         # append the hadoop conf to server
         cls._append_conf(cls.config, cls.oauth2_conf_path)
-        # restart the server
-        cls._restart_server_with_oauth()
+
+        IntegrationTestEnv.exec_gravitino("restart")
+        cls.oauth2_token_provider = DefaultOAuth2TokenProvider(
+            f"{cls.oauth2_server_uri}", "test:test", "test", "oauth2/token"
+        )
+
+        auth_header = {
+            AuthConstants.HTTP_HEADER_AUTHORIZATION: cls.oauth2_token_provider.get_token_data().decode(
+                "utf-8"
+            )
+        }
+
+        if not check_gravitino_server_status(headers=auth_header):
+            logger.error("ERROR: Can't start Gravitino server!")
+            sys.exit(0)
 
     @classmethod
     def tearDownClass(cls):
@@ -83,7 +95,7 @@ class TestOAuth2(IntegrationTestEnv, TestCommonAuth):
             # reset server conf
             cls._reset_conf(cls.config, cls.oauth2_conf_path)
             # restart server
-            cls.restart_server()
+            cls.exec_gravitino("restart")
         finally:
             # close oauth2 container
             cls.oauth2_container.close()
@@ -104,53 +116,9 @@ class TestOAuth2(IntegrationTestEnv, TestCommonAuth):
 
         return default_sign_key
 
-    @classmethod
-    def _restart_server_with_oauth(cls):
-        logger.info("Restarting Gravitino server...")
-        gravitino_home = os.environ.get("GRAVITINO_HOME")
-        gravitino_startup_script = os.path.join(gravitino_home, "bin/gravitino.sh")
-        if not os.path.exists(gravitino_startup_script):
-            raise GravitinoRuntimeException(
-                f"Can't find Gravitino startup script: {gravitino_startup_script}, "
-                "Please execute `./gradlew compileDistribution -x test` in the Gravitino "
-                "project root directory."
-            )
-
-        # Restart Gravitino Server
-        env_vars = os.environ.copy()
-        result = subprocess.run(
-            [gravitino_startup_script, "restart"],
-            env=env_vars,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if result.stdout:
-            logger.info("stdout: %s", result.stdout)
-        if result.stderr:
-            logger.info("stderr: %s", result.stderr)
-
-        oauth2_token_provider = DefaultOAuth2TokenProvider(
-            f"{cls.oauth2_server_uri}", "test:test", "test", "oauth2/token"
-        )
-
-        auth_header = {
-            AuthConstants.HTTP_HEADER_AUTHORIZATION: oauth2_token_provider.get_token_data().decode(
-                "utf-8"
-            )
-        }
-
-        if not check_gravitino_server_status(headers=auth_header):
-            logger.error("ERROR: Can't start Gravitino server!")
-            sys.exit(0)
-
     def setUp(self):
-        oauth2_token_provider = DefaultOAuth2TokenProvider(
-            f"{self.oauth2_server_uri}", "test:test", "test", "oauth2/token"
-        )
-
         self.gravitino_admin_client = GravitinoAdminClient(
-            uri="http://localhost:8090", auth_data_provider=oauth2_token_provider
+            uri="http://localhost:8090", auth_data_provider=self.oauth2_token_provider
         )
 
         self.init_test_env()
@@ -161,14 +129,10 @@ class TestOAuth2(IntegrationTestEnv, TestCommonAuth):
             self.metalake_name, comment="", properties={}
         )
 
-        oauth2_token_provider = DefaultOAuth2TokenProvider(
-            f"{self.oauth2_server_uri}", "test:test", "test", "oauth2/token"
-        )
-
         self.gravitino_client = GravitinoClient(
             uri="http://localhost:8090",
             metalake_name=self.metalake_name,
-            auth_data_provider=oauth2_token_provider,
+            auth_data_provider=self.oauth2_token_provider,
         )
 
         super().init_test_env()
