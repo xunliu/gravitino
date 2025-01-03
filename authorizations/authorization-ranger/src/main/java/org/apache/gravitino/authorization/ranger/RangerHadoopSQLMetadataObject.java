@@ -48,7 +48,7 @@ public class RangerHadoopSQLMetadataObject implements AuthorizationMetadataObjec
 
     public static Type fromMetadataType(MetadataObject.Type metadataType) {
       for (Type type : Type.values()) {
-        if (type.metadataObjectType() == metadataType) {
+        if (type.metadataType == metadataType) {
           return type;
         }
       }
@@ -99,7 +99,7 @@ public class RangerHadoopSQLMetadataObject implements AuthorizationMetadataObjec
   }
 
   @Override
-  public void validateAuthorizationMetadataObject() throws IllegalArgumentException {
+  public void validate() throws IllegalArgumentException {
     List<String> names = names();
     Preconditions.checkArgument(
         names != null && !names.isEmpty(), "Cannot create a Ranger metadata object with no names");

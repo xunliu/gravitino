@@ -107,5 +107,5 @@ public interface AuthorizationMetadataObject {
   }
 
   /** Validate different underlying datasource metadata object */
-  void validateAuthorizationMetadataObject() throws IllegalArgumentException;
+  void validate() throws IllegalArgumentException;
 }

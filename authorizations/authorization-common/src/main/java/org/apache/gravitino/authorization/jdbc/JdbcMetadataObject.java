@@ -58,7 +58,7 @@ public class JdbcMetadataObject implements AuthorizationMetadataObject {
   }
 
   @Override
-  public void validateAuthorizationMetadataObject() throws IllegalArgumentException {
+  public void validate() throws IllegalArgumentException {
     List<String> names = names();
     Preconditions.checkArgument(
         names != null && !names.isEmpty(), "The name of the object is empty.");
