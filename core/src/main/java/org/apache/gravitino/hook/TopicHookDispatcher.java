@@ -89,11 +89,11 @@ public class TopicHookDispatcher implements TopicDispatcher {
 
   @Override
   public boolean dropTopic(NameIdentifier ident) {
-    List<String> locationPaths =
+    List<String> locations =
         AuthorizationUtils.getMetadataObjectLocation(ident, Entity.EntityType.TOPIC);
     boolean dropped = dispatcher.dropTopic(ident);
     AuthorizationUtils.authorizationPluginRemovePrivileges(
-        ident, Entity.EntityType.TOPIC, locationPaths);
+        ident, Entity.EntityType.TOPIC, locations);
     return dropped;
   }
 

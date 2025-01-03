@@ -45,11 +45,11 @@ public interface MetadataObjectChange {
    * Remove a metadata entity MetadataObjectChange.
    *
    * @param metadataObject The metadata object.
-   * @param locationPaths The location paths of the metadata object.
+   * @param locations The locations of the metadata object.
    * @return return a MetadataObjectChange for the remove metadata object.
    */
-  static MetadataObjectChange remove(MetadataObject metadataObject, List<String> locationPaths) {
-    return new RemoveMetadataObject(metadataObject, locationPaths);
+  static MetadataObjectChange remove(MetadataObject metadataObject, List<String> locations) {
+    return new RemoveMetadataObject(metadataObject, locations);
   }
 
   /** A RenameMetadataObject is to rename securable object's metadata entity. */
@@ -129,11 +129,11 @@ public interface MetadataObjectChange {
   /** A RemoveMetadataObject is to remove securable object's metadata entity. */
   final class RemoveMetadataObject implements MetadataObjectChange {
     private final MetadataObject metadataObject;
-    private final List<String> locationPaths;
+    private final List<String> locations;
 
-    private RemoveMetadataObject(MetadataObject metadataObject, List<String> locationPaths) {
+    private RemoveMetadataObject(MetadataObject metadataObject, List<String> locations) {
       this.metadataObject = metadataObject;
-      this.locationPaths = locationPaths;
+      this.locations = locations;
     }
 
     /**
@@ -150,8 +150,8 @@ public interface MetadataObjectChange {
      *
      * @return return a location path.
      */
-    public List<String> getLocationPaths() {
-      return locationPaths;
+    public List<String> getLocations() {
+      return locations;
     }
 
     /**

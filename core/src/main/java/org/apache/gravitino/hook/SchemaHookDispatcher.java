@@ -90,11 +90,11 @@ public class SchemaHookDispatcher implements SchemaDispatcher {
 
   @Override
   public boolean dropSchema(NameIdentifier ident, boolean cascade) throws NonEmptySchemaException {
-    List<String> locationPaths =
+    List<String> locations =
         AuthorizationUtils.getMetadataObjectLocation(ident, Entity.EntityType.SCHEMA);
     boolean dropped = dispatcher.dropSchema(ident, cascade);
     AuthorizationUtils.authorizationPluginRemovePrivileges(
-        ident, Entity.EntityType.SCHEMA, locationPaths);
+        ident, Entity.EntityType.SCHEMA, locations);
     return dropped;
   }
 

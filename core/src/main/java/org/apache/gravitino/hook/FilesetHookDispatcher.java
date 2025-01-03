@@ -104,11 +104,11 @@ public class FilesetHookDispatcher implements FilesetDispatcher {
 
   @Override
   public boolean dropFileset(NameIdentifier ident) {
-    List<String> locationPaths =
+    List<String> locations =
         AuthorizationUtils.getMetadataObjectLocation(ident, Entity.EntityType.FILESET);
     boolean dropped = dispatcher.dropFileset(ident);
     AuthorizationUtils.authorizationPluginRemovePrivileges(
-        ident, Entity.EntityType.FILESET, locationPaths);
+        ident, Entity.EntityType.FILESET, locations);
     return dropped;
   }
 

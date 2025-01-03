@@ -263,13 +263,12 @@ public class AuthorizationUtils {
   }
 
   public static void authorizationPluginRemovePrivileges(
-      NameIdentifier ident, Entity.EntityType type, List<String> locationPaths) {
+      NameIdentifier ident, Entity.EntityType type, List<String> locations) {
     // If we enable authorization, we should remove the privileges about the entity in the
     // authorization plugin.
     if (GravitinoEnv.getInstance().accessControlDispatcher() != null) {
       MetadataObject metadataObject = NameIdentifierUtil.toMetadataObject(ident, type);
-      MetadataObjectChange removeObject =
-          MetadataObjectChange.remove(metadataObject, locationPaths);
+      MetadataObjectChange removeObject = MetadataObjectChange.remove(metadataObject, locations);
       callAuthorizationPluginForMetadataObject(
           ident.namespace().level(0),
           metadataObject,
@@ -382,13 +381,13 @@ public class AuthorizationUtils {
 
   public static List<String> getMetadataObjectLocation(
       NameIdentifier ident, Entity.EntityType type) {
-    List<String> locationPaths = new ArrayList<>();
+    List<String> locations = new ArrayList<>();
     MetadataObject metadataObject;
     try {
       metadataObject = NameIdentifierUtil.toMetadataObject(ident, type);
     } catch (IllegalArgumentException e) {
-      LOG.warn("Failed to get location paths for metadata object %s type %s", ident, type, e);
-      return locationPaths;
+      LOG.warn("Illegal argument exception for metadata object %s type %s", ident, type, e);
+      return locations;
     }
 
     String metalake =
@@ -399,7 +398,7 @@ public class AuthorizationUtils {
           {
             NameIdentifier[] identifiers =
                 GravitinoEnv.getInstance().catalogDispatcher().listCatalogs(Namespace.of(metalake));
-            List<String> finalLocationPath = locationPaths;
+            List<String> finalLocationPath = locations;
             Arrays.stream(identifiers)
                 .collect(Collectors.toList())
                 .forEach(
@@ -445,7 +444,7 @@ public class AuthorizationUtils {
                     defaultSchemaLocation != null,
                     String.format("Catalog %s location is not found", ident));
                 String location = HDFS_PATTERN.matcher(defaultSchemaLocation).replaceAll("");
-                locationPaths.add(location);
+                locations.add(location);
               }
             }
           }
@@ -458,7 +457,7 @@ public class AuthorizationUtils {
               Preconditions.checkArgument(
                   schemaLocation != null, String.format("Schema %s location is not found", ident));
               String location = HDFS_PATTERN.matcher(schemaLocation).replaceAll("");
-              locationPaths.add(location);
+              locations.add(location);
             }
           }
           break;
@@ -470,7 +469,7 @@ public class AuthorizationUtils {
               Preconditions.checkArgument(
                   schemaLocation != null, String.format("Table %s location is not found", ident));
               String location = HDFS_PATTERN.matcher(schemaLocation).replaceAll("");
-              locationPaths.add(location);
+              locations.add(location);
             }
           }
           break;
@@ -484,7 +483,7 @@ public class AuthorizationUtils {
           Preconditions.checkArgument(
               filesetLocation != null,
               String.format("Fileset %s location is not found", identifier));
-          locationPaths.add(HDFS_PATTERN.matcher(filesetLocation).replaceAll(""));
+          locations.add(HDFS_PATTERN.matcher(filesetLocation).replaceAll(""));
           break;
         case TOPIC:
           break;
@@ -497,7 +496,7 @@ public class AuthorizationUtils {
       LOG.warn("Failed to get location paths for metadata object %s type %s", ident, type, e);
     }
 
-    return locationPaths;
+    return locations;
   }
 
   private static NameIdentifier getObjectNameIdentifier(

@@ -127,10 +127,10 @@ public class CatalogHookDispatcher implements CatalogDispatcher {
   @Override
   public boolean dropCatalog(NameIdentifier ident, boolean force)
       throws NonEmptyEntityException, CatalogInUseException {
-    List<String> locationPaths =
+    List<String> locations =
         AuthorizationUtils.getMetadataObjectLocation(ident, Entity.EntityType.CATALOG);
     AuthorizationUtils.authorizationPluginRemovePrivileges(
-        ident, Entity.EntityType.CATALOG, locationPaths);
+        ident, Entity.EntityType.CATALOG, locations);
     return dispatcher.dropCatalog(ident, force);
   }
 

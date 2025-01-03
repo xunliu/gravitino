@@ -116,21 +116,21 @@ public class TableHookDispatcher implements TableDispatcher {
 
   @Override
   public boolean dropTable(NameIdentifier ident) {
-    List<String> locationPaths =
+    List<String> locations =
         AuthorizationUtils.getMetadataObjectLocation(ident, Entity.EntityType.TABLE);
     boolean dropped = dispatcher.dropTable(ident);
     AuthorizationUtils.authorizationPluginRemovePrivileges(
-        ident, Entity.EntityType.TABLE, locationPaths);
+        ident, Entity.EntityType.TABLE, locations);
     return dropped;
   }
 
   @Override
   public boolean purgeTable(NameIdentifier ident) throws UnsupportedOperationException {
-    List<String> locationPaths =
+    List<String> locations =
         AuthorizationUtils.getMetadataObjectLocation(ident, Entity.EntityType.TABLE);
     boolean purged = dispatcher.purgeTable(ident);
     AuthorizationUtils.authorizationPluginRemovePrivileges(
-        ident, Entity.EntityType.TABLE, locationPaths);
+        ident, Entity.EntityType.TABLE, locations);
     return purged;
   }
 

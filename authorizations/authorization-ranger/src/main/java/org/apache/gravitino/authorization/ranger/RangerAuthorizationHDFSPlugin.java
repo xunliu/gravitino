@@ -793,9 +793,8 @@ public class RangerAuthorizationHDFSPlugin extends RangerAuthorizationPlugin {
         metadataObject.type().equals(MetadataObject.Type.METALAKE)
             ? NameIdentifier.of(metadataObject.fullName())
             : NameIdentifier.parse(String.join(".", metalake, metadataObject.fullName()));
-    List<String> locationPaths =
-        AuthorizationUtils.getMetadataObjectLocation(identifier, entityType);
-    locationPaths.stream()
+    List<String> locations = AuthorizationUtils.getMetadataObjectLocation(identifier, entityType);
+    locations.stream()
         .forEach(
             locationPath -> {
               PathBasedMetadataObject pathBaseMetadataObject =
@@ -853,7 +852,7 @@ public class RangerAuthorizationHDFSPlugin extends RangerAuthorizationPlugin {
         MetadataObjectChange.RemoveMetadataObject changeMetadataObject =
             ((MetadataObjectChange.RemoveMetadataObject) change);
         List<AuthorizationMetadataObject> authzMetadataObjects = new ArrayList<>();
-        changeMetadataObject.getLocationPaths().stream()
+        changeMetadataObject.getLocations().stream()
             .forEach(
                 locationPath -> {
                   PathBasedMetadataObject pathBaseMetadataObject =
